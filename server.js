@@ -1,58 +1,47 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
 const path = require('path');
+require('dotenv').config();
 
-const PORT = 3000;
+const app = express();
 
-const MIME_TYPES = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'text/javascript',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.json': 'application/json',
-  '.ico': 'image/x-icon'
-};
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-const server = http.createServer((req, res) => {
-  // Strip query string
-  let urlPath = req.url.split('?')[0];
-  // Decode URI encoding
-  urlPath = decodeURIComponent(urlPath);
-  
-  if (urlPath === '/') {
-    urlPath = '/index.html';
-  }
+// Serve static frontend files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
-  // Prevent directory traversal
-  urlPath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
+// Database Connection (Fallback to in-memory/mock if no URI)
+if (process.env.MONGO_URI) {
+  mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB Connected via Atlas'))
+    .catch(err => console.error('MongoDB Connection Error:', err));
+} else {
+  console.log('No MONGO_URI provided. Running with in-memory Mock Data mode.');
+}
 
-  // Serve from public directory
-  let filePath = path.join(__dirname, 'public', urlPath);
-  const ext = path.extname(filePath);
-  const contentType = MIME_TYPES[ext] || 'text/plain';
-
-  console.log(`[REQUEST] ${req.method} ${urlPath} -> ${filePath}`);
-
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        console.error(`[404 NOT FOUND] ${filePath}`);
-        res.writeHead(404);
-        res.end('File not found: ' + urlPath);
-      } else {
-        console.error(`[500 ERROR] ${err.message}`);
-        res.writeHead(500);
-        res.end('Server Error: ' + err.code);
-      }
-    } else {
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(content, 'utf-8');
-    }
-  });
+// API Routes
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Everything App API is running flawlessly.' });
 });
 
-server.listen(PORT, () => {
+app.get('/api/posts', (req, res) => {
+  // TODO: Replace with real MongoDB query `Post.find()`
+  res.json([{ id: 1, text: 'Hello from the Node.js backend!', author: '@system' }]);
+});
+
+// Catch-all to serve index.html for Single Page App routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Port configuration for Vercel/Local
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });
+
+// Export the Express API for Vercel Serverless
+module.exports = app;
