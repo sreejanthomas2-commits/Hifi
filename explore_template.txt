@@ -1,0 +1,109 @@
+﻿function getExploreTemplate() {
+  return `<section id="pane-explore" class="pane">
+        <h1 class="pane-title"><span>Explore</span> Universe</h1>
+
+        <div class="explore-search">
+          <span class="material-symbols-rounded" style="opacity:0.6; font-size:18px">search</span>
+          <input type="text" id="explore-search" placeholder="Search topics, creators, hashtags...">
+        </div>
+
+        <!-- Google Trends Stream Connect Card -->
+        <div class="card mb16 flex-between flex-center" style="padding: 12px 18px; background: rgba(52, 168, 83, 0.05); border: 1px solid rgba(52, 168, 83, 0.15); display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <div style="display:flex; align-items:center; gap:10px">
+            <span class="material-symbols-rounded" style="color:#34A853; font-size:22px">language</span>
+            <div>
+              <div style="font-size:13.5px; font-weight:700; color:var(--t1)">Google Trends Integration</div>
+              <div style="font-size:11px; color:var(--t3)">Stream present trending queries & historical search data volume</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="google-trends-status" onclick="toggleGoogleTrends()" style="display:inline-flex; align-items:center; gap:6px; color:var(--t2); font-weight:700; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--border)">
+            <span class="status-dot" style="width:8px; height:8px; border-radius:50%; background:var(--t3); display:inline-block"></span> Connect Google Trends
+          </button>
+        </div>
+
+        <!-- Real-Time Global Hotspot Trend Map -->
+        <div class="trend-map-wrapper">
+          <div class="section-hdr">
+            <span class="section-title flex-center gap8"><span class="material-symbols-rounded" style="color:var(--pink)">public</span> Real-Time Global Hotspot Trend Map</span>
+            <span class="badge badge-pink">Live Map</span>
+          </div>
+          <p class="tc-2 fs12 mb12">Click pulsating hotspots to preview live localized trends, emergencies, and volunteer opportunities.</p>
+          <div class="trend-map-container" id="trend-map-container">
+            <!-- Pulsating Hotspots SVG overlay -->
+            <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0.15;" viewBox="0 0 800 400">
+              <path d="M 150 150 Q 220 180 300 120 T 450 150" fill="none" stroke="var(--blue)" stroke-width="2" stroke-dasharray="5 5"></path>
+              <path d="M 300 120 Q 380 90 480 180 T 650 130" fill="none" stroke="var(--pink)" stroke-width="2" stroke-dasharray="5 5"></path>
+            </svg>
+            
+            <!-- Hotspots overlay -->
+            <div class="trend-map-hotspot" style="left: 20%; top: 38%;" onclick="clickMapHotspot('sv', event)" title="Silicon Valley (USA)"></div>
+            <div class="trend-map-hotspot" style="left: 45%; top: 40%;" onclick="clickMapHotspot('london', event)" title="London (UK)"></div>
+            <div class="trend-map-hotspot" style="left: 49%; top: 45%;" onclick="clickMapHotspot('paris', event)" title="Paris (France)"></div>
+            <div class="trend-map-hotspot" style="left: 64%; top: 52%;" onclick="clickMapHotspot('delhi', event)" title="New Delhi (India)"></div>
+            <div class="trend-map-hotspot" style="left: 80%; top: 42%;" onclick="clickMapHotspot('tokyo', event)" title="Tokyo (Japan)"></div>
+            
+            <!-- Info Drawer -->
+            <div class="trend-map-drawer" id="trend-map-drawer">
+              <div class="flex-between" style="border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+                <strong class="fs12 tc-1" id="tmd-city">City Selected</strong>
+                <button class="btn btn-ghost btn-sm" style="padding: 2px 6px; font-size:10px; border:none;" onclick="closeMapDrawer(event)">Γ£ò</button>
+              </div>
+              <div class="fs11 tc-2 mt8" id="tmd-trends">Click any hotspot to display.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chips-row" id="topic-chips"></div>
+
+        <!-- Universal Search Results (Hidden by Default) -->
+        <div id="search-results-panel" class="hidden">
+          <div class="tabs mb16">
+            <button class="tab-btn active" id="st-all" onclick="switchSearchTab('all')">All Results</button>
+            <button class="tab-btn" id="st-vid" onclick="switchSearchTab('videos')">Videos <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-left:4px">movie</span></button>
+            <button class="tab-btn" id="st-art" onclick="switchSearchTab('articles')">Articles <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-left:4px">newspaper</span></button>
+            <button class="tab-btn" id="st-pod" onclick="switchSearchTab('podcasts')">Podcasts <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-left:4px">mic</span></button>
+            <button class="tab-btn" id="st-fac" onclick="switchSearchTab('factchecks')">Fact Checks <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-left:4px">shield</span></button>
+            <button class="tab-btn" id="st-pap" onclick="switchSearchTab('papers')">Papers <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-left:4px">school</span></button>
+          </div>
+          <div class="grid-2 gap16" style="align-items: start">
+            <!-- Media column -->
+            <div id="search-media-results" class="flex flex-col gap12"></div>
+            <!-- AI Card Column -->
+            <div class="card p20 sticky" style="top:20px" id="search-ai-card"></div>
+          </div>
+        </div>
+
+        <!-- Standard Explorer content -->
+        <div id="explore-default-content" style="display:grid; grid-template-columns:1fr 280px; gap:24px; align-items:start">
+          <div>
+            <div class="section-hdr">
+              <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--orange)">local_fire_department</span> Hot Topics</span>
+              <span class="section-link">View all</span>
+            </div>
+            <div class="topic-grid" id="topic-grid"></div>
+          </div>
+          <div style="position:sticky; top:80px">
+            <div class="section-hdr">
+              <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--purple)">auto_awesome</span> Trending Creators</span>
+            </div>
+            <div class="flex-col gap12" id="creator-grid"></div>
+          </div>
+        </div>
+      </section>`;
+}
+
+function getCategoryTemplate() {
+  return `<section id="pane-category" class="pane" style="padding:24px">
+    <div style="margin-bottom:20px">
+      <button class="btn btn-ghost btn-sm" onclick="navigateTo('explore')" style="display:inline-flex; align-items:center; gap:6px; margin-bottom:16px">
+        <span class="material-symbols-rounded" style="font-size:16px">arrow_back</span> Back to Explore
+      </button>
+      <h1 class="pane-title" id="cat-title"><span>Category</span> Portal</h1>
+      <p class="tc-2 fs13" id="cat-description">Explore advanced multimedia feeds.</p>
+    </div>
+    <div id="cat-dynamic-content"></div>
+  </section>`;
+}
+
+
+

@@ -1,0 +1,22 @@
+{
+  "name": "trending-digital-ecosystem",
+  "version": "1.0.0",
+  "description": "Trending - Calm, Balanced Digital Ecosystem Simulator",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.3"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

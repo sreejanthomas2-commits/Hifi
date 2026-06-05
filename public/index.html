@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Trending — Your next-generation digital universe.">
+  <title>Trending — Your Digital Universe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+
+<!-- PREMIUM CALL/VIDEO SIMULATOR MODAL (Hidden by Default) -->
+<div id="call-modal" class="call-modal-overlay hidden">
+  <div class="call-fullscreen">
+    <!-- Animated background for video call -->
+    <div class="call-video-bg" id="call-video-bg">
+      <div class="call-video-grid">
+        <div class="call-remote-feed" id="call-remote-feed">
+          <div class="call-remote-avatar" id="call-remote-avatar">
+            <span class="material-symbols-rounded" style="font-size:72px; color:rgba(255,255,255,0.9)">person</span>
+          </div>
+          <div class="call-remote-label" id="call-remote-label">Remote Camera</div>
+        </div>
+        <div class="call-self-feed" id="call-self-feed">
+          <div class="call-self-avatar">
+            <span class="material-symbols-rounded" style="font-size:24px; color:#fff">person</span>
+          </div>
+          <div class="call-self-label">You</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Call Info Overlay -->
+    <div class="call-info-overlay">
+      <div class="call-type-badge" id="call-type-badge">
+        <span class="material-symbols-rounded" style="font-size:16px">videocam</span>
+        <span id="call-type-text">Video Call</span>
+      </div>
+      <h2 class="call-contact-name" id="call-name">Sarah Chen</h2>
+      <p class="call-status-text" id="call-status">Connecting...</p>
+      <div class="call-timer" id="call-timer" style="display:none">
+        <span class="call-timer-dot"></span>
+        <span id="call-timer-text">00:00</span>
+      </div>
+      <div class="call-quality-bar" id="call-quality-bar" style="display:none">
+        <span class="material-symbols-rounded" style="font-size:14px;color:var(--green)">signal_cellular_alt</span>
+        <span>HD · Encrypted</span>
+      </div>
+    </div>
+
+    <!-- Call Controls -->
+    <div class="call-controls">
+      <button class="call-ctrl-btn" id="call-mute-btn" onclick="toggleCallMute()" title="Mute">
+        <span class="material-symbols-rounded" id="call-mute-icon">mic</span>
+        <span class="call-ctrl-label">Mute</span>
+      </button>
+      <button class="call-ctrl-btn" id="call-camera-btn" onclick="toggleCallCamera()" title="Camera">
+        <span class="material-symbols-rounded" id="call-camera-icon">videocam</span>
+        <span class="call-ctrl-label">Camera</span>
+      </button>
+      <button class="call-ctrl-btn" id="call-speaker-btn" onclick="toggleCallSpeaker()" title="Speaker">
+        <span class="material-symbols-rounded" id="call-speaker-icon">volume_up</span>
+        <span class="call-ctrl-label">Speaker</span>
+      </button>
+      <button class="call-ctrl-btn call-accept-btn" id="call-accept-btn" onclick="acceptMockCall()" title="Answer">
+        <span class="material-symbols-rounded">call</span>
+        <span class="call-ctrl-label">Answer</span>
+      </button>
+      <button class="call-ctrl-btn call-end-btn" onclick="endMockCall()" title="End Call">
+        <span class="material-symbols-rounded">call_end</span>
+        <span class="call-ctrl-label">End</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SECURE AUTH MODAL (Hidden by Default) -->
+<div id="auth-modal" class="auth-modal-overlay hidden">
+  <div class="auth-card card p24" style="background:var(--card); border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3)">
+    <div class="auth-header text-center mb20">
+      <div class="brand-logo emoji-3d" style="background:var(--g-brand); display:grid; place-items:center; margin: 0 auto 12px; width:48px; height:48px; border-radius:50%; animation:ix-float-idle 3s ease-in-out infinite">
+        <span class="material-symbols-rounded" style="color:#fff; font-size:24px; font-variation-settings:'FILL' 1">diamond</span>
+      </div>
+      <h2 class="fw9 tc-1 fs18" style="letter-spacing:-0.03em">Welcome to Trending</h2>
+      <p class="tc-2 fs12 mt4">Unlock your next-generation digital universe</p>
+    </div>
+    
+    <!-- Sign-in view -->
+    <div id="auth-main-view">
+      <!-- Google Sign-In Button -->
+      <button class="btn w100 flex-center gap12 mb12" id="google-signin-btn" onclick="signInWithGoogle()" style="background:#fff; color:#1f1f1f; border:1px solid #dadce0; height:42px; justify-content:center; font-weight:600; display:flex; width:100%; border-radius:var(--r2); transition:var(--tr); cursor:pointer">
+        <svg style="width:18px; height:18px; margin-right:8px" viewBox="0 0 24 24">
+          <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.137 4.114-3.465 0-6.274-2.81-6.274-6.275 0-3.465 2.81-6.274 6.274-6.274 1.543 0 2.957.566 4.05 1.49l2.973-2.973C18.913 2.193 15.78 1 12.24 1 6.032 1 12.24 6.032 12.24 12.24s5.032 11.24 11.24 11.24c6.48 0 10.78-4.55 10.78-10.96 0-.74-.067-1.424-.2-2.235H12.24z"/>
+        </svg>
+        Sign in with Google
+      </button>
+
+      <div class="auth-divider mb12 text-center tc-3 fs11" style="display:flex; align-items:center; gap:8px; margin: 16px 0">
+        <span style="flex:1; height:1px; background:var(--border)"></span>
+        <span style="color:var(--t3); font-weight:500">or use Gmail credentials</span>
+        <span style="flex:1; height:1px; background:var(--border)"></span>
+      </div>
+
+      <!-- Gmail Login Form -->
+      <form id="gmail-login-form" onsubmit="signInWithGmail(event)" style="display:flex; flex-direction:column; gap:12px">
+        <div class="form-group">
+          <input type="email" id="auth-email" class="input" placeholder="username@gmail.com" required style="width:100%; background:var(--card2); border:1px solid var(--border); border-radius:var(--r2); padding:10px 14px; color:var(--t1); outline:none">
+        </div>
+        <div class="form-group" style="margin-bottom:6px">
+          <input type="password" id="auth-password" class="input" placeholder="Password" required style="width:100%; background:var(--card2); border:1px solid var(--border); border-radius:var(--r2); padding:10px 14px; color:var(--t1); outline:none">
+        </div>
+        <button type="submit" class="btn btn-primary w100 flex-center gap8" style="justify-content:center; height:42px; font-weight:600; cursor:pointer; width:100%; display:inline-flex; align-items:center">
+          Continue with Gmail <span class="material-symbols-rounded" style="font-size:16px; margin-left:4px">arrow_forward</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading view (Interactive Google Dialog Simulator) -->
+    <div id="auth-loading-view" class="hidden text-center p20" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px 0">
+      <div class="google-spinner" style="margin:20px auto; width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--purple); border-radius:50%; animation:spin 0.8s linear infinite"></div>
+      <h3 class="fw8 tc-1 fs14" id="auth-loading-status">Connecting to secure servers...</h3>
+      <p class="tc-3 fs11 mt6">Verifying secure OAuth2 keys & certificates...</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- CATEGORY GRID SIDEBAR MODAL (Hidden by Default) -->
+<div id="category-modal" class="category-modal-overlay hidden">
+  <div class="category-modal card p24">
+    <div class="flex-between mb16">
+      <h3 class="fw8 tc-1" style="display:inline-flex; align-items:center; gap:6px">
+        <span class="material-symbols-rounded emoji-3d" style="color:var(--blue); font-size:24px">public</span>
+        <span>Expandable Category Universe</span>
+      </h3>
+      <button class="icon-btn" onclick="toggleCategorySidebar()" style="display:inline-flex; align-items:center; justify-content:center">
+        <span class="material-symbols-rounded" style="font-size:18px">close</span>
+      </button>
+    </div>
+    <div class="category-grid-links" id="full-category-grid">
+      <!-- Full list of 50+ categories dynamically added by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo emoji-3d" style="background:var(--g-brand); display:grid; place-items:center; animation:ix-float-idle 3s ease-in-out infinite; width:36px; height:36px; border-radius:50%">
+        <span class="material-symbols-rounded" style="color:#fff; font-size:20px; font-variation-settings:'FILL' 1">diamond</span>
+      </div>
+      <span class="brand-name">Trending</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-pane="feeds" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">home</span>
+        <span class="nav-label">Home</span>
+      </a>
+      <a class="nav-item" data-pane="explore" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">search</span>
+        <span class="nav-label">Explore</span>
+      </a>
+      <a class="nav-item" data-pane="reels" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--orange)">electric_bolt</span>
+        <span class="nav-label">Shorty</span>
+      </a>
+      <a class="nav-item" data-pane="fashionverse" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
+        <span class="nav-label">FashionVerse</span>
+      </a>
+      <a class="nav-item" data-pane="fitness" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">fitness_center</span>
+        <span class="nav-label">Fitness</span>
+      </a>
+      <a class="nav-item" data-pane="learn" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#4CAF50">grass</span>
+        <span class="nav-label">Global Agri Hub</span>
+      </a>
+      <a class="nav-item" data-pane="fashionhub" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
+        <span class="nav-label">Global Fashion Hub</span>
+      </a>
+      <a class="nav-item" data-pane="creator" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">auto_awesome</span>
+        <span class="nav-label">Creator Studio</span>
+      </a>
+      <a class="nav-item" data-pane="messages" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">chat</span>
+        <span class="nav-label">Messages</span>
+        <span class="nav-badge" id="msg-badge">3</span>
+      </a>
+      <a class="nav-item" data-pane="community" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">groups</span>
+        <span class="nav-label">Community</span>
+      </a>
+      <a class="nav-item" data-pane="profile" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">person</span>
+        <span class="nav-label">Profile</span>
+      </a>
+      <a class="nav-item" data-pane="settings" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">settings</span>
+        <span class="nav-label">Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="network-status" style="padding: 12px; background: var(--card2); border-radius: var(--r2); margin: 0 16px 16px 16px; font-size: 11px; border: 1px solid var(--border); transition: var(--tr)">
+      <div style="display: flex; flex-direction: column; gap: 4px; color: var(--t2);">
+        <span id="server-node-lbl" style="font-weight:600">Global Server Node</span>
+        <span id="latency-val" style="color: var(--green); font-weight: bold; display: flex; align-items: center; gap: 6px;">
+          <span class="material-symbols-rounded" style="font-size:12px">lock</span> 
+          Encrypted (24ms)
+        </span>
+      </div>
+    </div>
+
+    <div class="sidebar-user" onclick="handleUserAuthClick()" style="cursor:pointer; transition:background 0.2s; border-radius:var(--r2)" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+      <div class="sidebar-av emoji-3d" id="sidebar-av" style="display:grid; place-items:center; background:var(--g-brand); color:#fff; font-size:12px; font-weight:700">AV</div>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-name" id="sidebar-name">Alex Vance</span>
+        <span class="sidebar-user-handle" id="sidebar-handle">@alex_vance</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN APP -->
+  <div class="app-main">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <button class="hamburger icon-btn" id="hamburger" title="Open Menu" style="display:inline-flex; align-items:center; justify-content:center; margin-right:12px">
+        <span class="material-symbols-rounded" style="font-size:24px">menu</span>
+      </button>
+
+      <div class="header-search" style="position:relative; display:flex; align-items:center">
+        <span class="search-logo material-symbols-rounded" style="position:absolute; left:16px; font-size:20px; opacity:0.6; color:var(--t2)">search</span>
+        <input type="text" id="global-search" placeholder="Search Trending (videos, papers, articles, fact-checks)..." style="padding-left:42px; padding-right:42px">
+        <span class="sparkle-ai-icon material-symbols-rounded emoji-3d" onclick="toggleAI()" title="Ask ALINA" style="position:absolute; right:16px; cursor:pointer; font-size:20px; user-select:none; animation:ix-float-idle 2.5s ease-in-out infinite; color:#7C4DFF">auto_awesome</span>
+      </div>
+
+
+
+      <div class="header-actions">
+        <div class="global-localizer" style="display: flex; align-items: center; gap: 6px; margin-right: 8px;">
+          <span class="material-symbols-rounded" style="color: var(--t2); font-size: 20px;">language</span>
+          <select id="lang-selector" style="background: var(--card2); color: var(--t1); border: 1px solid var(--border); border-radius: var(--r2); padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer; transition: var(--tr)">
+            <option value="en">English (US)</option>
+            <option value="hi">हिन्दी (IN)</option>
+            <option value="es">Español (ES)</option>
+            <option value="ja">日本語 (JP)</option>
+          </select>
+        </div>
+        <button class="icon-btn" id="theme-btn" title="Toggle theme" style="display:inline-flex; align-items:center; justify-content:center">
+          <span id="theme-icon" class="material-symbols-rounded emoji-3d" style="font-size:20px; color:var(--orange)">dark_mode</span>
+        </button>
+        <div class="notif-btn">
+          <button class="icon-btn" style="display:inline-flex; align-items:center; justify-content:center">
+            <span class="material-symbols-rounded emoji-3d" style="font-size:20px; color:var(--purple)">notifications</span>
+          </button>
+          <div class="notif-dot"></div>
+        </div>
+        <div class="header-av emoji-3d" id="header-av">AV</div>
+      </div>
+    </header>
+
+    <!-- Viewport Fallback for automated layout routing tests -->
+    <main id="app-viewport" class="hidden"></main>
+    <main id="content-display-viewport" class="hidden"></main>
+    <main id="global-viewport" class="hidden"></main>
+
+    <!-- PANE CONTAINER -->
+    <main class="pane-container" id="main-content">
+
+      <!-- ===================== PANE: FEEDS ===================== -->
+      
+
+      <!-- ===================== PANE: EXPLORE ===================== -->
+      
+
+      <!-- ===================== PANE: REELS ===================== -->
+      
+
+      <!-- ===================== PANE: FASHIONVERSE ===================== -->
+      
+
+      <!-- ===================== PANE: FITNESS ===================== -->
+      
+
+      <!-- ===================== PANE: NOMAD SPACE ===================== -->
+      <!-- ===================== PANE: LEARN ===================== -->
+      <!-- ===================== PANE: AGRIHUB ===================== -->
+      
+
+      <!-- ===================== PANE: CREATOR ===================== -->
+      
+
+      <!-- ===================== PANE: MESSAGES ===================== -->
+      
+
+      <!-- ===================== PANE: COMMUNITY ===================== -->
+      
+
+      <!-- ===================== PANE: PROFILE ===================== -->
+      
+
+      <!-- ===================== PANE: ADAPTIVE CATEGORY PORTAL ===================== -->
+      
+
+    
+<!-- ===================== PANE: DESIGN STUDIO ===================== -->
+
+</main><!-- /pane-container -->
+  </div><!-- /app-main -->
+
+</div><!-- /app-wrapper -->
+
+
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-items">
+    <button class="m-nav-btn" data-pane="feeds">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">home</span>
+      <span>Home</span>
+    </button>
+    <button class="m-nav-btn" data-pane="explore">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">search</span>
+      <span>Explore</span>
+    </button>
+    <button class="m-nav-btn" data-pane="learn">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#4CAF50; margin-bottom:2px">grass</span>
+      <span>Global Agri Hub</span>
+    </button>
+    <button class="m-nav-btn" data-pane="creator">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">auto_awesome</span>
+      <span>Create</span>
+    </button>
+    <button class="m-nav-btn" data-pane="fashionhub">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
+      <span>Fashion</span>
+    </button>
+    <button class="m-nav-btn" data-pane="messages">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">chat</span>
+      <span>Messages</span>
+    </button>
+    <button class="m-nav-btn" data-pane="community">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">groups</span>
+      <span>Community</span>
+    </button>
+    <button class="m-nav-btn" data-pane="profile">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">person</span>
+      <span>Profile</span>
+    </button>
+    <button class="m-nav-btn" data-pane="settings">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">settings</span>
+      <span>Settings</span>
+    </button>
+  </div>
+</nav>
+
+<!-- COURSE DETAIL MODAL -->
+<div id="course-detail-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+  <div class="card" style="width:100%; max-width:850px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3)">
+    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+      <div class="flex-center gap8">
+        <span class="material-symbols-rounded emoji-3d" id="cd-title-icon" style="font-size:28px">school</span>
+        <h2 class="fw9 tc-1 fs18" id="cd-title">Course Details</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeCourseDetails()" style="font-size:20px; padding:4px 8px">✕</button>
+    </div>
+    <div class="p20" style="display:flex; flex-direction:column; gap:20px">
+      <div class="grid-2 gap20">
+        <!-- Left: Video + preprints -->
+        <div>
+          <div style="position:relative; padding-bottom:56.25%; background:#0e0f18; border-radius:var(--r2); border:1px solid var(--border); overflow:hidden">
+            <canvas id="course-video-canvas" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></canvas>
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4)">
+              <button class="btn btn-primary" id="course-video-play" onclick="toggleCourseVideo()" style="border-radius:50%; width:64px; height:64px; display:grid; place-items:center; padding:0"><span class="material-symbols-rounded" style="font-size:32px">play_arrow</span></button>
+            </div>
+          </div>
+          <div class="mt16">
+            <h4 class="fw8 tc-1 fs13 mb8">📥 Downloadable Resources &amp; Preprints</h4>
+            <div class="flex flex-col gap4">
+              <div class="flex-between py6 px10" style="background:var(--card2); border-radius:var(--r1); border:1px solid var(--border)">
+                <span class="fs11 tc-2">📄 Complete Core Syllabus Study Pack.pdf</span>
+                <button class="btn btn-ghost btn-sm" onclick="showToast('Syllabus PDF Downloaded!')">Download</button>
+              </div>
+              <div class="flex-between py6 px10" style="background:var(--card2); border-radius:var(--r1); border:1px solid var(--border)">
+                <span class="fs11 tc-2">🔬 Harvard Academic Research Blueprint.pdf</span>
+                <button class="btn btn-ghost btn-sm" onclick="showToast('Research Preprint Downloaded!')">Download</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right: Tutor AI + Quizzes -->
+        <div>
+          <div class="tabs mb12" id="cd-tabs">
+            <button class="tab-btn active" id="cdt-tutor" onclick="switchCourseDetailTab('tutor')">Study Buddy</button>
+            <button class="tab-btn" id="cdt-quiz" onclick="switchCourseDetailTab('quiz')">Interactive Quiz</button>
+          </div>
+          
+          <!-- Tutor AI Tab -->
+          <div id="cd-tutor-tab">
+            <div class="card p12 mb12" style="background:var(--card2); border:1px dashed var(--border)">
+              <div class="flex gap8" style="align-items:center">
+                <div class="avatar av-xs" style="background:var(--g-brand); color:#fff; display:grid; place-items:center">🎓</div>
+                <div>
+                  <div class="fw8 fs12 tc-1">Study Buddy</div>
+                  <div class="fs10 tc-green">● Ready to narrate concepts</div>
+                </div>
+              </div>
+              <p class="tc-2 fs11 mt8" id="cd-mentor-welcome">Ask me to summarize any lecture or design a custom schedule using my synthesized voice.</p>
+              <div class="flex gap8 mt12">
+                <button class="btn btn-primary btn-sm flex-center gap4" onclick="mentorSpeakConcept()"><span class="material-symbols-rounded" style="font-size:14px">volume_up</span> Voice Explain Concept</button>
+                <button class="btn btn-ghost btn-sm flex-center gap4" onclick="mentorGenerateSchedule()"><span class="material-symbols-rounded" style="font-size:14px">auto_awesome</span> Create Study Plan</button>
+              </div>
+            </div>
+            <div id="cd-tutor-output" class="hidden card p12 fs11 tc-2" style="background:var(--card2); max-height:150px; overflow-y:auto; line-height:1.5"></div>
+          </div>
+          
+          <!-- Quiz Tab -->
+          <div id="cd-quiz-tab" class="hidden">
+            <div class="card p12" style="background:var(--card2); border:1px solid var(--border)">
+              <div id="cd-quiz-content"></div>
+              <button class="btn btn-primary btn-sm mt12" style="width:100%" onclick="submitCDQuiz()">Submit Answer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GIG WORKSPACE MODAL -->
+<div id="gig-workspace-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+  <div class="card" style="width:100%; max-width:950px; max-height:92vh; overflow-y:auto; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3)">
+    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+      <div class="flex-center gap8">
+        <span class="material-symbols-rounded emoji-3d" style="font-size:28px; color:var(--blue)">work</span>
+        <h2 class="fw9 tc-1 fs18" id="gw-title">Ecosystem Contract Workspace</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeGigWorkspace()" style="font-size:20px; padding:4px 8px">✕</button>
+    </div>
+    <div class="p20 grid-2 gap20">
+      <!-- Left Column: Collaborative Whiteboard -->
+      <div>
+        <div class="flex-between mb8">
+          <h4 class="fw8 tc-1 fs13 flex-center gap4"><span class="material-symbols-rounded" style="color:var(--pink)">draw</span> Shared Canvas Whiteboard</h4>
+          <button class="btn btn-ghost btn-sm" onclick="clearWhiteboard()">Clear</button>
+        </div>
+        <canvas id="gw-whiteboard" style="width:100%; height:260px; background:#fff; border-radius:var(--r2); border:2px solid var(--border); cursor:crosshair"></canvas>
+        <p class="tc-3 fs10 mt4">Hold click &amp; drag to draw with client in real-time.</p>
+        
+        <!-- Milestones Escrow System -->
+        <div class="card mt16 p12" style="background:var(--card2)">
+          <h4 class="fw8 tc-1 fs12 flex-center gap4 mb8"><span class="material-symbols-rounded" style="color:var(--green)">lock</span> Escrow Milestones</h4>
+          <div class="flex-between py6" style="border-bottom:1px solid var(--border)">
+            <div>
+              <div class="fs11 fw7 tc-1">Milestone 1: Prototype Layout</div>
+              <div class="fs10 tc-3" id="gw-escrow-status">Status: Locked in Escrow 🔒</div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="gw-release-btn" onclick="releaseEscrowFunds()">Release Funds</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Live Chat & Meetings -->
+      <div style="display:flex; flex-direction:column; gap:16px">
+        <div class="card p12" style="background:var(--card2)">
+          <h4 class="fw8 tc-1 fs12 mb6 flex-center gap4"><span class="material-symbols-rounded" style="color:var(--blue)">videocam</span> Client Video Meeting</h4>
+          <div style="position:relative; height:120px; background:#05050a; border-radius:var(--r1); overflow:hidden" id="gw-video-frame">
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--t3)" id="gw-video-label">Meeting Offline</div>
+          </div>
+          <div class="flex gap8 mt8">
+            <button class="btn btn-primary btn-sm flex-center gap4" onclick="toggleWorkspaceVideoCall()"><span class="material-symbols-rounded" style="font-size:14px">videocam</span> Start Meeting</button>
+            <button class="btn btn-ghost btn-sm" onclick="showToast('Screen sharing started!')">🖥️ Share Screen</button>
+          </div>
+        </div>
+        
+        <div class="card p12" style="background:var(--card2); flex:1; display:flex; flex-direction:column; max-height:220px">
+          <h4 class="fw8 tc-1 fs12 mb6 flex-center gap4"><span class="material-symbols-rounded" style="color:var(--orange)">forum</span> Project Feed &amp; Chat</h4>
+          <div id="gw-chat-log" style="flex:1; overflow-y:auto; font-size:11px; display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
+          <div class="flex gap4">
+            <input type="text" id="gw-chat-input" class="input btn-sm" placeholder="Send workspace alert..." style="flex:1">
+            <button class="btn btn-primary btn-sm" onclick="sendWorkspaceChat()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLOUD PLAY MODAL -->
+<div id="cloud-play-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+  <div class="card" style="width:100%; max-width:800px; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3); overflow:hidden">
+    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+      <div class="flex-center gap8">
+        <span class="material-symbols-rounded emoji-3d" style="font-size:28px; color:var(--orange)">sports_esports</span>
+        <h2 class="fw9 tc-1 fs18" id="cp-title">GameVerse Cloud Stream Console</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeCloudStream()" style="font-size:20px; padding:4px 8px">✕</button>
+    </div>
+    <div style="background:#000; height:380px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center" id="cp-screen">
+      <div id="cp-precache" style="text-align:center; color:#fff">
+        <span class="material-symbols-rounded" style="font-size:48px; color:var(--blue); animation:spin 2s linear infinite">sync</span>
+        <div class="fw8 fs15 mt12" id="cp-precache-status">Connecting to Edge Cloud Node...</div>
+        <div class="fs11 tc-3 mt4">Pre-caching APK assets &amp; checking Anti-Cheat keys...</div>
+      </div>
+      <canvas id="cp-canvas" class="hidden" style="position:absolute; inset:0; width:100%; height:100%"></canvas>
+      <div id="cp-virtual-controller" class="hidden" style="position:absolute; bottom:16px; left:16px; right:16px; display:flex; justify-content:space-between">
+        <div class="flex gap8">
+          <button class="btn btn-ghost btn-sm">🕹️ D-Pad</button>
+        </div>
+        <div class="flex gap8">
+          <button class="btn btn-ghost btn-sm">Action A</button>
+          <button class="btn btn-ghost btn-sm">Action B</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAY STORE GAME DETAIL MODAL -->
+<div id="play-store-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+  <div class="card" style="width:100%; max-width:850px; max-height:92vh; overflow-y:auto; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3); background:var(--card)">
+    <!-- Header -->
+    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+      <div class="flex-center gap8">
+        <span class="material-symbols-rounded emoji-3d" style="font-size:28px; color:var(--orange)">storefront</span>
+        <h2 class="fw9 tc-1 fs18" id="ps-header-title">GameVerse Store</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closePlayStoreGame()" style="font-size:20px; padding:4px 8px">✕</button>
+    </div>
+    
+    <!-- Body Content -->
+    <div class="p20" style="display:flex; flex-direction:column; gap:20px">
+      <div class="grid-2 gap20">
+        <!-- Left: Game Icon, Trailer, Download controls -->
+        <div style="display:flex; flex-direction:column; gap:16px">
+          <!-- Game Branding Info -->
+          <div class="flex gap16" style="align-items:center">
+            <div id="ps-game-icon-container" style="width:80px; height:80px; border-radius:18px; background:var(--card2); display:grid; place-items:center; border:1px solid var(--border)">
+              <span class="material-symbols-rounded emoji-3d" id="ps-game-icon" style="font-size:42px">sports_esports</span>
+            </div>
+            <div>
+              <h3 class="fw9 tc-1 fs18" id="ps-game-title" style="margin:0">Neon Runner Elite</h3>
+              <div class="fs12 tc-blue mt2" id="ps-game-developer">Ecosystem DevStudio · Verified ✓</div>
+              <div class="flex gap4 mt4" style="align-items:center">
+                <span class="badge badge-green fs10" id="ps-game-rating">4.8 ★</span>
+                <span class="fs11 tc-3" id="ps-game-downloads">500K+ Downloads</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Animated Video Preview -->
+          <div style="position:relative; padding-bottom:56.25%; background:#000; border-radius:var(--r2); overflow:hidden; border:1px solid var(--border)">
+            <canvas id="ps-video-canvas" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></canvas>
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3)">
+              <button class="btn btn-primary" id="ps-video-play-btn" onclick="togglePlayStoreVideo()" style="border-radius:50%; width:56px; height:56px; display:grid; place-items:center; padding:0">
+                <span class="material-symbols-rounded" style="font-size:28px">play_arrow</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Download progress bars -->
+          <div class="card p12" style="background:var(--card2)">
+            <div class="flex-between">
+              <span class="fs12 fw7 tc-1" id="ps-download-status">Available on GameVerse Cloud</span>
+              <span class="fs11 tc-3" id="ps-download-percent">Ready</span>
+            </div>
+            <div class="progress-bar mt8 mb12" id="ps-progress-bar-container" style="display:none">
+              <div class="progress-fill" id="ps-progress-bar-fill" style="width:0%; background:var(--green)"></div>
+            </div>
+            
+            <div class="flex gap8 mt8">
+              <button class="btn btn-primary flex-center gap4" id="ps-install-btn" onclick="startPlayStoreDownload()" style="flex:1">
+                <span class="material-symbols-rounded" style="font-size:16px">download</span> Download &amp; Install APK
+              </button>
+              <button class="btn btn-ghost flex-center gap4" id="ps-stream-btn" onclick="closePlayStoreGame(); startCloudStream(activePlayStoreGame.id);">
+                <span class="material-symbols-rounded" style="font-size:16px">cloud</span> Cloud Stream
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right: Specs, Screenshots, Reviews -->
+        <div style="display:flex; flex-direction:column; gap:16px">
+          <!-- Screenshots Carousel -->
+          <div>
+            <h4 class="fw8 tc-1 fs12 mb8">📸 Screenshots &amp; Gameplay Previews</h4>
+            <div class="flex gap8 overflow-x-auto py4" style="scroll-snap-type:x mandatory">
+              <div class="card" style="width:140px; height:80px; flex-shrink:0; background:linear-gradient(135deg, #ec4899, #8b5cf6); border-radius:var(--r1); display:grid; place-items:center"><span class="material-symbols-rounded" style="color:#fff">videocam</span></div>
+              <div class="card" style="width:140px; height:80px; flex-shrink:0; background:linear-gradient(135deg, #3b82f6, #10b981); border-radius:var(--r1); display:grid; place-items:center"><span class="material-symbols-rounded" style="color:#fff">photo</span></div>
+              <div class="card" style="width:140px; height:80px; flex-shrink:0; background:linear-gradient(135deg, #f59e0b, #ef4444); border-radius:var(--r1); display:grid; place-items:center"><span class="material-symbols-rounded" style="color:#fff">photo</span></div>
+            </div>
+          </div>
+          
+          <!-- Specs Requirements -->
+          <div class="card p12" style="background:var(--card2)">
+            <h4 class="fw8 tc-1 fs12 mb8">⚙️ System Requirements &amp; Safety</h4>
+            <div class="grid-2 gap8 fs11">
+              <div><span class="tc-3">Min OS:</span> <span class="tc-1">Android 10+ / WebGL</span></div>
+              <div><span class="tc-3">Storage:</span> <span class="tc-1">120 MB</span></div>
+              <div><span class="tc-3">Safe Rating:</span> <span class="tc-1">PEGI 3 · Family Safe</span></div>
+              <div><span class="tc-3">Anti-Cheat:</span> <span class="tc-1">Ecosystem Secure</span></div>
+            </div>
+          </div>
+          
+          <!-- Comments / Reviews Ledger -->
+          <div class="card p12" style="background:var(--card2)">
+            <h4 class="fw8 tc-1 fs12 mb8">💬 Player Reviews</h4>
+            <div class="flex flex-col gap6 fs11">
+              <div style="border-bottom:1px solid var(--border); padding-bottom:6px">
+                <div class="flex-between"><strong>Dev Kumar</strong> <span class="tc-orange">★★★★★</span></div>
+                <p class="tc-2 mt2">Super smooth gameplay! Runs flawlessly on Chrome WebGL.</p>
+              </div>
+              <div>
+                <div class="flex-between"><strong>Sarah Chen</strong> <span class="tc-orange">★★★★☆</span></div>
+                <p class="tc-2 mt2">Amazing graphics for a browser game. Love the audio vibes!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- EDU REELS MODAL -->
+<div id="edu-reels-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+  <div class="card" style="width:100%; max-width:420px; height:80vh; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3); position:relative; overflow:hidden">
+    <div class="flex-between p12" style="position:absolute; top:0; left:0; right:0; z-index:999999; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)">
+      <span class="fw8" style="color:#fff; font-size:13px">✨ Democracy Enclave Explainer Reels</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeEduReels()" style="font-size:18px; padding:2px 6px; color:#fff">✕</button>
+    </div>
+    <div id="edu-reels-container" style="height:100%; overflow-y:scroll; scroll-snap-type:y mandatory"></div>
+  </div>
+</div>
+
+
+
+<!-- AR TRY-ON MODAL -->
+<div id="ar-tryon-modal" style="display:none; position:fixed; inset:0; z-index:999999; background:var(--bg); flex-direction:column;">
+  <div class="flex-between p16" style="border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); position:absolute; top:0; left:0; right:0; z-index:2;">
+    <div style="display:flex; align-items:center; gap:8px">
+      <span class="material-symbols-rounded emoji-3d" style="color:var(--pink)">view_in_ar</span>
+      <span class="fw8 tc-1" style="font-size:16px">AR Try-On</span>
+    </div>
+    <button class="btn btn-ghost btn-sm flex-center" onclick="closeARTryOn()" style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); color:#fff">
+      <span class="material-symbols-rounded" style="font-size:18px">close</span>
+    </button>
+  </div>
+  
+  <div id="ar-camera-view" style="flex:1; position:relative; background:#0a0a0f; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden;">
+    <!-- Simulated Camera Feed / Model -->
+    <div id="ar-scan-line" style="position:absolute; top:0; left:0; right:0; height:2px; background:var(--pink); box-shadow:0 0 12px var(--pink); animation:ar-scan 2s linear infinite; z-index:1; display:none;"></div>
+    
+    <div id="ar-model-container" style="position:relative; z-index:1; text-align:center;">
+      <span class="material-symbols-rounded" style="font-size:80px; color:rgba(255,255,255,0.2); animation:pulse-slow 2s infinite" id="ar-placeholder-icon">person</span>
+      <div id="ar-status-text" style="color:var(--t2); margin-top:16px; font-weight:600; font-size:14px;">Initializing AR Engine...</div>
+    </div>
+    
+    <!-- Item Info Overlay -->
+    <div id="ar-item-overlay" style="position:absolute; bottom:32px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); padding:16px; border-radius:var(--r3); border:1px solid rgba(255,255,255,0.1); text-align:center; min-width:280px; z-index:2; display:none; opacity:0; transition:opacity 0.3s ease;">
+      <h3 id="ar-item-name" class="fw8 tc-1 mb4" style="font-size:16px">Product Name</h3>
+      <div id="ar-item-brand" class="tc-2 mb12" style="font-size:12px">Brand</div>
+      <button id="ar-claim-btn" class="btn btn-primary flex-center gap4" style="width:100%; justify-content:center; display:none;" onclick="claimARTryOnPoints()">
+        <span class="material-symbols-rounded">stars</span> Claim +50 XP
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <script src="js/state.js?v=2"></script>
+  <script src="js/data/mockDb.js?v=2"></script>
+  <script src="js/utils/dom.js?v=2"></script>
+  <script src="js/utils/engine.js?v=2"></script>
+  <script src="js/components/ui.js?v=2"></script>
+  <script src="js/components/theme.js?v=2"></script>
+  <script src="js/router.js?v=2"></script>
+  <script src="js/pages/feeds.js?v=2"></script>
+  <script src="js/pages/explore.js?v=2"></script>
+  <script src="js/pages/reels.js?v=2"></script>
+  <script src="js/pages/fashionverse.js?v=2"></script>
+  <script src="js/pages/fitness.js?v=2"></script>
+  <script src="js/pages/learn.js?v=2"></script>
+  <script src="js/pages/globalfashionhub.js?v=2"></script>
+  <script src="js/pages/creator.js?v=2"></script>
+  <script src="js/pages/community.js?v=2"></script>
+  <script src="js/pages/profile.js?v=2"></script>
+  <script src="js/pages/settings.js?v=2"></script>
+  <script src="js/pages/messages.js?v=2"></script>
+
+  <script src="js/main.js?v=2"></script>
+<script src="interactions.js?v=2"></script>
+<script>
+  // Simple check to bind interactions when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof IX !== 'undefined') {
+      IX._injectCSS();
+      IX.bindNavItems();
+      IX.bindIconButtons();
+      IX.bindCards();
+      IX.bindFeedReactions();
+      IX.bindAllEmojis();
+      IX._observeEmojis();
+    }
+  });
+</script>
+
+</body>
+</html>
+
+
+
+
+
