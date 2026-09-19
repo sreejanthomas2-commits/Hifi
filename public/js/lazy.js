@@ -47,7 +47,6 @@
 /* pane name (as navigateTo receives it) → the module that draws it. */
 const PAGES = {
   reels:        './pages/reels.js?v=20260916em8',
-  fashionverse: './pages/fashionverse.js?v=5m8',
   cryptomarket: './pages/cryptomarket.js?v=8m8',
   dao:          './pages/web3communities.js?v=3m8',
   settings:     './pages/settings.js?v=20260917cm8'

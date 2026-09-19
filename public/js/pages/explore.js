@@ -2230,127 +2230,6 @@ function submitCivicReport() {
   renderCivicSubContent();
 }
 
-// ── FASHIONVERSE 🛍️ ──────────────────────────────────────────────
-function renderFashionVerse(brand = 'All') {
-  const el = $id('fv-product-grid'); if (!el) return;
-  const items = brand === 'All' ? DATA.fvProducts : DATA.fvProducts.filter(p => p.brand === brand);
-  el.innerHTML = items.map(p => {
-    const arButton = p.arEnabled ? `<button class="btn btn-sm flex-center gap4" style="background:rgba(255,42,133,0.2); color:var(--pink); border:1px solid var(--pink); border-radius:12px; font-weight:700;" onclick="openARTryOn('${p.id}')"><span class="material-symbols-rounded" style="font-size:14px">view_in_ar</span> AR Try-On</button>` : '';
-    
-    return `
-      <div class="product-card">
-        <div class="product-img" style="background:${p.bg}">
-          <span class="emoji-3d" style="font-size:80px">${p.emoji}</span>
-          ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ''}
-          <button class="product-wishlist"><span class="material-symbols-rounded" style="font-size:18px">favorite_border</span></button>
-        </div>
-        <div class="product-info">
-          <div class="product-seller tc-2">${p.brand}</div>
-          <div class="product-name tc-1">${p.name}</div>
-          <div class="product-rating tc-3">${p.rating}</div>
-          <div class="flex-between" style="margin-top:12px; align-items:flex-end">
-            <div class="product-price">${p.price > 0 ? '$' + p.price.toFixed(2) : 'Free Drop'}</div>
-            ${arButton}
-          </div>
-          <button class="btn btn-primary mt12 flex-center gap4" style="width:100%; border-radius:12px;" onclick="addToCart('${p.name}', ${p.price})">
-            <span class="material-symbols-rounded" style="font-size:16px">shopping_cart</span> Add to Cart
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const brandsContainer = $id('fv-brands-container');
-  if (brandsContainer) {
-    brandsContainer.innerHTML = DATA.fvBrands.map(b => `
-      <span class="brand-chip${b === brand ? ' active' : ''}" onclick="renderFashionVerse('${b}')">${b}</span>
-    `).join('');
-  }
-}
-
-// AR Try-On Logic
-let currentARItem = null;
-function openARTryOn(itemId) {
-  const item = DATA.fvProducts.find(p => p.id === itemId);
-  if (!item) return;
-  currentARItem = item;
-  
-  const modal = $id('ar-tryon-modal');
-  const scanLine = $id('ar-scan-line');
-  const statusText = $id('ar-status-text');
-  const icon = $id('ar-placeholder-icon');
-  const overlay = $id('ar-item-overlay');
-  
-  if (modal) modal.style.display = 'flex';
-  
-  // Reset states
-  if (scanLine) scanLine.style.display = 'none';
-  if (overlay) overlay.style.display = 'none';
-  if (overlay) overlay.style.opacity = '0';
-  if (icon) icon.textContent = 'person';
-  if (statusText) statusText.textContent = 'Initializing Camera...';
-  
-  // Simulation sequence
-  setTimeout(() => {
-    if (statusText) statusText.textContent = 'Scanning Environment...';
-    if (scanLine) scanLine.style.display = 'block';
-  }, 1000);
-  
-  setTimeout(() => {
-    if (statusText) statusText.textContent = 'Tracking Body...';
-  }, 2500);
-  
-  setTimeout(() => {
-    if (statusText) statusText.textContent = 'Applying Model...';
-    if (icon) icon.textContent = item.emoji; // Show the item instead of person
-  }, 4000);
-  
-  setTimeout(() => {
-    if (statusText) statusText.textContent = 'AR Active. Strike a pose!';
-    if (scanLine) scanLine.style.display = 'none';
-    if (overlay) {
-      overlay.style.display = 'block';
-      setTimeout(() => overlay.style.opacity = '1', 50);
-      $id('ar-item-name').textContent = item.name;
-      $id('ar-item-brand').textContent = item.brand;
-      
-      const claimBtn = $id('ar-claim-btn');
-      if (claimBtn) {
-        claimBtn.style.display = 'flex';
-        // Only allow claiming points once per session per item
-        if (item.claimed) {
-          claimBtn.disabled = true;
-          claimBtn.innerHTML = '<span class="material-symbols-rounded">check_circle</span> Points Claimed';
-        } else {
-          claimBtn.disabled = false;
-          claimBtn.innerHTML = '<span class="material-symbols-rounded">stars</span> Claim +50 XP';
-        }
-      }
-    }
-  }, 5000);
-}
-
-function closeARTryOn() {
-  const modal = $id('ar-tryon-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-function claimARTryOnPoints() {
-  if (!currentARItem || currentARItem.claimed) return;
-  
-  S.user.xp += 50;
-  currentARItem.claimed = true;
-  updateUserUI();
-  
-  const claimBtn = $id('ar-claim-btn');
-  if (claimBtn) {
-    claimBtn.disabled = true;
-    claimBtn.innerHTML = '<span class="material-symbols-rounded">check_circle</span> Points Claimed';
-  }
-  
-  showToast(`FashionVerse: Earned +50 XP for trying on ${currentARItem.brand}! 🌟`);
-}
-
 // ── DUAL FEED & FEED MODE CONTROLLERS ────────────────────────────
 function toggleDualFeed(mode) {
   S.dualFeed = mode;
@@ -2897,10 +2776,6 @@ publish('pages/explore.js', {
   stopWildlifeCanvasSim: () => stopWildlifeCanvasSim,
   renderCivicSubContent: () => renderCivicSubContent,
   submitCivicReport: () => submitCivicReport,
-  renderFashionVerse: () => renderFashionVerse,
-  currentARItem: () => currentARItem, openARTryOn: () => openARTryOn,
-  closeARTryOn: () => closeARTryOn,
-  claimARTryOnPoints: () => claimARTryOnPoints,
   toggleDualFeed: () => toggleDualFeed,
   startFocusSession: () => startFocusSession,
   setupUniversalSearch: () => setupUniversalSearch,

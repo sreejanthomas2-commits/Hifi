@@ -37,7 +37,7 @@
    others had to stay — deferring the wrong one is silent, not loud. */
 
 import './state.js?v=5m8';
-import './data/mockDb.js?v=8m8';
+import './data/mockDb.js?v=9m9';
 import './data/languages.js?v=1m8';
 import './data/i18n.js?v=1m8';
 import './utils/api.js?v=20260919am8';
@@ -45,14 +45,15 @@ import './utils/firebase-auth.js?v=6m8';
 import './utils/dom.js?v=5m8';
 import './utils/engine.js?v=20260919am8';
 import './features/money.js?v=1m8';
-import './components/ui.js?v=4m8';
+import './components/ui.js?v=5m9';
 import './components/theme.js?v=20260917m8';
-import './router.js?v=1789835163';
+import './router.js?v=1789910000';
 import './components/mobile.js?v=4m8';
 import './pages/feeds.js?v=20260918bm8';
 import './features/token-markets.js?v=20260916cm8';
 import './pages/cryptoverse.js?v=20260916bm8';
-import './pages/explore.js?v=18m8';
+import './pages/explore.js?v=19m9';
+import './pages/shop.js?v=1m9';
 import './features/create.js?v=4m8';
 import './features/deposit.js?v=3m8';
 import './features/withdraw.js?v=3m8';

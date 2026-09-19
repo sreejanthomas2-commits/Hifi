@@ -4,17 +4,17 @@
    ║  Finds the bugs the compiler cannot, because this app calls most  ║
    ║  of its own code through strings:                                 ║
    ║                                                                   ║
-   ║    onclick="renderFashionVerse()"   an inline handler             ║
+   ║    onclick="renderExplore()"        an inline handler             ║
    ║    _safe('renderProfile')           the router's indirection      ║
    ║                                                                   ║
    ║  Neither is a reference anything checks. Rename the target, or    ║
    ║  defer the module holding it, and the call goes quiet — the page  ║
    ║  simply does nothing, or draws the wrong thing, with no error.    ║
    ║                                                                   ║
-   ║  That is exactly how this bit us: fashionverse.js's               ║
-   ║  renderFashionVerse was renamed to renderFashionVerseShop while   ║
-   ║  router.js still asked for the old name, so the pane quietly      ║
-   ║  fell through to explore.js's grid instead.                       ║
+   ║  That is exactly how this bit us once: a page module's render     ║
+   ║  function was renamed while router.js still asked for the old     ║
+   ║  name, so the pane quietly drew a different file's grid           ║
+   ║  instead, with nothing reported anywhere.                         ║
    ║                                                                   ║
    ║  Three checks:                                                    ║
    ║                                                                   ║

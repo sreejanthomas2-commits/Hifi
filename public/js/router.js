@@ -4,7 +4,7 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-import { ensurePane } from './lazy.js?v=1789834943';
+import { ensurePane } from './lazy.js?v=1789910000';
 
 function setupNav() {
   document.querySelectorAll('.nav-item[data-pane]').forEach(el => {
@@ -117,12 +117,6 @@ async function navigateTo(pane) {
   if (pane === 'community') _safe('renderCommunity', 'renderCommunity');
   if (pane === 'profile') _safe('renderProfile', 'renderProfile');
   if (pane === 'messages') _safe('setupMessages', 'setupMessages');
-  /* The pane's shell is getFashionverseTemplate in fashionverse.js; the
-     grid that fills it is renderFashionVerse in explore.js, which is
-     also where the AR Try-On modal it links to lives. Two files, one
-     page. fashionverse.js has its own renderFashionVerseShop, which
-     nothing calls. */
-  if (pane === 'fashionverse') _safe('renderFashionVerse', 'renderFashionVerse');
   if (pane === 'earn') _safe('renderEarn', 'renderEarn');
   if (pane === 'settings') _safe('renderSettings', 'renderSettings');
 }

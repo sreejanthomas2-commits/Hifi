@@ -427,39 +427,6 @@ select.input { appearance: none; cursor: pointer; }
 .product-add { width: 36px; height: 36px; border-radius: 50%; background: var(--g-brand); color: #fff; border: none; font-size: 20px; font-weight: 300; display: grid; place-items: center; cursor: pointer; transition: var(--tr); }
 .product-add:hover { transform: rotate(90deg); box-shadow: 0 4px 12px var(--blue-s); }
 
-/* FashionVerse Product Enhancements */
-.product-img {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border-bottom: 1px solid var(--border);
-  overflow: hidden;
-}
-.product-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: linear-gradient(135deg, #ff2a85, #7928ca);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: var(--rf);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: 0 2px 8px rgba(255,42,133,0.4);
-}
-.product-rating {
-  font-size: 12px;
-  color: var(--orange);
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-.product-card:hover .product-img {
-  background: linear-gradient(135deg, rgba(121,40,202,0.1), rgba(255,42,133,0.1)) !important;
-}
 .cart-sidebar { background: var(--card); border: 1px solid var(--border); border-radius: var(--r3); padding: 20px; display: flex; flex-direction: column; position: sticky; top: 24px; height: calc(100vh - 120px); }
 .cart-title { font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
 .cart-badge { background: var(--blue); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: var(--rf); }
@@ -2414,35 +2381,6 @@ select.input { appearance: none; cursor: pointer; }
 .game-title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--t1); }
 .game-genre { font-size: 0.8rem; color: var(--t3); }
 .game-rating, .game-price { font-size: 0.8rem; color: var(--orange); font-weight: 700; }
-
-/* FashionVerse Additions */
-@keyframes ar-scan {
-  0% { top: 10%; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { top: 90%; opacity: 0; }
-}
-
-.brand-chip {
-  padding: 8px 16px;
-  border-radius: var(--rf);
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: var(--tr);
-}
-.brand-chip:hover {
-  background: rgba(255,255,255,0.1);
-  transform: translateY(-2px);
-}
-.brand-chip.active {
-  background: var(--pink);
-  color: #fff;
-  border-color: var(--pink);
-  box-shadow: 0 4px 12px rgba(255,42,133,0.3);
-}
 
 /* ========================================================
    DESIGN STUDIO SUPER COMMAND

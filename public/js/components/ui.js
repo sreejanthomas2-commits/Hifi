@@ -46,7 +46,6 @@ function renderCategoryGrid() {
     { icon: 'music_note', name: 'Music Hub', color: '#E040FB' },
     { icon: 'sports_esports', name: 'Gaming', color: '#69F0AE' },
     { icon: 'restaurant', name: 'Culinary', color: '#FF9100' },
-    { icon: 'auto_awesome', name: 'Fashionverse', color: '#F48FB1' },
     { icon: 'flight_takeoff', name: 'Travel', color: '#81D4FA' },
     { icon: 'trending_up', name: 'Finance', color: '#4CAF50' },
     { icon: 'menu_book', name: 'Literature', color: '#BCAAA4' },

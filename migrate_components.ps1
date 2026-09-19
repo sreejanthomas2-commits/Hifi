@@ -4,7 +4,6 @@ $panes = @(
     @{ id="feeds"; file="feeds.js" },
     @{ id="explore"; file="explore.js" },
     @{ id="reels"; file="reels.js" },
-    @{ id="fashionverse"; file="fashionverse.js" },
     @{ id="fitness"; file="fitness.js" },
     @{ id="learn"; file="learn.js" },
     @{ id="creator"; file="creator.js" },

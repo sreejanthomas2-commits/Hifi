@@ -140,15 +140,6 @@ const DATA = {
     { emoji:'\u2728', creator:'@petparent',    desc:'Teaching my dog to do this took 2 weeks', likes:'87.4K', views:'4.5M', bg:'hsl(38,50%,16%)' },
     { emoji:'\u2728', creator:'@zenmind',      desc:'10-second breathing reset for anxiety', likes:'52.6K', views:'3.2M', bg:'hsl(155,40%,14%)' },
   ],
-  fvProducts: [
-    { id:'fv1', emoji:'\u2728', name:'CyberPunk Neo Jacket', brand:'CyberPunk', price:189.99, arEnabled:true, rating:'★★★★★', badge:'HOT', bg:'hsl(330,45%,18%)' },
-    { id:'fv2', emoji:'\u2728', name:'AirMax 2040 Infinity', brand:'Nike', price:220.00, arEnabled:true, rating:'★★★★☆', badge:'NEW', bg:'hsl(213,55%,18%)' },
-    { id:'fv3', emoji:'\u2728', name:'Gucci Glace AR Shades', brand:'Gucci', price:350.00, arEnabled:true, rating:'★★★★★', badge:'SALE', bg:'hsl(155,45%,16%)' },
-    { id:'fv4', emoji:'\u2728', name:'Balenciaga Void Tote', brand:'Balenciaga', price:950.00, arEnabled:false, rating:'★★★★☆', badge:'TRENDING', bg:'hsl(260,45%,18%)' },
-    { id:'fv5', emoji:'\u2728', name:'Supreme Neural Cap', brand:'Supreme', price:75.00, arEnabled:true, rating:'★★★★★', badge:'HOT', bg:'hsl(38,60%,18%)' },
-    { id:'fv6', emoji:'\u2728', name:'TechWear Stealth Coat', brand:'CyberPunk', price:210.00, arEnabled:true, rating:'★★★★☆', badge:'NEW', bg:'hsl(28,50%,18%)' }
-  ],
-  fvBrands: ['All', 'Nike', 'Gucci', 'Balenciaga', 'Supreme', 'CyberPunk'],
   products: [
     { emoji:'\u2728', name:'ProSound X1 Wireless Headphones', seller:'AudioTech', price:89.99, oldPrice:149.99, rating:'★★★★★', badge:'SALE', bg:'hsl(213,55%,18%)' },
     { emoji:'\u2728', name:'SmartFit Pro 5 Watch',            seller:'FitGear',   price:199.99, oldPrice:null,   rating:'★★★★☆', badge:'NEW', bg:'hsl(155,45%,16%)' },
@@ -346,23 +337,6 @@ const DATA = {
     { id:'emergency', emoji:'🚨', name:'Emergency Alerts' }
   ],
 
-  // ── FashionVerse Products ──
-  fvBrands: ['All', 'RTFKT-X', 'GlitchWear', 'Overworld', 'NeonThread', 'AuraLabs', 'CyberKicks'],
-  fvProducts: [
-    { id:'fv1', name:'Neo-Tokyo Kickz v2', brand:'RTFKT-X', price:89.99, emoji:'\u2728', rating:'\u2B50 4.9 (2.1K)', bg:'linear-gradient(135deg, #1a1a2e, #16213e)', badge:'HOT', arEnabled:true },
-    { id:'fv2', name:'Cyberpunk Exo-Shell', brand:'GlitchWear', price:0, emoji:'\u2728', rating:'\u2B50 4.7 (890)', bg:'linear-gradient(135deg, #0f0c29, #302b63)', badge:'FREE DROP', arEnabled:true },
-    { id:'fv3', name:'Aura Halo V1 Headset', brand:'Overworld', price:149.99, emoji:'\u2728', rating:'\u2B50 4.8 (1.4K)', bg:'linear-gradient(135deg, #1f1c2c, #928dab)', badge:'+300 XP', arEnabled:true },
-    { id:'fv4', name:'Neon Pulse Jacket', brand:'NeonThread', price:59.99, emoji:'\u2728', rating:'\u2B50 4.6 (670)', bg:'linear-gradient(135deg, #0d0d0d, #1a1a2e)', badge:'LIMITED', arEnabled:false },
-    { id:'fv5', name:'Quantum Stride Boots', brand:'CyberKicks', price:119.99, emoji:'\u2728', rating:'\u2B50 4.9 (3.2K)', bg:'linear-gradient(135deg, #16213e, #0f3460)', badge:'TRENDING', arEnabled:true },
-    { id:'fv6', name:'Holographic Visor MK3', brand:'AuraLabs', price:79.99, emoji:'\u2728', rating:'\u2B50 4.5 (445)', bg:'linear-gradient(135deg, #1a1a2e, #e94560)', badge:null, arEnabled:true },
-    { id:'fv7', name:'Digital Armor Vest', brand:'GlitchWear', price:199.99, emoji:'\u2728', rating:'\u2B50 4.8 (1.8K)', bg:'linear-gradient(135deg, #2d1b69, #1a1a2e)', badge:'EXCLUSIVE', arEnabled:true },
-    { id:'fv8', name:'Synthwave Runner 4.0', brand:'RTFKT-X', price:134.99, emoji:'\u2728', rating:'\u2B50 4.7 (920)', bg:'linear-gradient(135deg, #0f0e17, #1e1f3b)', badge:'+150 XP', arEnabled:false },
-    { id:'fv9', name:'AuraGlove Pro', brand:'AuraLabs', price:44.99, emoji:'\u2728', rating:'\u2B50 4.4 (310)', bg:'linear-gradient(135deg, #141e30, #243b55)', badge:null, arEnabled:false },
-    { id:'fv10', name:'Prism Street Hoodie', brand:'NeonThread', price:69.99, emoji:'\u2728', rating:'\u2B50 4.6 (520)', bg:'linear-gradient(135deg, #0c0c0c, #2e2e3a)', badge:'NEW', arEnabled:true },
-    { id:'fv11', name:'Chrome Walker Sneaks', brand:'CyberKicks', price:94.99, emoji:'\u2728', rating:'\u2B50 4.8 (1.1K)', bg:'linear-gradient(135deg, #111, #333)', badge:null, arEnabled:true },
-    { id:'fv12', name:'MetaFrame Shades', brand:'Overworld', price:54.99, emoji:'\u2728', rating:'\u2B50 4.3 (290)', bg:'linear-gradient(135deg, #1f1c2c, #2a2a4a)', badge:'REBEL', arEnabled:false }
-  ],
-  
   // ── Web3 Crypto Hub Data ──
   wallet: {
     address: '0x8A9F...2C11',

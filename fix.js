@@ -14,10 +14,6 @@ const correctSidebar = `<nav class="sidebar-nav">
         <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--orange)">electric_bolt</span>
         <span class="nav-label">Shorty</span>
       </a>
-      <a class="nav-item" data-pane="fashionverse" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
-        <span class="nav-label">FashionVerse</span>
-      </a>
       <a class="nav-item" data-pane="fitness" href="#">
         <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">fitness_center</span>
         <span class="nav-label">Fitness</span>
