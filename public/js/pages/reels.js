@@ -1018,3 +1018,19 @@ function renderReels() { SH.paintHub(); }
 window.openShortyPopup = idx => { if (typeof navigateTo === 'function') navigateTo('reels'); SH.openAt(Number(idx) || 0, SH.listFor('foryou')); };
 window.openReelsPopup = window.openShortyPopup;
 window.openCreateReelModal = () => SH.openCreate();
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('pages/reels.js', {
+  SH: () => SH, getReelsTemplate: () => getReelsTemplate,
+  renderReels: () => renderReels
+});

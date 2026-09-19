@@ -660,3 +660,50 @@ function closeCloudStream() {
   const m = $id('cloud-play-modal');
   if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
 }
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('pages/modals.js', {
+  switchCourseDetailTab: () => switchCourseDetailTab,
+  swipeStartup: () => swipeStartup, toggleCallMute: () => toggleCallMute,
+  toggleCallCamera: () => toggleCallCamera,
+  toggleCallSpeaker: () => toggleCallSpeaker,
+  acceptMockCall: () => acceptMockCall,
+  closeCourseDetails: () => closeCourseDetails,
+  toggleCourseVideo: () => toggleCourseVideo,
+  mentorSpeakConcept: () => mentorSpeakConcept,
+  mentorGenerateSchedule: () => mentorGenerateSchedule,
+  submitCDQuiz: () => submitCDQuiz,
+  closeGigWorkspace: () => closeGigWorkspace,
+  clearWhiteboard: () => clearWhiteboard,
+  releaseEscrowFunds: () => releaseEscrowFunds,
+  toggleWorkspaceVideoCall: () => toggleWorkspaceVideoCall,
+  sendWorkspaceChat: () => sendWorkspaceChat,
+  closeEduReels: () => closeEduReels,
+  toggleBreathingGuide: () => toggleBreathingGuide,
+  resetBreathingGuide: () => resetBreathingGuide,
+  narratePost: () => narratePost, endMockCall: () => endMockCall,
+  openCourseDetails: () => openCourseDetails,
+  openGigWorkspace: () => openGigWorkspace,
+  openEduReels: () => openEduReels,
+  openPlayStoreGame: () => openPlayStoreGame,
+  closePlayStoreGame: () => closePlayStoreGame,
+  resetPlayStoreDownload: () => resetPlayStoreDownload,
+  psDownloadTimer: () => psDownloadTimer,
+  startPlayStoreDownload: () => startPlayStoreDownload,
+  psVideoAnim: () => psVideoAnim,
+  togglePlayStoreVideo: () => togglePlayStoreVideo,
+  stopPlayStoreVideo: () => stopPlayStoreVideo,
+  cpBootTimer: () => cpBootTimer, startCloudStream: () => startCloudStream,
+  runCloudStreamCanvas: () => runCloudStreamCanvas,
+  closeCloudStream: () => closeCloudStream
+});

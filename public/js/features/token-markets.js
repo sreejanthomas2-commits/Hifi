@@ -215,3 +215,16 @@ window.TokenMarkets = (() => {
   setInterval(refresh, 5 * 60 * 1000);
   return {prices, refresh, html, open, catalog, info, tagline, matches, LISTED, stamp: () => stockUpdated + ':' + quoteUpdated + ':' + fresh(stockUpdated) + fresh(quoteUpdated), isStock:sym => Object.hasOwn(stocks,sym) || Object.hasOwn(catalog,sym)};
 })();
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('features/token-markets.js', {});

@@ -1431,3 +1431,24 @@ const PG = (() => {
 })();
 
 window.PG = PG;
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('pages/profile.js', {
+  renderProfile: () => renderProfile,
+  syncProfileIdentity: () => syncProfileIdentity,
+  toggleEditForm: () => toggleEditForm,
+  saveProfileChanges: () => saveProfileChanges,
+  getProfileTemplate: () => getProfileTemplate,
+  switchProfileTab: () => switchProfileTab,
+  profileSectionHTML: () => profileSectionHTML, PG: () => PG
+});

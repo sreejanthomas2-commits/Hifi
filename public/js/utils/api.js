@@ -569,3 +569,30 @@ Always provide concise, highly actionable, and accurate responses.`;
     return "Oops! I ran into a bit of a glitch while thinking. Could you try asking me that again? 😅";
   }
 };
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('utils/api.js', {
+  CG_CACHE_KEY: () => CG_CACHE_KEY,
+  CG_CACHE_MAX_AGE: () => CG_CACHE_MAX_AGE,
+  saveMarketCache: () => saveMarketCache,
+  hydrateMarketCache: () => hydrateMarketCache,
+  cryptoFailures: () => cryptoFailures,
+  fetchCryptoPrices: () => fetchCryptoPrices,
+  binanceFallbackAt: () => binanceFallbackAt,
+  binanceFallback: () => binanceFallback,
+  updateCryptoPortalUI: () => updateCryptoPortalUI,
+  CRYPTO_POLL_MS: () => CRYPTO_POLL_MS,
+  CRYPTO_MAX_BACKOFF_MS: () => CRYPTO_MAX_BACKOFF_MS,
+  scheduleCryptoPoll: () => scheduleCryptoPoll,
+  updateWalletUI: () => updateWalletUI
+});

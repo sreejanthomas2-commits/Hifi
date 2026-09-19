@@ -1458,3 +1458,56 @@ function filterTopicGrid(cat, chipEl) {
     }
   });
 }
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('pages/feeds.js', {
+  renderStories: () => renderStories, renderFeed: () => renderFeed,
+  tickerPrice: () => tickerPrice, TickerFX: () => TickerFX,
+  TICKER_SIZE: () => TICKER_SIZE, TICKER_MAJORS: () => TICKER_MAJORS,
+  TICKER_STABLE: () => TICKER_STABLE,
+  TICKER_DERIV_NAME: () => TICKER_DERIV_NAME,
+  TICKER_DERIV_SYM: () => TICKER_DERIV_SYM, tickerCoins: () => tickerCoins,
+  paintTickerStatus: () => paintTickerStatus, SideRow: () => SideRow,
+  renderUniversalTicker: () => renderUniversalTicker,
+  postInitials: () => postInitials, renderPostCard: () => renderPostCard,
+  sharePost: () => sharePost, likePost: () => likePost,
+  renderTrending: () => renderTrending,
+  renderWhoToFollow: () => renderWhoToFollow,
+  sendFriendRequest: () => sendFriendRequest,
+  publishPost: () => publishPost, _feedRetries: () => _feedRetries,
+  FEED_MAX_RETRIES: () => FEED_MAX_RETRIES,
+  listenToGlobalFeed: () => listenToGlobalFeed,
+  openPostComposer: () => openPostComposer,
+  openStoryComposer: () => openStoryComposer,
+  closeStoryComposer: () => closeStoryComposer,
+  submitStory: () => submitStory,
+  storyTimerInterval: () => storyTimerInterval,
+  currentStoryIdx: () => currentStoryIdx,
+  storyProgressPct: () => storyProgressPct, storyPaused: () => storyPaused,
+  STORY_CONTENTS: () => STORY_CONTENTS,
+  openStoryViewer: () => openStoryViewer,
+  closeStoryViewer: () => closeStoryViewer,
+  startStoryTimer: () => startStoryTimer, nextStory: () => nextStory,
+  prevStory: () => prevStory,
+  handleStoryReplyKey: () => handleStoryReplyKey,
+  sendStoryReply: () => sendStoryReply, viewStory: () => viewStory,
+  renderExplore: () => renderExplore,
+  getFeedsTemplate: () => getFeedsTemplate,
+  handleComposerFile: () => handleComposerFile,
+  clearComposerFile: () => clearComposerFile,
+  POLL_MAX_OPTIONS: () => POLL_MAX_OPTIONS,
+  pollCategoryForCurrentFeed: () => pollCategoryForCurrentFeed,
+  createPoll: () => createPoll, pollKeyHandler: () => pollKeyHandler,
+  syncPollOptionUI: () => syncPollOptionUI,
+  filterTopicGrid: () => filterTopicGrid
+});

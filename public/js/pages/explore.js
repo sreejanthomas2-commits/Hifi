@@ -2867,5 +2867,46 @@ window.renderCryptoHub = async function(tab = 'markets') {
   }
 };
 
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
 
-
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('pages/explore.js', {
+  populateCategorySidebar: () => populateCategorySidebar,
+  toggleCategorySidebar: () => toggleCategorySidebar,
+  clickCategory: () => clickCategory,
+  renderCategoryPortal: () => renderCategoryPortal,
+  debounce: () => debounce, fetchData: () => fetchData, data: () => data,
+  mixChemical: () => mixChemical, clearChemicals: () => clearChemicals,
+  renderScienceSubContent: () => renderScienceSubContent,
+  drawRealityScoreCircle: () => drawRealityScoreCircle,
+  toggleELI15: () => toggleELI15,
+  startCryptoLiveChart: () => startCryptoLiveChart,
+  stopCryptoLiveChart: () => stopCryptoLiveChart,
+  toggleMusicPlayback: () => toggleMusicPlayback,
+  renderMusicSubContent: () => renderMusicSubContent,
+  renderTechSubContent: () => renderTechSubContent,
+  startWildlifeCanvasSim: () => startWildlifeCanvasSim,
+  stopWildlifeCanvasSim: () => stopWildlifeCanvasSim,
+  renderCivicSubContent: () => renderCivicSubContent,
+  submitCivicReport: () => submitCivicReport,
+  renderFashionVerse: () => renderFashionVerse,
+  currentARItem: () => currentARItem, openARTryOn: () => openARTryOn,
+  closeARTryOn: () => closeARTryOn,
+  claimARTryOnPoints: () => claimARTryOnPoints,
+  toggleDualFeed: () => toggleDualFeed,
+  startFocusSession: () => startFocusSession,
+  setupUniversalSearch: () => setupUniversalSearch,
+  renderSearchResults: () => renderSearchResults,
+  switchSearchTab: () => switchSearchTab,
+  runAIDeepfakeScanner: () => runAIDeepfakeScanner,
+  getExploreTemplate: () => getExploreTemplate,
+  getCategoryTemplate: () => getCategoryTemplate
+});

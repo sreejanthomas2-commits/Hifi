@@ -33,6 +33,17 @@ const ok = (name, cond) => check(name, !!cond, true);
 const near = (name, got, want, eps) => check(name, Math.abs(got - want) < (eps || 1e-9) ? 'yes' : `${got}`, 'yes');
 
 /* ── A browser, near enough ──────────────────────────────────────── */
+/* These files are ES modules in the browser now. Each ends with a bridge
+   that imports publish() and republishes its names on window - machinery
+   the browser needs and this harness does not, and an `import` statement
+   cannot run in vm.runInContext's script mode. So the bridge is trimmed
+   and the module body runs as it always did. */
+function readModule(rel) {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', rel), 'utf8');
+  const at = src.indexOf('Global bridge');
+  return at === -1 ? src : src.slice(0, src.lastIndexOf('/*', at));
+}
+
 function makeWorld(opts) {
   const o = opts || {};
   const store = {};
@@ -80,8 +91,7 @@ function makeWorld(opts) {
   ctx.window.localStorage = localStorage;
   ctx.globalThis = ctx;
   vm.createContext(ctx);
-  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'features', 'money.js'), 'utf8');
-  vm.runInContext(src, ctx);
+  vm.runInContext(readModule('features/money.js'), ctx);
   /* `const MNY` is a lexical binding, not a property of the context, so
      the handle comes from the same `window.MNY` the browser uses. */
   return { MNY: ctx.window.MNY, DATA, TR, T, raw, ctx };

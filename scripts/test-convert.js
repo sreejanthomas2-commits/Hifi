@@ -51,6 +51,17 @@ function makeDoc() {
   };
 }
 
+/* These files are ES modules in the browser now. Each ends with a bridge
+   that imports publish() and republishes its names on window - machinery
+   the browser needs and this harness does not, and an `import` statement
+   cannot run in vm.runInContext's script mode. So the bridge is trimmed
+   and the module body runs as it always did. */
+function readModule(rel) {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', rel), 'utf8');
+  const at = src.indexOf('Global bridge');
+  return at === -1 ? src : src.slice(0, src.lastIndexOf('/*', at));
+}
+
 function makeWorld(opts) {
   const o = opts || {};
   const store = {};
@@ -102,7 +113,7 @@ function makeWorld(opts) {
   ctx.globalThis = ctx;
   vm.createContext(ctx);
 
-  const load = rel => vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'js', rel), 'utf8'), ctx);
+  const load = rel => vm.runInContext(readModule(rel), ctx);
   load('features/money.js');
   load('features/convert.js');
   return { MNY: ctx.window.MNY, CVT: ctx.window.CVT, prices, DATA, TR, T, ctx };

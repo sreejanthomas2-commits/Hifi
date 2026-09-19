@@ -431,3 +431,34 @@ window.submitTip = function() {
     }
   }
 };
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('utils/engine.js', {
+  TRANSLATIONS: () => TRANSLATIONS,
+  MODE_CATEGORY_MAP: () => MODE_CATEGORY_MAP,
+  MODE_REEL_MAP: () => MODE_REEL_MAP, MODE_LEARN_MAP: () => MODE_LEARN_MAP,
+  MODE_PEOPLE_MAP: () => MODE_PEOPLE_MAP,
+  formatRelativeTime: () => formatRelativeTime,
+  applyLanguage: () => applyLanguage,
+  savePostsToLocal: () => savePostsToLocal,
+  saveCommentsToLocal: () => saveCommentsToLocal,
+  lastScrollTime: () => lastScrollTime,
+  initAdRevenueAccrual: () => initAdRevenueAccrual,
+  simulateCreatorTip: () => simulateCreatorTip,
+  TOKEN_MONOGRAM: () => TOKEN_MONOGRAM,
+  CURRENCY_GLYPH: () => CURRENCY_GLYPH, normSym: () => normSym,
+  coinHue: () => coinHue, TICKER_ALIAS: () => TICKER_ALIAS,
+  TIP_FEE: () => TIP_FEE, TIP_COINS: () => TIP_COINS,
+  tipCoins: () => tipCoins, tipHave: () => tipHave,
+  tipWallet: () => tipWallet, tipFmt: () => tipFmt
+});

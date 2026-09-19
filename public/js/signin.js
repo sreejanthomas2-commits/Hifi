@@ -29,3 +29,16 @@
  new MutationObserver(()=>{const visible=!modal.classList.contains('hidden');document.querySelector('.app-wrapper')?.toggleAttribute('inert',visible);if(visible)get('auth-email').focus({preventScroll:true});}).observe(modal,{attributes:true,attributeFilter:['class']});
  modal.addEventListener('keydown',event=>{if(event.key==='Escape'){continueAsGuest();return;}if(event.key!=='Tab')return;const focusable=[...modal.querySelectorAll('button,input,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}});
 })();
+
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from './globals.js?v=2';
+publish('signin.js', {});

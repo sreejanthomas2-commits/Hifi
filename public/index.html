@@ -673,7 +673,11 @@
     window.db = null;
     window.firebaseAuth = null;
   </script>
-  <script type="module" async>
+  <script type="module" src="js/boot.js?v=8"></script>
+  <!-- Not async: this block calls into the app (renderFeed, handleAuth,
+       $id), so it has to run after boot.js has published the globals.
+       Module scripts without async run in document order. -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -720,78 +724,6 @@
       window.firebaseAuth = null;
     }
   </script>
-
-  <script defer src="js/state.js?v=5s1"></script>
-  <script defer src="js/data/mockDb.js?v=8s1"></script>
-  <script defer src="js/data/languages.js?v=1s1"></script>
-  <script defer src="js/data/i18n.js?v=1s1"></script>
-  <script defer src="js/utils/api.js?v=20260919as1"></script>
-  <script defer src="js/utils/firebase-auth.js?v=6s1"></script>
-  <script defer src="js/utils/dom.js?v=5s1"></script>
-  <script defer src="js/utils/engine.js?v=20260919as1"></script>
-  <script defer src="js/features/money.js?v=1s1"></script>
-  <script defer src="js/components/ui.js?v=4s1"></script>
-  <script defer src="js/components/theme.js?v=20260917s1"></script>
-  <script defer src="js/router.js?v=20260918as1"></script>
-  <script defer src="js/components/mobile.js?v=4s1"></script>
-  <script defer src="js/pages/feeds.js?v=20260918bs1"></script>
-  <script defer src="js/pages/explore.js?v=17s1"></script>
-  <script defer src="js/features/token-markets.js?v=20260916cs1"></script>
-  <script defer src="js/pages/cryptoverse.js?v=20260916bs1"></script>
-  <script defer src="js/pages/reels.js?v=20260916es1"></script>
-  <script defer src="js/pages/fashionverse.js?v=4s1"></script>
-  <script defer src="js/features/create.js?v=4s1"></script>
-  <script defer src="js/features/deposit.js?v=3s1"></script>
-  <script defer src="js/features/withdraw.js?v=3s1"></script>
-  <script defer src="js/features/cryptodata.js?v=3s1"></script>
-  <script defer src="js/pages/cryptomarket.js?v=8s1"></script>
-  <script defer src="js/pages/assets.js?v=9s1"></script>
-  <script defer src="js/pages/trade.js?v=20260919as1"></script>
-  <script defer src="js/pages/p2p.js?v=3s1"></script>
-  <script defer src="js/pages/web3communities.js?v=3s1"></script>
-  <script defer src="js/pages/earn.js?v=4s1"></script>
-  <script defer src="js/pages/homecrypto.js?v=20260917cs1"></script>
-  <script defer src="js/pages/homehub.js?v=14s1"></script>
-  <script defer src="js/pages/communityhub.js?v=5s1"></script>
-  <script defer src="js/pages/profile.js?v=20s1"></script>
-  <script defer src="js/features/highlights.js?v=1s1"></script>
-  <script defer src="js/pages/settings.js?v=20260917cs1"></script>
-  <script defer src="js/pages/messages.js?v=15s1"></script>
-  <script defer src="js/pages/telegram.js?v=4s1"></script>
-  <script defer src="js/pages/messenger.js?v=6s1"></script>
-  <script defer src="js/pages/modals.js?v=2s1"></script>
-  <script defer src="js/pages/web3hub.js?v=4s1"></script>
-  <script defer src="js/features/socialfi.js?v=3s1"></script>
-  <script defer src="js/features/cryptotools.js?v=20260912s1"></script>
-  <script defer src="js/features/assets.js?v=2s1"></script>
-  <script defer src="js/features/feargreed.js?v=8s1"></script>
-  <script defer src="js/features/wallet.js?v=4s1"></script>
-  <script defer src="js/features/chatfi.js?v=6s1"></script>
-  <script defer src="js/features/pay.js?v=3s1"></script>
-  <script defer src="js/features/convert.js?v=2s1"></script>
-  <script defer src="js/features/walletview.js?v=6s1"></script>
-  <script defer src="js/features/walletaddr.js?v=6s1"></script>
-  <script defer src="js/features/search.js?v=3s1"></script>
-  <script defer src="js/features/langs.js?v=1s1"></script>
-  <script defer src="js/features/marketdata.js?v=3s1"></script>
-  <script defer src="js/features/studio.js?v=5s1"></script>
-  <script defer src="js/features/cryptofeed.js?v=1s1"></script>
-  <script defer src="js/features/commune.js?v=5s1"></script>
-  <script defer src="js/pages/communehub.js?v=8s1"></script>
-  <script defer src="js/pages/communestudio.js?v=5s1"></script>
-  <script defer src="js/features/communeplus.js?v=2s1"></script>
-  <script defer src="js/pages/communeplus-hub.js?v=5s1"></script>
-  <script defer src="js/pages/communeplus-community.js?v=2s1"></script>
-  <script defer src="js/pages/communeplus-tools.js?v=4s1"></script>
-  <script defer src="js/pages/communeplus-studio.js?v=3s1"></script>
-  <script defer src="js/features/communemember.js?v=3s1"></script>
-  <script defer src="js/pages/communebrand.js?v=7s1"></script>
-  <script defer src="js/features/profileme.js?v=5s1"></script>
-  <script defer src="js/features/discover.js?v=10s1"></script>
-  <script defer src="js/features/notes.js?v=5s1"></script>
-
-  <script defer src="js/main.js?v=7s1"></script>
-<script defer src="interactions.js?v=5s1"></script>
 <script>
   // Simple check to bind interactions when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
@@ -807,7 +739,6 @@
   });
 </script>
 
-<script defer src="js/signin.js?v=1s1"></script>
 </body>
 </html>
 

@@ -1330,3 +1330,63 @@ function makePipDraggable() {
   document.addEventListener('touchend', onUp);
 }
 
+/* ── Global bridge ───────────────────────────────────────────────────
+   This file is an ES module now, so its top-level names are private
+   to it. Inline onclick= handlers and every other module still look
+   them up on the global object, so they are republished here.
+
+   Each one is a thunk because the list is produced by scanning, and
+   scanning over-collects — a line inside a template literal can look
+   like a declaration. publish() calls each thunk and skips the ones
+   that do not resolve, so a phantom costs one caught error and not a
+   dead module graph. */
+import { publish } from '../globals.js?v=2';
+publish('pages/messages.js', {
+  setupAI: () => setupAI, toggleAI: () => toggleAI,
+  setAlinaState: () => setAlinaState, sendAI: () => sendAI,
+  callTrendingAI: () => callTrendingAI, addAIMessage: () => addAIMessage,
+  getActiveVoice: () => getActiveVoice, speakText: () => speakText,
+  changeVoiceModel: () => changeVoiceModel, toggleVoice: () => toggleVoice,
+  showToast: () => showToast, toggleComments: () => toggleComments,
+  handleCommentKey: () => handleCommentKey,
+  submitComment: () => submitComment,
+  publishProfilePost: () => publishProfilePost,
+  simVideoTimer: () => simVideoTimer,
+  simVideoProgress: () => simVideoProgress,
+  simVideoPlaying: () => simVideoPlaying,
+  simVideoDurationSecs: () => simVideoDurationSecs,
+  openSimulatedVideo: () => openSimulatedVideo,
+  closeSimulatedVideo: () => closeSimulatedVideo,
+  playSimulatedVideo: () => playSimulatedVideo, podTimer: () => podTimer,
+  podProgress: () => podProgress, podPlaying: () => podPlaying,
+  togglePodcastPlayback: () => togglePodcastPlayback,
+  playSpecificPodcast: () => playSpecificPodcast,
+  profileMusicTimer: () => profileMusicTimer,
+  profileMusicProgress: () => profileMusicProgress,
+  profileMusicPlaying: () => profileMusicPlaying,
+  profileMusicAnimId: () => profileMusicAnimId,
+  initProfileAudioWave: () => initProfileAudioWave,
+  animateProfileAudioWave: () => animateProfileAudioWave,
+  toggleProfileMusic: () => toggleProfileMusic,
+  profileStreamChatInterval: () => profileStreamChatInterval,
+  startProfileStreamChatSimulation: () => startProfileStreamChatSimulation,
+  submitStreamChat: () => submitStreamChat,
+  sendLiveStreamReaction: () => sendLiveStreamReaction,
+  filterSaved: () => filterSaved,
+  generatePdfReceipt: () => generatePdfReceipt,
+  submitCryptoTransfer: () => submitCryptoTransfer,
+  switchDiscordServer: () => switchDiscordServer,
+  switchDiscordChannel: () => switchDiscordChannel,
+  submitDiscordMessage: () => submitDiscordMessage,
+  completeQuest: () => completeQuest,
+  calculatePayouts: () => calculatePayouts,
+  saveProfileBioEditor: () => saveProfileBioEditor,
+  toggleGhostMode: () => toggleGhostMode,
+  drawProfileAnalyticsChart: () => drawProfileAnalyticsChart,
+  changeThemeAccent: () => changeThemeAccent,
+  getMessagesTemplate: () => getMessagesTemplate,
+  callTimer: () => callTimer, callSeconds: () => callSeconds,
+  mockCall: () => mockCall, startCallTimer: () => startCallTimer,
+  endMockCall: () => endMockCall, toggleVCMute: () => toggleVCMute,
+  toggleVCCam: () => toggleVCCam, makePipDraggable: () => makePipDraggable
+});
