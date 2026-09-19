@@ -25,6 +25,8 @@ const S = {
   activeLearnTab: 'courses',
   disappearingMessages: false,
   activeChatFilter: 'all', // all, groups, channels, bots
+  chatSearch: '',
+  peerTyping: null, // chat id whose peer is currently "typing"
   civicReports: [
     { id: 1, type: 'Road Damage', text: 'Huge pothole on 5th avenue blocking traffic.', location: '5th Ave & Pine St', status: 'Tracked', authority: '@CityTransit' },
     { id: 2, type: 'Lost Pet', text: 'Golden retriever lost since yesterday. Wearing a collar.', location: 'North Oak Park', status: 'Resolved ✅', authority: '@AnimalCare' }

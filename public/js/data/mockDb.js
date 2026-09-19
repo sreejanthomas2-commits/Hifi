@@ -58,21 +58,20 @@ const DATA = {
     { id:10, author:'Jordan Lee', handle:'@jordanl', emoji:'\u2728', time:'7h ago', body:'Finally launched my SaaS product after 8 months of building in stealth mode. First 100 users signed up within 3 hours. The power of building an audience first is real.', tags:['#startup','#saas','#buildinpublic'], likes:4521, comments:389, shares:267, liked:false, type:'text', category:'tech' },
     { id:11, author:'Nina Patel', handle:'@ninap', emoji:'\u2728', time:'8h ago', body:'Meal prep Sunday done right! 5 containers of high-protein chicken bowls, 3 smoothie packs, and overnight oats for the week. Nutrition is the foundation of everything.', emoji_block:'\u2728\u2728\u2728', tags:['#mealprep','#nutrition','#fitness'], likes:1567, comments:98, shares:145, liked:false, type:'emoji', category:'fitness' },
     { id:12, author:'Alex Rivera', handle:'@alexr', emoji:'\u2728', time:'9h ago', body:'Hot take: The best frameworks are the ones you actually ship products with. Stop framework-hopping. Pick one, master it, build things that matter.', tags:['#webdev','#coding','#hottake'], likes:5234, comments:567, shares:890, liked:false, type:'text', category:'tech' },
+    { id:13, author:'Rajesh Singh', handle:'@rajesh_farms', emoji:'👨‍🌾', time:'10h ago', body:'Just completed harvesting my new hybrid wheat variety. The yield is looking 20% higher than last year despite the erratic rains! The future of farming is data-driven.', tags:['#agriculture','#farming','#wheat'], likes:890, comments:142, shares:56, liked:false, type:'text', category:'agriculture' },
+    { id:14, author:'Crypto Whale', handle:'@whale_alert', emoji:'🐋', time:'11h ago', body:'BTC just broke resistance. We are entering a new phase of the bull market. Altcoins will follow soon. Stay vigilant.', tags:['#crypto','#bitcoin','#bullmarket'], likes:4520, comments:890, shares:1200, liked:false, type:'text', category:'crypto' },
   ],
 
   topics: [
+    { emoji:'🌾', name:'Global Agri Hub', count:'5.2M posts', cat:'agriculture' },
+    { emoji:'🪙', name:'Bitcoin & Crypto', count:'3.9M posts', cat:'crypto' },
     { emoji:'🤖', name:'Artificial Intelligence', count:'2.4M posts', cat:'tech' },
-    { emoji:'💪', name:'Fitness & Wellness', count:'1.8M posts', cat:'health' },
+    { emoji:'💪', name:'Fitness & Wellness', count:'1.8M posts', cat:'fitness' },
     { emoji:'🎨', name:'Design & Art', count:'1.5M posts', cat:'design' },
     { emoji:'💻', name:'Tech & Coding', count:'1.3M posts', cat:'tech' },
     { emoji:'🎮', name:'Gaming', count:'1.1M posts', cat:'gaming' },
-    { emoji:'✈️', name:'Travel & Culture', count:'980K posts', cat:'travel' },
-    { emoji:'🎵', name:'Music & Audio', count:'870K posts', cat:'music' },
-    { emoji:'📈', name:'Finance & Business', count:'760K posts', cat:'finance' },
-    { emoji:'🍕', name:'Food & Lifestyle', count:'690K posts', cat:'food' },
     { emoji:'🚀', name:'Startups', count:'540K posts', cat:'startups' },
     { emoji:'🔬', name:'Quantum Computing', count:'520K posts', cat:'science' },
-    { emoji:'🪙', name:'Bitcoin & Crypto', count:'1.9M posts', cat:'crypto' },
     { emoji:'📰', name:'World News', count:'2.1M posts', cat:'politics' },
     { emoji:'🦌', name:'Wildlife Watch', count:'430K posts', cat:'wildlife' },
     { emoji:'⚽', name:'Sports Highlights', count:'1.7M posts', cat:'sports' },
@@ -237,6 +236,28 @@ const DATA = {
       { me:false, text:'Progress! Same time next week?',                                  time:'9:47 AM' },
       { me:true,  text:'100%. I\'m already dreading it haha',                             time:'9:48 AM' },
     ],
+    3: [
+      { me:false, text:'Check my latest post 🔥 It\'s already at 2K likes!',              time:'11:02 AM' },
+      { me:true,  text:'Just saw it — the color grading is unreal 😍',                    time:'11:05 AM' },
+      { me:false, text:'Thanks! Shot everything on my phone believe it or not.',          time:'11:06 AM' },
+    ],
+    4: [
+      { me:false, text:'What stack are you using for the new project?',                   time:'8:20 AM' },
+      { me:true,  text:'Node + Express on the backend, vanilla JS front. Keeping it simple.', time:'8:24 AM' },
+      { me:false, text:'Respect. No-framework gang 💪',                                   time:'8:25 AM' },
+    ],
+    5: [
+      { me:false, text:'Sarah added 3 files to the layout folder.',                       time:'Mon' },
+      { me:false, text:'Can everyone review the new grid spec before Friday?',            time:'Mon' },
+      { me:true,  text:'On it — I\'ll leave comments tonight.',                           time:'Mon' },
+    ],
+    6: [
+      { me:false, text:'📢 Web3 summit updates released! Full schedule now live on the portal.', time:'2d' },
+      { me:false, text:'📢 Speaker lineup drops tomorrow. Stay tuned!',                   time:'2d' },
+    ],
+    7: [
+      { me:false, text:'Hi! I\'m ALINA 🤖 — ask me anything: writing, code, ideas, translations…', time:'Now' },
+    ],
   },
   streams: [
     { emoji:'\u2728', name:'ProGamer_X — Ranked Matches',  viewers:'12.4K', live:true  },
@@ -256,14 +277,14 @@ const DATA = {
     'I can help you schedule content, analyze competitors, or generate post ideas. What would you like to focus on?',
   ],
   gigs: [
-    { id:1, title:'Figma Landing Page Design', company:'StartupHub', pay:'$450', tags:['Design','Figma'], applied:false, desc:'Design a high-converting, responsive glassmorphic landing page in Figma for a green-energy SaaS platform.', client:'Zara Ahmed', milestones:['Prototype wireframe layouts','High-fidelity HSL visual style design','Escrow release review'] },
-    { id:2, title:'React Component Library Refactor', company:'TechCorp', pay:'$800', tags:['Code','React'], applied:false, desc:'Refactor legacy web app buttons, inputs, and modals to use modern React 19 server components and custom CSS variables.', client:'Marcus Webb', milestones:['State refactor and optimization','Modernizing inputs & select fields','React 19 testing and package assembly'] },
-    { id:3, title:'Science Explainer Copywriting', company:'EduMedia', pay:'$300', tags:['Writing','Science'], applied:false, desc:'Write concise, educational scripts explaining quantum entanglement and fluid boundary velocity for a suite of 60-second learning reels.', client:'Luna Park', milestones:['Draft core quantum physics syllabus','Verify factual accuracy thresholds','Write final presentation script outlines'] },
-    { id:4, title:'Solidity Token Smart Contract', company:'DeFi Labs', pay:'$1,200', tags:['Web3','Solidity'], applied:false, desc:'Develop and audit an ERC-20 token smart contract with custom minting rules and gas-optimized validation checks.', client:'Dev Kumar', milestones:['Write token minting rule algorithms','Run gas utilization tests','Complete local sandbox security audit'] },
-    { id:5, title:'AI Chatbot Integration (Next.js)', company:'GeminiBuild', pay:'$950', tags:['Code','AI'], applied:false, desc:'Integrate a streaming AI assistant conversational panel into a Next.js 15 enterprise SaaS portal.', client:'Kai Brooks', milestones:['Establish serverless context pipes','UI styling with clean glass effects','Verify streaming response speeds'] },
-    { id:6, title:'Spatial UI Glassmorphic Styling', company:'VisionTech', pay:'$700', tags:['Design','CSS'], applied:false, desc:'Style a glassmorphic dashboard with vibrant HSL colors, micro-animations, and dynamic mobile-first media queries.', client:'Mia Thompson', milestones:['Configure CSS HSL color tokens','Develop active scale animations','Validate cross-browser media rendering'] },
-    { id:7, title:'Rust Engine WebAssembly Porting', company:'WasmSoft', pay:'$1,500', tags:['Code','Rust'], applied:false, desc:'Compile a high-performance graphic rendering library written in Rust to WebAssembly to run inside standard web browsers.', client:'Sarah Chen', milestones:['Refactor Rust calculations loops','Compile target WebAssembly package','Benchmark browser frame latency rates'] },
-    { id:8, title:'Bio-informatics Data Synthesizer', company:'BioGrid', pay:'$1,100', tags:['Science','Python'], applied:false, desc:'Write a Python script to parse FASTA biological files, extract protein sequences, and compute evolutionary conservation scores.', client:'Tyler Ross', milestones:['Program genomic parsing regex patterns','Synthesize relative conservation weights','Format output JSON for UI visualizers'] }
+    { id:1, title:'Figma Landing Page Design', company:'StartupHub', pay:'$450 (0.0065 BTC)', tags:['Design','Figma'], applied:false, desc:'Design a high-converting, responsive glassmorphic landing page in Figma for a green-energy SaaS platform.', client:'Zara Ahmed', milestones:['Prototype wireframe layouts','High-fidelity HSL visual style design','Escrow release review'] },
+    { id:2, title:'React Component Library Refactor', company:'TechCorp', pay:'$800 (0.0116 BTC)', tags:['Code','React'], applied:false, desc:'Refactor legacy web app buttons, inputs, and modals to use modern React 19 server components and custom CSS variables.', client:'Marcus Webb', milestones:['State refactor and optimization','Modernizing inputs & select fields','React 19 testing and package assembly'] },
+    { id:3, title:'Science Explainer Copywriting', company:'EduMedia', pay:'$300 (0.0043 BTC)', tags:['Writing','Science'], applied:false, desc:'Write concise, educational scripts explaining quantum entanglement and fluid boundary velocity for a suite of 60-second learning reels.', client:'Luna Park', milestones:['Draft core quantum physics syllabus','Verify factual accuracy thresholds','Write final presentation script outlines'] },
+    { id:4, title:'Solidity Token Smart Contract', company:'DeFi Labs', pay:'$1,200 (0.0175 BTC)', tags:['Web3','Solidity'], applied:false, desc:'Develop and audit an ERC-20 token smart contract with custom minting rules and gas-optimized validation checks.', client:'Dev Kumar', milestones:['Write token minting rule algorithms','Run gas utilization tests','Complete local sandbox security audit'] },
+    { id:5, title:'AI Chatbot Integration (Next.js)', company:'GeminiBuild', pay:'$950 (0.0138 BTC)', tags:['Code','AI'], applied:false, desc:'Integrate a streaming AI assistant conversational panel into a Next.js 15 enterprise SaaS portal.', client:'Kai Brooks', milestones:['Establish serverless context pipes','UI styling with clean glass effects','Verify streaming response speeds'] },
+    { id:6, title:'Spatial UI Glassmorphic Styling', company:'VisionTech', pay:'$700 (0.0102 BTC)', tags:['Design','CSS'], applied:false, desc:'Style a glassmorphic dashboard with vibrant HSL colors, micro-animations, and dynamic mobile-first media queries.', client:'Mia Thompson', milestones:['Configure CSS HSL color tokens','Develop active scale animations','Validate cross-browser media rendering'] },
+    { id:7, title:'Rust Engine WebAssembly Porting', company:'WasmSoft', pay:'$1,500 (0.0219 BTC)', tags:['Code','Rust'], applied:false, desc:'Compile a high-performance graphic rendering library written in Rust to WebAssembly to run inside standard web browsers.', client:'Sarah Chen', milestones:['Refactor Rust calculations loops','Compile target WebAssembly package','Benchmark browser frame latency rates'] },
+    { id:8, title:'Bio-informatics Data Synthesizer', company:'BioGrid', pay:'$1,100 (0.0160 BTC)', tags:['Science','Python'], applied:false, desc:'Write a Python script to parse FASTA biological files, extract protein sequences, and compute evolutionary conservation scores.', client:'Tyler Ross', milestones:['Program genomic parsing regex patterns','Synthesize relative conservation weights','Format output JSON for UI visualizers'] }
   ],
   // All 50+ categories listed cleanly
   allCategories: [
@@ -382,5 +403,63 @@ const DATA = {
     { user: 'Luna Park', handle: '@lunap', type: 'image', content: 'Obsessed with this holographic trench coat I just generated in the AI Lab! 🧥✨', image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', timestamp: '5 mins ago', likes: 124 },
     { user: 'Tyler Ross', handle: '@tylerr', type: 'text', content: 'Anyone else attending the digital Milan runway tonight? The AR integrations are supposed to be insane.', timestamp: '12 mins ago', likes: 45 },
     { user: 'Sarah Chen', handle: '@sarahc', type: 'image', content: 'Cyberpunk streetwear concept sketch. Dropping this collection next month!', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80', timestamp: '1 hour ago', likes: 890 }
+  ],
+  
+  // ── Fitness Hub Data ──
+  fitnessPosts: [
+    { id: 'fp1', author: 'Marcus Webb', handle: '@marcus_lifts', avatar: '💪', role: 'Powerlifter', time: '1h ago', content: 'Just hit a new PR on the deadlift! 500lbs moving smooth. Consistency and sleep are the real cheat codes.', category: 'PR', likes: 4210, comments: 342, tags: ['Deadlift', 'Powerlifting', 'PR'] },
+    { id: 'fp2', author: 'Sarah Chen', handle: '@sarah_runs', avatar: '🏃‍♀️', role: 'Marathoner', time: '3h ago', content: 'Completed my 18-mile long run today. The humidity was brutal but pacing was solid. Fueling strategy: 1 gel every 45 mins worked perfectly!', category: 'Running', likes: 2150, comments: 180, tags: ['Running', 'MarathonTraining', 'Endurance'] },
+    { id: 'fp3', author: 'Alex Fitness', handle: '@alex_fit', avatar: '🧘', role: 'Yoga Coach', time: '5h ago', content: 'Mobility is just as important as strength. If you cannot touch your toes, you are missing out on vital functional health. Try this 5-min flow tonight.', category: 'Mobility', likes: 8920, comments: 840, tags: ['Yoga', 'Mobility', 'Recovery'] },
+    { id: 'fp4', author: 'Nutrition Lab', handle: '@nutrilab', avatar: '🥑', role: 'Dietitian', time: '8h ago', content: 'Stop overcomplicating protein. 1.6g to 2.2g per kg of bodyweight. Space it out in 3-4 meals. That is 90% of the game.', category: 'Nutrition', likes: 12400, comments: 1200, tags: ['Nutrition', 'Protein', 'Science'] }
+  ],
+  fitnessVideos: [
+    { id: 'fv1', title: '10-Min Core Crusher (No Equipment)', channel: 'Fit Flow', views: '1.2M', duration: '10:05', thumb_color: '#E91E63', icon: '🔥', category: 'Workout', type: 'Video' },
+    { id: 'fv2', title: '🔴 LIVE: Morning HIIT Session', channel: 'HIIT Squad', views: '2.4K watching', duration: 'LIVE', thumb_color: '#F44336', icon: '⚡', category: 'Live', type: 'Live' },
+    { id: 'fv3', title: 'Fix Your Squat Form in 60s', channel: 'Squat U', views: '3.4M', duration: '0:58', thumb_color: '#3F51B5', icon: '🦵', category: 'Tutorial', type: 'Short' },
+    { id: 'fv4', title: 'High Protein Meal Prep (Under $20)', channel: 'Kitchen Gains', views: '890K', duration: '14:20', thumb_color: '#4CAF50', icon: '🥗', category: 'Nutrition', type: 'Video' }
+  ],
+  
+  // ── Crypto Hub Data ──
+  cryptoPosts: [
+    { id: 'cp1', author: 'Crypto Whale', handle: '@whaletrades', avatar: '🐳', time: '10m ago', content: 'Just moved 1500 ETH to cold storage. Not trusting these centralized exchanges after the latest news. Not your keys, not your coins.', likes: 3200, comments: 450, tags: ['ETH', 'ColdStorage', 'Security'] },
+    { id: 'cp2', author: 'DeFi Degen', handle: '@yieldfarmer', avatar: '🚜', time: '1h ago', content: 'The APY on the new SOL liquidity pools is insane right now. I just farmed 45% APY over the weekend. Don\'t sleep on this!', likes: 1850, comments: 210, tags: ['SOL', 'DeFi', 'YieldFarming'] },
+    { id: 'cp3', author: 'Blockchain Builder', handle: '@dev_block', avatar: '💻', time: '3h ago', content: 'Building smart contracts on Ethereum is getting so much easier with the new Solidity updates. Just deployed a testnet oracle in 5 minutes.', likes: 890, comments: 120, tags: ['Ethereum', 'Web3', 'Solidity'] },
+    { id: 'cp4', author: 'Satoshi Fan', handle: '@btc_maxi', avatar: '⚡', time: '5h ago', content: 'Bitcoin dominance is climbing again. The halving supply shock is real. Stack sats and stay humble.', likes: 5400, comments: 890, tags: ['Bitcoin', 'BTC', 'Halving'] }
   ]
 };
+
+/* ── Social wallet persistence ─────────────────────────────────────────
+   DATA.wallet.balances is the social wallet: tips come out of it, creator
+   rewards and subscriptions settle through it, and Trade's Deposit /
+   Withdraw move USDT between it and the trading account.
+
+   It used to be rebuilt from the seed above on every load and never
+   written back. So a tip was quietly refunded on reload — and because the
+   trading account IS saved, a Deposit left the money in both places
+   (and a Withdraw lost it from both).
+
+   Several modules write to it directly, so rather than touching each one
+   the balances object is wrapped: restored from storage here, and saved
+   on every write, whoever makes it. */
+(function persistSocialWallet() {
+  const KEY = 'ts_social_wallet';
+  if (!DATA.wallet || !DATA.wallet.balances) return;
+  const raw = DATA.wallet.balances;
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved && typeof saved === 'object') {
+      Object.keys(saved).forEach(k => {
+        const v = Number(saved[k]);
+        if (isFinite(v) && v >= 0) raw[k] = v;
+      });
+    }
+  } catch (e) { /* corrupt entry — fall back to the seed */ }
+
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(raw)); } catch (e) {} };
+
+  DATA.wallet.balances = new Proxy(raw, {
+    set(target, key, value) { target[key] = value; persist(); return true; },
+    deleteProperty(target, key) { delete target[key]; persist(); return true; }
+  });
+})();

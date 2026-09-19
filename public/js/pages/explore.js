@@ -17,6 +17,8 @@ function toggleCategorySidebar() {
 }
 
 function clickCategory(cat) {
+  // Cryptoverse and the old Crypto Markets portal are one page now.
+  if (cat === 'crypto') { if (typeof navigateTo === 'function') navigateTo('cryptomarket'); return; }
   // Toggle chip active classes
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
   const activeChips = Array.from(document.querySelectorAll('.cat-chip')).filter(c => c.textContent.toLowerCase().includes(cat));
@@ -43,7 +45,8 @@ function clickCategory(cat) {
     music: '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--pink); vertical-align:middle; margin-right:6px">music_note</span><span>Music & Audio</span>',
     finance: '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--green); vertical-align:middle; margin-right:6px">trending_up</span><span>Finance & Business</span>',
     food: '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--orange); vertical-align:middle; margin-right:6px">local_pizza</span><span>Food & Lifestyle</span>',
-    startup: '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--purple); vertical-align:middle; margin-right:6px">rocket_launch</span><span>Startups</span> Hub'
+    startup: '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--purple); vertical-align:middle; margin-right:6px">rocket_launch</span><span>Startups</span> Hub',
+    crypto: '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:#F7931A; vertical-align:middle; margin-right:6px">currency_bitcoin</span><span>Crypto</span> Markets'
   };
   const descs = {
     ai: 'Tech news, new developments in AI, model releases.',
@@ -55,10 +58,17 @@ function clickCategory(cat) {
     music: 'Live lyrically synchronized beats visualizer and songwriting workspace.',
     finance: 'Business news, real-time data, and live crypto market updates.',
     food: 'Food news, recipe posts, and lifestyle photography/video.',
-    startup: 'Startup hub news, pitch videos, and startup spotlights.'
+    startup: 'Startup hub news, pitch videos, and startup spotlights.',
+    crypto: 'Live prices, dApps, projects, news and the crypto community — all in one place.'
   };
   
+  // Crypto Markets is reached from the main nav, not from Explore, so the
+  // back button has to know where it is actually going back to.
+  S.catFrom = (S.pane === 'explore') ? 'explore' : '';
   navigateTo('category');
+
+  const backEl = $id('cat-back');
+  if (backEl) backEl.hidden = S.catFrom !== 'explore';
 
   const titleEl = $id('cat-title'); if (titleEl) titleEl.innerHTML = titles[cat] || '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--blue); vertical-align:middle; margin-right:6px">explore</span><span>Category</span> Portal';
   const descEl = $id('cat-description'); if (descEl) descEl.textContent = descs[cat] || 'Explore advanced multimedia feeds.';
@@ -68,7 +78,14 @@ function clickCategory(cat) {
 
 function renderCategoryPortal(cat) {
   const portal = $id('cat-dynamic-content'); if (!portal) return;
-  
+
+  // The grid uses 'startups'; the portal branch below was written as 'startup'.
+  if (cat === 'startups') cat = 'startup';
+
+  /* Every branch below sets innerHTML, so the shared News + Videos block is
+     appended afterwards on a microtask — one place instead of 50 copies. */
+  setTimeout(() => { if (typeof CC !== 'undefined') CC.mount(S.selectedCategory); }, 0);
+
   if (cat === 'ai') {
     portal.innerHTML = `
       <div class="grid-2 mb16">
@@ -421,39 +438,9 @@ function debounce(fn, t) {
       </div>
     `;
   } else if (cat === 'crypto') {
-    portal.innerHTML = `
-      <div class="grid-2 mb16">
-        <div class="card p20" style="background:linear-gradient(135deg,#0a0a1a,#1a0b2e); border:1px solid #00ffcc33">
-          <h3 class="fw8 mb12 tc-1"><span class="material-symbols-rounded emoji-3d" style="color:#00ffcc">currency_bitcoin</span> Live Markets</h3>
-          <div class="flex-between mb12 pb12" style="border-bottom:1px solid #ffffff15">
-            <div><div class="fs12 tc-3">BTC/USD</div><div class="fw8 fs20" style="color:#00ffcc">$68,412.30</div></div>
-            <div class="tc-right"><div class="fs12 tc-3">24h</div><div class="fw8 fs16" style="color:#00ffcc">+3.7% ↑</div></div>
-          </div>
-          <div class="flex-between mb12 pb12" style="border-bottom:1px solid #ffffff15">
-            <div><div class="fs12 tc-3">ETH/USD</div><div class="fw8 fs16" style="color:#00ffcc">$3,870.55</div></div>
-            <div class="tc-right"><div class="fs12 tc-3">24h</div><div class="fw8 fs14" style="color:#ff6b6b">-1.2% ↓</div></div>
-          </div>
-          <div class="flex-between">
-            <div><div class="fs12 tc-3">SOL/USD</div><div class="fw8 fs16" style="color:#00ffcc">$178.20</div></div>
-            <div class="tc-right"><div class="fs12 tc-3">24h</div><div class="fw8 fs14" style="color:#00ffcc">+6.1% ↑</div></div>
-          </div>
-        </div>
-        <div class="card p20">
-          <h3 class="fw8 mb12 tc-1"><span class="material-symbols-rounded emoji-3d" style="color:var(--orange)">notifications_active</span> Crypto Alerts</h3>
-          <div class="flex-col gap12">
-            <div style="padding:12px; border-left:3px solid var(--green); background:var(--card2); border-radius:4px 8px 8px 4px">
-              <div class="fw7 fs13 tc-1">Whale Alert: 5,000 BTC moved to cold storage</div>
-              <div class="fs11 tc-3">2 min ago • Blockchain scanner</div>
-            </div>
-            <div style="padding:12px; border-left:3px solid var(--orange); background:var(--card2); border-radius:4px 8px 8px 4px">
-              <div class="fw7 fs13 tc-1">DeFi Protocol TVL surpasses $90B</div>
-              <div class="fs11 tc-3">18 min ago • DeFi Pulse</div>
-            </div>
-          </div>
-          <button class="btn btn-primary btn-sm w100 mt12" onclick="showToast('Setting up price alerts...')">⚡ Set Alerts</button>
-        </div>
-      </div>
-    `;
+    if (typeof window.renderCryptoHub === 'function') {
+      window.renderCryptoHub('markets');
+    }
   } else if (cat === 'wildlife') {
     portal.innerHTML = `
       <div class="grid-2 mb16">
@@ -2368,46 +2355,6 @@ function toggleDualFeed(mode) {
   renderFeed();
 }
 
-function switchFeedMode(mode) {
-  S.feedMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(mode));
-  });
-  
-  // Apply visual theme comfort tinting
-  const html = document.documentElement;
-  if (mode === 'focus') {
-    html.style.setProperty('--blue', 'hsl(217, 91%, 50%)');
-    showToast('Focus Mode Active: Muting notifications 🎯');
-  } else if (mode === 'study') {
-    html.style.setProperty('--blue', 'hsl(155, 60%, 40%)');
-    showToast('Study Mode: Scientific priority 🌱');
-  } else if (mode === 'chill') {
-    html.style.setProperty('--blue', 'hsl(260, 65%, 54%)');
-    showToast('Night Chill: Soothing visual accents active 🌙');
-  } else if (mode === 'motivation') {
-    html.style.setProperty('--blue', 'hsl(14, 85%, 50%)');
-    showToast('Motivation Mode Active: Fuel your drive! 🔥');
-  } else if (mode === 'news') {
-    html.style.setProperty('--blue', 'hsl(355, 72%, 50%)');
-    showToast('Breaking News Mode: Real-time global updates 📰');
-  } else if (mode === 'wellness') {
-    html.style.setProperty('--blue', 'hsl(145, 60%, 45%)');
-    showToast('Wellness Mode: Breathing, fitness, and health focus 🧘');
-  } else if (mode === 'productivity') {
-    html.style.setProperty('--blue', 'hsl(190, 90%, 40%)');
-    showToast('Productivity Mode: Maximize efficiency & learning 🚀');
-  } else {
-    html.style.setProperty('--blue', 'hsl(217, 91%, 60%)');
-    showToast(`Switched Feed Mode to: ${mode}`);
-  }
-  
-  // Update all dependent UI feeds instantly upon switching mode
-  renderFeed();
-  renderReels();
-  renderVoteHall();
-  renderWhoToFollow();
-}
 
 function startFocusSession() {
   if (S.focusActive) {
@@ -2512,8 +2459,13 @@ function setupUniversalSearch() {
   
   // Full Search Results panel toggle (on Enter key)
   const submitSearch = (val) => {
+    // Search belongs to the SR overlay now — people, shorts, audio, tags and
+    // coins, over whatever pane you were on. The news panel below is only a
+    // fallback for when that module hasn't loaded.
+    if (window.SR) { window.SR.open(val || ''); return; }
+
     const q = val.trim().toLowerCase();
-    
+
     if (!q) {
       const panel = $id('search-results-panel');
       const exploreDefault = $id('explore-default-content');
@@ -2528,14 +2480,14 @@ function setupUniversalSearch() {
     if (es && es.value !== val) es.value = val;
     if (gs && gs.value !== val) gs.value = val;
     
-    setTimeout(() => {
+    setTimeout(async () => {
       const panel = $id('search-results-panel');
       const exploreDefault = $id('explore-default-content');
       
       panel?.classList.remove('hidden');
       exploreDefault?.classList.add('hidden');
       
-      renderSearchResults(q);
+      await renderSearchResults(q);
     }, 10);
   };
   
@@ -2559,12 +2511,16 @@ function setupUniversalSearch() {
     });
   }
   
-  // Global search always navigates and submits on type or Enter
+  // Global search: typing stays put; Enter submits. Live-updates results
+  // only when already viewing the Explore search panel.
   if (gs) {
     gs.addEventListener('input', (e) => {
-      submitSearch(e.target.value);
+      const panel = $id('search-results-panel');
+      if (S.pane === 'explore' && panel && !panel.classList.contains('hidden')) {
+        submitSearch(e.target.value);
+      }
     });
-    
+
     gs.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -2575,32 +2531,46 @@ function setupUniversalSearch() {
   }
 }
 
-function renderSearchResults(q) {
+async function renderSearchResults(q) {
   const media = $id('search-media-results'); if (!media) return;
   const aiCard = $id('search-ai-card');
   
-  // Dynamic media results matching query, enriched with live Google present-day traffic data
-  const mockResults = [
-    { title: `${q.toUpperCase()} CRISPR Gene Editing Efficiencies`, type: 'papers', desc: `Analyzing DNA double-strand breaks step-by-step for "${q}".`, badge: 'Science Paper', traffic: '100K+ searches today' },
-    { title: `Crypto Yield Farm Liquidity Mechanics on ${q.toUpperCase()}`, type: 'articles', desc: `Understanding Decentralized Finance smart contract protocols referencing "${q}".`, badge: 'Finance Article', traffic: '500K+ searches today' },
-    { title: `${q.toUpperCase()} React 19 Server Components deep-dive`, type: 'videos', desc: `60-minute cinematic programming workshop explaining "${q}".`, badge: 'Developer Workshop', traffic: '300K+ searches today' },
-    { title: `Is ${q.toUpperCase()} a smart future standard?`, type: 'factchecks', desc: 'Fact Check Status: VERIFIED · Bias: neutral', badge: 'Fact Check', traffic: '80K+ searches' },
-    { title: `Sunset Horizon Chill Vibes Beat: Tribute to ${q.toUpperCase()}`, type: 'podcasts', desc: `Beatmaker_96 episode 4 tribute inspired by "${q}".`, badge: 'Podcast', traffic: '120K+ searches' }
-  ];
+  if (aiCard) {
+    aiCard.innerHTML = `<div class="fs14 tc-1"><span class="material-symbols-rounded spinner inline-icon">progress_activity</span> Synthesizing live internet data for "${q}"...</div>`;
+  }
+  media.innerHTML = `<div class="p20 tc-center tc-3"><span class="material-symbols-rounded spinner">sync</span> Fetching live internet results from Google News...</div>`;
   
-  const filtered = S.searchTab === 'all' ? mockResults : mockResults.filter(r => r.type === S.searchTab);
+  let liveArticles = [];
+  try {
+    if (window.fetchLiveNews) {
+      liveArticles = await window.fetchLiveNews(q);
+    }
+  } catch (err) {}
+
+  if (liveArticles.length === 0) {
+    const mockResults = [
+      { title: `${q.toUpperCase()} CRISPR Gene Editing Efficiencies`, type: 'papers', desc: `Analyzing DNA double-strand breaks step-by-step for "${q}".`, badge: 'Science Paper', traffic: '100K+ searches today' },
+      { title: `Crypto Yield Farm Liquidity Mechanics on ${q.toUpperCase()}`, type: 'articles', desc: `Understanding Decentralized Finance smart contract protocols referencing "${q}".`, badge: 'Finance Article', traffic: '500K+ searches today' },
+      { title: `${q.toUpperCase()} React 19 Server Components deep-dive`, type: 'videos', desc: `60-minute cinematic programming workshop explaining "${q}".`, badge: 'Developer Workshop', traffic: '300K+ searches today' },
+      { title: `Is ${q.toUpperCase()} a smart future standard?`, type: 'factchecks', desc: 'Fact Check Status: VERIFIED A  Bias: neutral', badge: 'Fact Check', traffic: '80K+ searches' },
+      { title: `Sunset Horizon Chill Vibes Beat: Tribute to ${q.toUpperCase()}`, type: 'podcasts', desc: `Beatmaker_96 episode 4 tribute inspired by "${q}".`, badge: 'Podcast', traffic: '120K+ searches' }
+    ];
+    liveArticles = mockResults;
+  }
+  
+  const filtered = S.searchTab === 'all' ? liveArticles : liveArticles.filter(r => r.type === S.searchTab || (r.id && S.searchTab === 'articles'));
   
   media.innerHTML = filtered.map(r => `
     <div class="card p16 flex flex-col gap8">
       <div class="flex-between">
-        <span class="badge badge-blue fs11" style="background:#4F46E5">${r.badge}</span>
-        <button class="btn btn-ghost btn-sm" onclick="showToast('Opening search result...')">Open</button>
+        <span class="badge badge-blue fs11" style="background:#4F46E5">${r.badge || 'Live News Article'}</span>
+        <button class="btn btn-ghost btn-sm" onclick="window.open('${r.url || '#'}', '_blank')">Open</button>
       </div>
       <h3 class="fw7 fs14 tc-1">${r.title}</h3>
-      <p class="tc-2 fs12">${r.desc}</p>
+      <p class="tc-2 fs12">${r.excerpt || r.desc}</p>
       <div class="fs11 mt4 fw7" style="color:#34A853; display:flex; align-items:center; gap:4px">
-        <span class="material-symbols-rounded" style="font-size:14px">trending_up</span>
-        Live Traffic: ${r.traffic} — Verified via Google Cloud Engine.
+        <span class="material-symbols-rounded" style="font-size:14px">${r.source ? 'public' : 'trending_up'}</span>
+        ${r.source ? `Source: ${r.source} | Published: ${new Date(r.publishedAt).toLocaleDateString()}` : `Live Traffic: ${r.traffic} - Verified via Google Cloud Engine.`}
       </div>
     </div>`).join('');
     
@@ -2665,63 +2635,7 @@ function switchSearchTab(tab) {
   if (es) renderSearchResults(es.value.trim().toLowerCase());
 }
 
-/* --- Trend Map and Deepfake Scanner Interactivity --- */
-function clickMapHotspot(city, event) {
-  if (event) event.stopPropagation();
-  
-  document.querySelectorAll('.trend-map-hotspot').forEach(el => el.classList.remove('active'));
-  if (event && event.currentTarget) {
-    event.currentTarget.classList.add('active');
-  }
-  
-  const drawer = $id('trend-map-drawer');
-  const cityEl = $id('tmd-city');
-  const trendsEl = $id('tmd-trends');
-  if (!drawer || !cityEl || !trendsEl) return;
-  
-  const data = {
-    sv: {
-      city: '🇺🇸 Silicon Valley, USA',
-      trends: '🔥 <strong>Trending Now:</strong> #GeminiAgenticSDK (+340% searches), #NextJS19, DeepSeek V4 release.<br>⚠️ <strong>Local Alerts:</strong> Power outage scheduled for sub-station beta.<br>🎯 <strong>Volunteer Match:</strong> STEM tutoring at San Jose public labs (+100 XP).'
-    },
-    london: {
-      city: '🇬🇧 London, United Kingdom',
-      trends: '🔥 <strong>Trending Now:</strong> #AIPrivacyAct debate (+120%), #LondonFinTech Summit, #ChelseaMatches.<br>⚠️ <strong>Local Alerts:</strong> Tube line closures on Jubilee line this weekend.<br>🎯 <strong>Volunteer Match:</strong> Help pack food pantry parcels at Central Church (+80 XP).'
-    },
-    paris: {
-      city: '🇫🇷 Paris, France',
-      trends: '🔥 <strong>Trending Now:</strong> #FashionVerseSpringWeek (+450%), #LouvreVirtualMuseum, #SustainableTransit.<br>🚨 <strong>Local Alerts:</strong> Flood alert near Seine river banks (Yellow Warning).<br>🎯 <strong>Volunteer Match:</strong> Seine banks clean-up crew Saturday afternoon (+120 XP).'
-    },
-    delhi: {
-      city: '🇮🇳 New Delhi, India',
-      trends: '🔥 <strong>Trending Now:</strong> #DigitalIndiaPortal, #18thLokSabhaDebates (+800%), #DeFiMarketplace.<br>⚠️ <strong>Local Alerts:</strong> Severe dust storm advisory. Residents urged to stay indoors.<br>🎯 <strong>Volunteer Match:</strong> Blood donation drive at Ram Manohar Hospital (+200 XP).'
-    },
-    tokyo: {
-      city: '🇯🇵 Tokyo, Japan',
-      trends: '🔥 <strong>Trending Now:</strong> #CyberModShaders (+220%), #SubBassMastery course, #ShibuyaCrossingsLive.<br>⚠️ <strong>Local Alerts:</strong> Mock Disaster Preparedness Drill at Shibuya Station.<br>🎯 <strong>Volunteer Match:</strong> Guide overseas tourists at Shibuya Crossing (+150 XP).'
-    }
-  };
-  
-  const info = data[city] || { city: 'Global Hotspot', trends: 'Dynamic trends matching present-day server queries.' };
-  
-  cityEl.innerHTML = info.city;
-  trendsEl.innerHTML = info.trends;
-  drawer.classList.add('open');
-  
-  // Haptic reaction burst
-  if (typeof IX !== 'undefined' && IX.burstReaction) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    IX.burstReaction('🔥', rect.left + rect.width / 2, rect.top + rect.height / 2, 6);
-  }
-}
-
-function closeMapDrawer(event) {
-  if (event) event.stopPropagation();
-  const drawer = $id('trend-map-drawer');
-  if (drawer) drawer.classList.remove('open');
-  document.querySelectorAll('.trend-map-hotspot').forEach(el => el.classList.remove('active'));
-}
-
+/* --- Deepfake Scanner Interactivity --- */
 function runAIDeepfakeScanner(q) {
   const el = $id('deepfake-scanner-results');
   if (!el) return;
@@ -2770,60 +2684,23 @@ function runAIDeepfakeScanner(q) {
 
 function getExploreTemplate() {
   return `<section id="pane-explore" class="pane">
-        <h1 class="pane-title"><span>Explore</span> Universe</h1>
+        <h1 class="pane-title"><span>Crypto</span>verse</h1>
+        <p class="tc-2 fs13 mb16">Live markets, sentiment and the stories moving them.</p>
 
         <div class="explore-search">
           <span class="material-symbols-rounded" style="opacity:0.6; font-size:18px">search</span>
-          <input type="text" id="explore-search" placeholder="Search topics, creators, hashtags...">
+          <input type="text" id="explore-search" placeholder="Search coins, creators, hashtags...">
         </div>
 
-        <!-- Google Trends Stream Connect Card -->
-        <div class="card mb16 flex-between flex-center" style="padding: 12px 18px; background: rgba(52, 168, 83, 0.05); border: 1px solid rgba(52, 168, 83, 0.15); display: flex; align-items: center; justify-content: space-between; gap: 12px">
-          <div style="display:flex; align-items:center; gap:10px">
-            <span class="material-symbols-rounded" style="color:#34A853; font-size:22px">language</span>
-            <div>
-              <div style="font-size:13.5px; font-weight:700; color:var(--t1)">Google Trends Integration</div>
-              <div style="font-size:11px; color:var(--t3)">Stream present trending queries & historical search data volume</div>
-            </div>
-          </div>
-          <button class="btn btn-ghost btn-sm" id="google-trends-status" onclick="toggleGoogleTrends()" style="display:inline-flex; align-items:center; gap:6px; color:var(--t2); font-weight:700; padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--border)">
-            <span class="status-dot" style="width:8px; height:8px; border-radius:50%; background:var(--t3); display:inline-block"></span> Connect Google Trends
-          </button>
-        </div>
-
-        <!-- Real-Time Global Hotspot Trend Map -->
-        <div class="trend-map-wrapper">
+        <!-- Crypto Fear & Greed Index -->
+        <div class="fgi-wrapper">
           <div class="section-hdr">
-            <span class="section-title flex-center gap8"><span class="material-symbols-rounded" style="color:var(--pink)">public</span> Real-Time Global Hotspot Trend Map</span>
-            <span class="badge badge-pink">Live Map</span>
+            <span class="section-title flex-center gap8"><span class="material-symbols-rounded" style="color:var(--orange)">speed</span> Crypto Fear &amp; Greed Index</span>
+            <span class="badge badge-orange">Live</span>
           </div>
-          <p class="tc-2 fs12 mb12">Click pulsating hotspots to preview live localized trends, emergencies, and volunteer opportunities.</p>
-          <div class="trend-map-container" id="trend-map-container">
-            <!-- Pulsating Hotspots SVG overlay -->
-            <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0.15;" viewBox="0 0 800 400">
-              <path d="M 150 150 Q 220 180 300 120 T 450 150" fill="none" stroke="var(--blue)" stroke-width="2" stroke-dasharray="5 5"></path>
-              <path d="M 300 120 Q 380 90 480 180 T 650 130" fill="none" stroke="var(--pink)" stroke-width="2" stroke-dasharray="5 5"></path>
-            </svg>
-            
-            <!-- Hotspots overlay -->
-            <div class="trend-map-hotspot" style="left: 20%; top: 38%;" onclick="clickMapHotspot('sv', event)" title="Silicon Valley (USA)"></div>
-            <div class="trend-map-hotspot" style="left: 45%; top: 40%;" onclick="clickMapHotspot('london', event)" title="London (UK)"></div>
-            <div class="trend-map-hotspot" style="left: 49%; top: 45%;" onclick="clickMapHotspot('paris', event)" title="Paris (France)"></div>
-            <div class="trend-map-hotspot" style="left: 64%; top: 52%;" onclick="clickMapHotspot('delhi', event)" title="New Delhi (India)"></div>
-            <div class="trend-map-hotspot" style="left: 80%; top: 42%;" onclick="clickMapHotspot('tokyo', event)" title="Tokyo (Japan)"></div>
-            
-            <!-- Info Drawer -->
-            <div class="trend-map-drawer" id="trend-map-drawer">
-              <div class="flex-between" style="border-bottom: 1px solid var(--border); padding-bottom: 6px;">
-                <strong class="fs12 tc-1" id="tmd-city">City Selected</strong>
-                <button class="btn btn-ghost btn-sm" style="padding: 2px 6px; font-size:10px; border:none;" onclick="closeMapDrawer(event)">✕</button>
-              </div>
-              <div class="fs11 tc-2 mt8" id="tmd-trends">Click any hotspot to display.</div>
-            </div>
-          </div>
+          <p class="tc-2 fs12 mb12">Market sentiment scored 0–100 from volatility, momentum, social volume, dominance and trends.</p>
+          <div id="fgi-root"></div>
         </div>
-
-        <div class="chips-row" id="topic-chips"></div>
 
         <!-- Universal Search Results (Hidden by Default) -->
         <div id="search-results-panel" class="hidden">
@@ -2843,15 +2720,9 @@ function getExploreTemplate() {
           </div>
         </div>
 
-        <!-- Standard Explorer content -->
+        <!-- Cryptoverse: live market discovery + Trending Creators -->
         <div id="explore-default-content" style="display:grid; grid-template-columns:1fr 280px; gap:24px; align-items:start">
-          <div>
-            <div class="section-hdr">
-              <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--orange)">local_fire_department</span> Hot Topics</span>
-              <span class="section-link">View all</span>
-            </div>
-            <div class="topic-grid" id="topic-grid"></div>
-          </div>
+          <div id="cv-root"></div>
           <div style="position:sticky; top:80px">
             <div class="section-hdr">
               <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--purple)">auto_awesome</span> Trending Creators</span>
@@ -2865,7 +2736,7 @@ function getExploreTemplate() {
 function getCategoryTemplate() {
   return `<section id="pane-category" class="pane" style="padding:24px">
     <div style="margin-bottom:20px">
-      <button class="btn btn-ghost btn-sm" onclick="navigateTo('explore')" style="display:inline-flex; align-items:center; gap:6px; margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" id="cat-back" hidden onclick="navigateTo('explore')" style="align-items:center; gap:6px; margin-bottom:16px">
         <span class="material-symbols-rounded" style="font-size:16px">arrow_back</span> Back to Explore
       </button>
       <h1 class="pane-title" id="cat-title"><span>Category</span> Portal</h1>
@@ -2874,5 +2745,122 @@ function getCategoryTemplate() {
     <div id="cat-dynamic-content"></div>
   </section>`;
 }
+
+window.renderCryptoHub = async function(tab = 'markets') {
+  const portal = document.getElementById('cat-dynamic-content');
+  if (!portal) return;
+
+  const tabsHtml = `
+    <div class="tabs mb16" style="justify-content: flex-start; overflow-x: auto;">
+      <button class="tab-btn crypto-tab-btn ${tab === 'markets' ? 'active' : ''}" data-tab="markets" onclick="renderCryptoHub('markets')">Live Markets</button>
+      <button class="tab-btn crypto-tab-btn ${tab === 'dapps' ? 'active' : ''}" data-tab="dapps" onclick="renderCryptoHub('dapps')">dApps</button>
+      <button class="tab-btn crypto-tab-btn ${tab === 'projects' ? 'active' : ''}" data-tab="projects" onclick="renderCryptoHub('projects')">Projects</button>
+      <button class="tab-btn crypto-tab-btn ${tab === 'news' ? 'active' : ''}" data-tab="news" onclick="renderCryptoHub('news')">Crypto News</button>
+      <button class="tab-btn crypto-tab-btn ${tab === 'community' ? 'active' : ''}" data-tab="community" onclick="renderCryptoHub('community')">Community Feed</button>
+    </div>
+    <div id="crypto-tab-content"></div>
+  `;
+  
+  if (!portal.querySelector('.crypto-tab-btn')) {
+    portal.innerHTML = tabsHtml;
+  } else {
+    document.querySelectorAll('.crypto-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.crypto-tab-btn[data-tab="${tab}"]`).classList.add('active');
+  }
+
+  const content = document.getElementById('crypto-tab-content');
+  
+  if (tab === 'markets') {
+    if (!window.liveCryptoPrices || Object.keys(window.liveCryptoPrices).length === 0) {
+      content.innerHTML = `<div class="p20 tc-center"><span class="material-symbols-rounded spinner">sync</span> Fetching live markets from Coinlayer...</div>`;
+      return;
+    }
+    
+    // Slice to 60 for performance to prevent lag when rendering
+    const coinsToRender = Object.entries(window.liveCryptoPrices)
+      .filter(([coin]) => !['bitcoin', 'ethereum', 'solana'].includes(coin))
+      .slice(0, 60);
+      
+    let marketsHtml = `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:12px;">`;
+    for (const [coin, data] of coinsToRender) {
+      const formatPrice = (val) => {
+        if (val === null || val === undefined) return '$0.00';
+        return '$' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 6});
+      };
+      const formatChange = (val) => {
+        if (val === null || val === undefined) return '<span class="tc-3">0.0%</span>';
+        const sign = val >= 0 ? '+' : '';
+        const color = val >= 0 ? 'var(--green)' : 'var(--red)';
+        return `<span style="color:${color}">${sign}${val.toFixed(1)}%</span>`;
+      };
+      marketsHtml += `
+        <div class="card p16 w3-market-card" style="background:var(--card2); border:1px solid var(--border)"
+             onclick="W3.openToken('${coin}')" title="Open ${coin} token page">
+          <div class="flex-between mb8">
+            <div class="coin-cell fw8 tc-1">
+              ${coinIcon(coin, 24)}<span class="coin-tick">${coin}</span>
+            </div>
+            <div class="fs11 tc-3">24h: ${formatChange(data.usd_24h_change)}</div>
+          </div>
+          <div class="fw8 fs18 tc-1">${formatPrice(data.usd)}</div>
+        </div>
+      `;
+    }
+    marketsHtml += `</div>`;
+    content.innerHTML = marketsHtml;
+  }
+  else if (tab === 'dapps') {
+    W3.renderDapps();
+  }
+  else if (tab === 'projects') {
+    W3.renderProjects();
+  }
+  else if (tab === 'news') {
+    content.innerHTML = `<div class="p20 tc-center"><span class="material-symbols-rounded spinner">sync</span> Fetching breaking crypto news...</div>`;
+    try {
+      const articles = await window.fetchLiveNews('cryptocurrency DeFi blockchain');
+      if (!articles || articles.length === 0) throw new Error("Empty");
+      content.innerHTML = `<div class="flex flex-col gap12">` + articles.map(r => `
+        <div class="card p16 flex flex-col gap8">
+          <div class="flex-between">
+            <span class="badge badge-purple fs11">Live News</span>
+            <button class="btn btn-ghost btn-sm" onclick="window.open('${r.url}', '_blank')">Read</button>
+          </div>
+          <h3 class="fw7 fs14 tc-1">${r.title}</h3>
+          <p class="tc-2 fs12">${r.excerpt}</p>
+          <div class="fs11 mt4 fw7 tc-green">Source: ${r.source} | ${new Date(r.publishedAt).toLocaleDateString()}</div>
+        </div>`).join('') + `</div>`;
+    } catch(err) {
+      content.innerHTML = `<div class="p20 tc-center tc-3">Unable to fetch live news. Try again later.</div>`;
+    }
+  }
+  else if (tab === 'community') {
+    if (typeof CF !== 'undefined') { CF.render(content); return; }
+    const posts = (typeof DATA !== 'undefined' && DATA.cryptoPosts) ? DATA.cryptoPosts : [];
+    content.innerHTML = `<div class="flex flex-col gap16">` + posts.map(p => `
+      <div class="card p16">
+        <div class="flex-between mb12">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:20px">${p.avatar}</div>
+            <div>
+              <div class="fw7 fs14 tc-1">${p.author}</div>
+              <div class="fs11 tc-3">${p.handle} • ${p.time}</div>
+            </div>
+          </div>
+        </div>
+        <p class="tc-1 fs13" style="line-height:1.5">${p.content}</p>
+        <div class="mt12 flex gap8">
+          ${p.tags.map(t => `<span class="badge badge-green fs10">#${t}</span>`).join('')}
+        </div>
+        <div class="flex-between mt16 pt12" style="border-top:1px solid var(--border)">
+          <button class="btn btn-ghost btn-sm" onclick="this.style.color='#00ffcc'; showToast('Liked! 💚')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">favorite</span> ${p.likes}</button>
+          <button class="btn btn-ghost btn-sm"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">chat_bubble</span> ${p.comments}</button>
+          <button class="btn btn-ghost btn-sm"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">share</span> Share</button>
+        </div>
+      </div>
+    `).join('') + `</div>`;
+  }
+};
+
 
 

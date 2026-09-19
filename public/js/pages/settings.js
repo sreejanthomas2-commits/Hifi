@@ -3,9 +3,76 @@
 // ─────────────────────────────────────────────────────────
 
 function renderSettings() {
-  // Initialization logic for settings can go here
-  console.log('Settings page rendered');
+  // Both pickers are rebuilt on every visit so they show what is actually set.
+  const host = document.getElementById('settings-language');
+  if (host && typeof LG !== 'undefined') host.innerHTML = LG.cardHTML();
+  const look = document.getElementById('settings-appearance');
+  if (look) look.innerHTML = appearanceCardHTML();
+  const acc = document.getElementById('settings-account');
+  if (acc && window.PME) acc.innerHTML = PME.settingsCardHTML();
 }
+
+/* ── Appearance ────────────────────────────────────────────────────────
+   The theme switch used to sit in the header and did not survive a
+   reload. It lives here now, remembers the choice, and can follow the
+   operating system instead of being told. */
+
+const THEME_CHOICES = [
+  ['light',  'Light',  'light_mode', 'Bright surfaces — the default.'],
+  ['dark',   'Dark',   'dark_mode',  'Low light, high contrast.'],
+  ['system', 'System', 'contrast',   'Follow your device setting.']
+];
+
+function appearanceCardHTML() {
+  const pref = (typeof themePref === 'function') ? themePref() : 'light';
+  const now = (typeof resolvedTheme === 'function') ? resolvedTheme(pref) : 'light';
+  const meshOff = document.body.classList.contains('no-mesh');
+  return `
+    <div class="card set-card">
+      <h3 class="set-h3"><span class="material-symbols-rounded">palette</span>Appearance</h3>
+      <p class="set-sub">Showing the <b>${now}</b> theme${pref === 'system' ? ' — matching your device' : ''}.</p>
+
+      <div class="set-themes">
+        ${THEME_CHOICES.map(([k, label, icon, note]) => `
+          <button class="set-theme${pref === k ? ' on' : ''}" onclick="pickTheme('${k}')" aria-pressed="${pref === k}">
+            <span class="set-theme-prev ${k}"><i class="bar"></i><i class="dot"></i><i class="line"></i><i class="line short"></i></span>
+            <span class="set-theme-t">
+              <b><span class="material-symbols-rounded">${icon}</span>${label}</b>
+              <span>${note}</span>
+            </span>
+            <span class="material-symbols-rounded set-theme-tick">${pref === k ? 'radio_button_checked' : 'radio_button_unchecked'}</span>
+          </button>`).join('')}
+      </div>
+
+      <div class="set-row">
+        <div>
+          <div class="set-row-t">Dynamic backgrounds</div>
+          <div class="set-row-s">Moving gradient mesh behind the app</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" ${meshOff ? '' : 'checked'} onchange="toggleMesh(this.checked)">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>`;
+}
+
+function pickTheme(pref) {
+  if (typeof setTheme === 'function') setTheme(pref);
+  const look = document.getElementById('settings-appearance');
+  if (look) look.innerHTML = appearanceCardHTML();
+  if (typeof showToast === 'function') {
+    showToast(pref === 'system' ? 'Appearance follows your device' : pref.charAt(0).toUpperCase() + pref.slice(1) + ' theme on');
+  }
+}
+
+function toggleMesh(on) {
+  document.body.classList.toggle('no-mesh', !on);
+  try { localStorage.setItem('ts_mesh', on ? '1' : '0'); } catch (e) {}
+  if (typeof showToast === 'function') showToast(on ? 'Dynamic backgrounds on' : 'Dynamic backgrounds off');
+}
+
+try { if (localStorage.getItem('ts_mesh') === '0') document.body.classList.add('no-mesh'); } catch (e) {}
 
 function getSettingsTemplate() {
   return `<section id="pane-settings" class="pane">
@@ -15,31 +82,11 @@ function getSettingsTemplate() {
         <span>Settings</span> Preferences
       </h1>
 
-      <div class="card" style="padding: 24px; margin-bottom: 20px;">
-        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--t1);">Appearance</h3>
-        
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
-          <div>
-            <div style="font-weight: 700; font-size: 14px;">Dark Mode</div>
-            <div style="font-size: 12px; color: var(--t3);">Toggle high-contrast dark theme</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" checked onchange="showToast('Theme updated')">
-            <span class="slider round"></span>
-          </label>
-        </div>
+      <div id="settings-account">${window.PME ? PME.settingsCardHTML() : ''}</div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
-          <div>
-            <div style="font-weight: 700; font-size: 14px;">Dynamic Backgrounds</div>
-            <div style="font-size: 12px; color: var(--t3);">Enable moving gradient mesh</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" checked onchange="showToast('Background updated')">
-            <span class="slider round"></span>
-          </label>
-        </div>
-      </div>
+      <div id="settings-appearance">${appearanceCardHTML()}</div>
+
+      <div id="settings-language">${typeof LG !== 'undefined' ? LG.cardHTML() : ''}</div>
 
       <div class="card" style="padding: 24px; margin-bottom: 20px;">
         <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--t1);">Notifications</h3>

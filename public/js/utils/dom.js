@@ -12,7 +12,18 @@ function escapeHTML(str) {
     }[tag] || tag)
   );
 }
-function _safe(fn, label) { try { fn(); } catch(e) { console.warn('[TS]', label, e.message); } }
+/* Accepts a function OR a global's name. Passing a bare identifier that
+   does not exist throws a ReferenceError while the argument is being
+   evaluated — before this function is even entered — which is enough to
+   kill the whole boot sequence. Passing the name as a string avoids that,
+   so one missing module can no longer take the app down with it. */
+function _safe(fn, label) {
+  try {
+    const f = typeof fn === 'string' ? window[fn] : fn;
+    if (typeof f === 'function') return f();
+    console.warn('[TS]', label || fn, 'is not defined — skipped');
+  } catch (e) { console.warn('[TS]', label, e.message); }
+}
 
 function get3DIconForEmoji(emoji) {
   const map = {

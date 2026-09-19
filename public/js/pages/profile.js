@@ -1,13 +1,56 @@
 // ── PROFILE ──────────────────────────────────────────────────────
-function renderProfile() {
+function renderProfile(tab) {
+  PG.init();
+  // The profile template is injected lazily, so the initial updateUserUI()
+  // ran before these nodes existed — re-sync name/handle/bio with the
+  // signed-in (or guest) user every time the pane opens.
+  if (typeof updateUserUI === 'function') updateUserUI();
+  syncProfileIdentity();
   const content = $id('prof-tab-dynamic-content');
-  if (content && !content.innerHTML) {
-    switchProfileTab('posts');
+  const st = PG.state;
+  if (content && !content.innerHTML) PG.show('posts');
+  // Posts and Shorty can change while you're elsewhere; the Crypto tab keeps
+  // whatever you were typing, unless a wallet just connected.
+  else if (!st.section && (st.tab === 'posts' || st.tab === 'shorty' || (tab === 'wallet' && st.tab === 'crypto'))) PG.show(st.tab);
+  PG.paint();
+}
+
+// Fill the profile fields that updateUserUI() doesn't own, so a guest never
+// sees another person's hardcoded identity.
+function syncProfileIdentity() {
+  const u = (typeof S !== 'undefined' && S.user) ? S.user : null;
+  if (!u) return;
+  const isGuest = u.fname === 'Guest';
+  const fullName = isGuest ? 'Guest Explorer' : `${u.fname} ${u.lname || ''}`.trim();
+  const handle = isGuest ? '@guest' : (u.handle || '@user');
+
+  const set = (id, val) => { const el = $id(id); if (el) el.textContent = val; };
+  set('profile-name', fullName);
+  const editName = $id('edit-name'); if (editName) editName.value = fullName;
+  const editHandle = $id('edit-handle'); if (editHandle) editHandle.value = handle;
+
+  // A guest is nobody's verified creator — hide the badge and zero the
+  // stats rather than showing a demo account's numbers as if they're theirs.
+  const verified = $id('profile-verified');
+  if (verified) verified.style.display = isGuest ? 'none' : '';
+
+  if (isGuest) {
+    set('profile-stat-followers', '0');
+    set('profile-stat-following', '0');
+    set('profile-stat-posts', String((DATA.posts || []).filter(p => p.mine).length));
+    set('profile-location', 'Location not set');
+    const link = $id('profile-link'); if (link) link.textContent = 'Add a link';
+  } else {
+    set('profile-location', u.location || 'Location not set');
+    const link = $id('profile-link');
+    if (link) link.textContent = u.link || `trending.app/${handle.replace('@','')}`;
   }
 }
 
 
 function toggleEditForm() {
+  // The full Edit profile page (photo, cover, birthday) replaces the inline form.
+  if (window.PME) { PME.open(); return; }
   const f = $id('edit-form');
   if (f) {
     const isHidden = f.style.display === 'none';
@@ -23,73 +66,15 @@ function toggleEditForm() {
   }
 }
 
+/* The Wallet tab's swap lives in WV now, priced off the live feed. These
+   two used to read a static mock table, so a swap executed at a price no
+   market was quoting. They are kept as forwarders because other screens
+   still link to "swap". */
 window.updateSwapEstimate = function() {
-  const m = typeof DATA !== 'undefined' && DATA.cryptoMarkets ? DATA.cryptoMarkets : [];
-  const getPrice = (coin) => {
-    if (coin === 'USDT') return 1.0;
-    if (coin === 'TREND') return 0.1;
-    const pair = m.find(x => x.pair === `${coin}/USDT`);
-    return pair ? pair.price : 1.0;
-  };
-  const amtIn = parseFloat($id('swap-amount-in').value) || 0;
-  const coinIn = $id('swap-coin-in').value;
-  const coinOut = $id('swap-coin-out').value;
-  
-  if (amtIn <= 0) {
-    $id('swap-amount-out').value = '';
-    return;
-  }
-  
-  const inValUsd = amtIn * getPrice(coinIn);
-  const outPriceUsd = getPrice(coinOut);
-  // Subtract 1% fee
-  const receivedUsd = inValUsd * 0.99;
-  const estOut = receivedUsd / outPriceUsd;
-  $id('swap-amount-out').value = estOut.toFixed(4);
+  if (typeof WV !== 'undefined') WV.setSwap('amount', (document.getElementById('wv-swap-amt') || {}).value || '');
 };
-
 window.submitTokenSwap = function() {
-  const amtIn = parseFloat($id('swap-amount-in').value);
-  const coinIn = $id('swap-coin-in').value;
-  const coinOut = $id('swap-coin-out').value;
-  const estOut = $id('swap-amount-out').value;
-  
-  if (!amtIn || amtIn <= 0) {
-    showToast('Enter an amount to swap ❌');
-    return;
-  }
-  if (coinIn === coinOut) {
-    showToast('Cannot swap same coin ❌');
-    return;
-  }
-  
-  const b = DATA.wallet.balances;
-  if (!b[coinIn] || b[coinIn] < amtIn) {
-    showToast(`Insufficient ${coinIn} balance ❌`);
-    return;
-  }
-  
-  // Deduct in, add out
-  b[coinIn] -= amtIn;
-  b[coinOut] = (b[coinOut] || 0) + parseFloat(estOut);
-  
-  const ledger = $id('wallet-ledger');
-  if (ledger) {
-    const div = document.createElement('div');
-    div.className = "flex-between py4";
-    div.style.borderBottom = "1px solid var(--border)";
-    div.innerHTML = `
-      <span class="tc-blue" style="display:inline-flex; align-items:center; gap:4px"><span class="material-symbols-rounded" style="font-size:14px">currency_exchange</span> Swapped Tokens</span>
-      <span class="fw7">-${amtIn} ${coinIn} ➔ +${parseFloat(estOut).toFixed(2)} ${coinOut}</span>
-    `;
-    ledger.prepend(div);
-  }
-  
-  $id('swap-amount-in').value = '';
-  $id('swap-amount-out').value = '';
-  showToast(`Swapped ${amtIn} ${coinIn} for ${parseFloat(estOut).toFixed(2)} ${coinOut}! ✅`);
-  
-  setTimeout(() => switchProfileTab('wallet'), 1500);
+  if (typeof WV !== 'undefined') WV.doSwap();
 };
 
 function saveProfileChanges() {
@@ -116,183 +101,104 @@ function saveProfileChanges() {
 
 
 function getProfileTemplate() {
+  const ico = n => `<span class="material-symbols-rounded" aria-hidden="true">${n}</span>`;
   return `<section id="pane-profile" class="pane">
-        <!-- Cover Banner -->
-        <div class="profile-cover-banner" style="position:relative; height:160px; background:linear-gradient(135deg, var(--blue), var(--purple), var(--pink)); border-radius:var(--r3); overflow:hidden; margin-bottom:-50px; border:1px solid var(--border)">
-          <div style="position:absolute; inset:0; background:radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 60%); pointer-events:none"></div>
-          <div style="position:absolute; right:20px; bottom:12px; display:flex; gap:8px">
-            <span class="badge badge-blue" style="display:inline-flex; align-items:center; gap:2px"><span class="material-symbols-rounded" style="font-size:12px; font-variation-settings:'FILL' 1">bolt</span> Level 14</span>
-            <span class="badge badge-purple" style="border:1px solid rgba(255,255,255,0.15)">Verified Creator</span>
+      <div class="pg">
+        <!-- Top bar: username, Create, menu -->
+        <div class="pg-top">
+          <h1 class="pg-top-u" id="pg-top-handle">profile</h1>
+          <div class="pg-top-a">
+            <button type="button" class="pg-ib" data-pg="create" aria-label="Create" title="Create">${ico('add_box')}</button>
+            <button type="button" class="pg-ib" data-pg="menu" aria-label="Menu" title="Menu" aria-haspopup="dialog">${ico('menu')}</button>
           </div>
         </div>
 
-        <div class="profile-header" style="position:relative; padding-top:60px; z-index:2">
-          <div class="avatar av-xl emoji-3d" id="profile-av" style="background:var(--g-brand); border:4px solid var(--card); box-shadow:var(--sh2); margin-top:-90px; display:grid; place-items:center; color:#fff; font-size:24px; font-weight:700">AV</div>
-          <div>
-            <div style="display:flex; align-items:center; gap:8px">
-              <div style="font-size:24px; font-weight:900; letter-spacing:-0.04em" id="profile-name">Alex Vance</div>
-              <span class="material-symbols-rounded" style="color:var(--blue); font-size:20px; font-variation-settings:'FILL' 1" title="Verified Creator">verified</span>
-              <span class="badge badge-green" style="font-size:10px; padding:2px 6px">● Online</span>
+        <!-- Photo, counts, name, bio, buttons -->
+        <div class="pg-hero">
+          <div class="pg-avcol">
+            <div class="pg-ring"><div class="avatar pg-av" id="profile-av">AV</div></div>
+          </div>
+          <div class="pg-stats">
+            <button type="button" class="pg-stat" data-pg="tab:posts"><b id="profile-stat-posts">0</b><span>posts</span></button>
+            <div class="pg-stat"><b id="profile-stat-followers">28.4K</b><span>followers</span></div>
+            <div class="pg-stat"><b id="profile-stat-following">892</b><span>following</span></div>
+          </div>
+          <div class="pg-info">
+            <div class="pg-name">
+              <span id="profile-name">Alex Vance</span>
+              <span class="material-symbols-rounded pg-verified" id="profile-verified" title="Verified creator">verified</span>
             </div>
-            
-            <div class="flex-center gap12 mt4" style="justify-content:flex-start; font-size:12.5px; color:var(--t2); flex-wrap:wrap">
+            <div class="pg-meta">
               <span id="profile-handle">@alex_vance</span>
-              <span>·</span>
-              <span class="flex-center gap4" style="color:var(--orange)"><span class="material-symbols-rounded" style="font-size:16px">bolt</span> Active Focus</span>
-              <span>·</span>
-              <span class="flex-center gap4"><span class="material-symbols-rounded" style="font-size:16px">location_on</span> San Francisco, CA</span>
-              <span>·</span>
-              <span class="flex-center gap4"><span class="material-symbols-rounded" style="font-size:16px">link</span> <a href="#" class="tc-blue" style="text-decoration:none">trending.app/alex</a></span>
-              <span>·</span>
-              <span class="flex-center gap4" style="color:var(--purple)"><span class="material-symbols-rounded" style="font-size:16px">calendar_month</span> Joined May 2024</span>
+              <span class="pme-metaitem" id="profile-location-wrap"><span>·</span><span id="profile-location">San Francisco, CA</span></span>
             </div>
-
-            <div class="profile-bio mt8" id="profile-bio">Digital creator &amp; tech enthusiast. Building the future one post at a time.</div>
-
-            <div class="profile-tags mt8" style="display:flex; gap:6px">
-              <span class="badge badge-blue">Developer</span>
-              <span class="badge badge-purple">Creator</span>
-              <span class="badge badge-pink">Gamer</span>
-              <span class="badge badge-green">Musician</span>
+            <div class="profile-bio pg-bio" id="profile-bio">Digital creator &amp; tech enthusiast. Building the future one post at a time.</div>
+            <div class="pg-linkrow">${ico('link')}<a href="#" id="profile-link" data-pg="link">trending.app/alex</a></div>
+            <div class="pg-chips">
+              <span class="pg-chip">${ico('shield')}<b id="profile-rep">98%</b> reputation</span>
+              <span class="pg-chip">${ico('auto_awesome')}<b id="profile-ai-trust">99%</b> AI trust</span>
+              <span class="pg-chip">${ico('local_fire_department')}<b>5 days</b> streak</span>
             </div>
-            
-            <div class="profile-stats-row mt16">
-              <div class="profile-stat">
-                <div class="profile-stat-val">28.4K</div>
-                <div class="profile-stat-lbl">Followers</div>
-              </div>
-              <div class="profile-stat">
-                <div class="profile-stat-val">892</div>
-                <div class="profile-stat-lbl">Following</div>
-              </div>
-              <div class="profile-stat">
-                <div class="profile-stat-val">347</div>
-                <div class="profile-stat-lbl">Posts</div>
-              </div>
-              <div class="profile-stat">
-                <div class="profile-stat-val tc-green" id="profile-rep">98%</div>
-                <div class="profile-stat-lbl">Reputation Score</div>
-              </div>
-              <div class="profile-stat">
-                <div class="profile-stat-val tc-blue" id="profile-ai-trust">99%</div>
-                <div class="profile-stat-lbl">AI Trust Score</div>
-              </div>
-              <div class="profile-stat">
-                <div class="profile-stat-val tc-pink">5 Days</div>
-                <div class="profile-stat-lbl">Daily Streak</div>
-              </div>
-            </div>
-            <!-- Profile Actions -->
-            <div class="flex gap8 mt16">
-              <button class="btn btn-primary btn-sm flex-center gap4" onclick="toggleEditForm()" style="display:inline-flex; align-items:center; gap:4px">
-                <span class="material-symbols-rounded" style="font-size:16px">edit</span> Edit Profile
-              </button>
-              <button class="btn btn-ghost btn-sm flex-center gap4" onclick="signOut()" style="display:inline-flex; align-items:center; gap:4px">
-                <span class="material-symbols-rounded" style="font-size:16px">logout</span> Sign Out
-              </button>
-            </div>
+          </div>
+          <div class="pg-btns">
+            <button type="button" class="pg-btn" onclick="toggleEditForm()">Edit profile</button>
+            <button type="button" class="pg-btn" data-pg="share">Share profile</button>
+            <button type="button" class="pg-btn pg-btn-ic" data-pg="people" aria-label="Discover people" title="Discover people">${ico('person_add')}</button>
           </div>
         </div>
 
-        <!-- Edit Profile Form (Sliding Card) -->
-        <div id="edit-form" class="card mt16" style="display:none; padding:24px; background:var(--card2); border:1px solid var(--border); border-radius:var(--r3); box-shadow:var(--sh2); margin-bottom:20px; animation:pane-in 0.3s ease both">
-          <h3 class="fw8 mb16 tc-1" style="display:flex; align-items:center; gap:8px">
-            <span class="material-symbols-rounded" style="color:var(--blue)">edit</span> Edit Profile Details
-          </h3>
-          <div class="grid-2 gap12" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
-            <div class="form-group">
-              <label class="form-label" style="display:block; font-size:11px; color:var(--t3); margin-bottom:4px">First Name</label>
-              <input class="input" type="text" id="edit-fname" value="Alex" style="width:100%">
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="display:block; font-size:11px; color:var(--t3); margin-bottom:4px">Last Name</label>
-              <input class="input" type="text" id="edit-lname" value="Vance" style="width:100%">
-            </div>
+        <!-- Story highlights: the circles are for your stories (HL.paint) -->
+        <div class="pg-hl" id="pg-hl" role="list" aria-label="Story highlights"></div>
+
+        <!-- Crypto: always on the profile, whichever tab is open -->
+        <div class="pg-cx" role="group" aria-label="Your crypto">
+          <button type="button" class="pg-cx-cell" data-pg="portfolio">
+            <span class="pg-cx-l">${ico('account_balance_wallet')}Assets</span><b id="pg-cx-equity">—</b>
+          </button>
+          <button type="button" class="pg-cx-cell" data-pg="wallet">
+            <span class="pg-cx-l">${ico('account_balance_wallet')}Wallet</span><b id="pg-cx-wallet">—</b>
+          </button>
+          <button type="button" class="pg-cx-cell" data-pg="earn">
+            <span class="pg-cx-l">${ico('savings')}Staked</span><b id="pg-cx-staked">—</b>
+          </button>
+          <div class="pg-cx-acts" id="pg-cx-acts" role="group" aria-label="Crypto actions"></div>
+          <span class="pg-cx-note">${ico('info')}Simulated balances · no real money moves</span>
+        </div>
+
+        <!-- Posts · Shorty · Crypto · Library -->
+        <div class="pg-tabs" id="pg-tabs" role="tablist" aria-label="Profile"></div>
+        <div id="prof-tab-dynamic-content" class="pg-body" role="tabpanel"></div>
+
+        <!-- Fallback editor, used only if the Edit profile page is unavailable -->
+        <div id="edit-form" class="card mt16" style="display:none; padding:24px">
+          <h3 class="fw8 mb16 tc-1">Edit Profile Details</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
+            <input class="input" type="text" id="edit-fname" aria-label="First name">
+            <input class="input" type="text" id="edit-lname" aria-label="Last name">
           </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <label class="form-label" style="display:block; font-size:11px; color:var(--t3); margin-bottom:4px">Username @handle</label>
-            <input class="input" type="text" id="edit-handle" value="@alex_vance" style="width:100%">
-          </div>
-          <div class="form-group" style="margin-bottom:16px">
-            <label class="form-label" style="display:block; font-size:11px; color:var(--t3); margin-bottom:4px">Bio Description</label>
-            <textarea class="input" id="edit-bio" style="height:80px; width:100%; resize:none">Digital creator & tech enthusiast. Building the future one post at a time. 🚀</textarea>
-          </div>
+          <input class="input" type="text" id="edit-handle" aria-label="Username" style="margin-bottom:12px">
+          <textarea class="input" id="edit-bio" aria-label="Bio" style="height:80px; resize:none; margin-bottom:16px"></textarea>
           <div class="flex gap8">
             <button class="btn btn-primary btn-sm" onclick="saveProfileChanges()">Save Changes</button>
             <button class="btn btn-ghost btn-sm" onclick="toggleEditForm()">Cancel</button>
           </div>
         </div>
-
-        <!-- 22-Tab Profile Navigation -->
-        <div class="tabs mb16 overflow-x-auto" style="scrollbar-width:none; display:flex; gap:6px; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; padding-bottom:6px">
-          <button class="tab-btn active" onclick="switchProfileTab('posts')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">dynamic_feed</span>Posts</button>
-          <button class="tab-btn" onclick="switchProfileTab('videos')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">video_library</span>Videos</button>
-          <button class="tab-btn" onclick="switchProfileTab('shorty')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">movie</span>Reels</button>
-          <button class="tab-btn" onclick="switchProfileTab('photos')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">image</span>Photos</button>
-          <button class="tab-btn" onclick="switchProfileTab('articles')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">article</span>Articles</button>
-          <button class="tab-btn" onclick="switchProfileTab('podcasts')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">podcasts</span>Podcasts</button>
-          <button class="tab-btn" onclick="switchProfileTab('music')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">music_note</span>Music</button>
-          <button class="tab-btn" onclick="switchProfileTab('livestreams')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">sensors</span>Livestreams</button>
-          <button class="tab-btn" onclick="switchProfileTab('documents')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">description</span>Documents</button>
-          <button class="tab-btn" onclick="switchProfileTab('research')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">school</span>Research</button>
-          <button class="tab-btn" onclick="switchProfileTab('saved')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">bookmark</span>Saved</button>
-          <button class="tab-btn" onclick="switchProfileTab('history')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">history</span>History</button>
-          <button class="tab-btn" onclick="switchProfileTab('liked')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">favorite</span>Liked</button>
-          <button class="tab-btn" onclick="switchProfileTab('purchases')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">shopping_cart</span>Purchases</button>
-          <button class="tab-btn" onclick="switchProfileTab('nfts')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">token</span>NFTs</button>
-          <button class="tab-btn" onclick="switchProfileTab('wallet')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">account_balance_wallet</span>Wallet</button>
-          <button class="tab-btn" onclick="switchProfileTab('communities')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">forum</span>Communities</button>
-          <button class="tab-btn" onclick="switchProfileTab('courses')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">local_library</span>Courses</button>
-
-          <button class="tab-btn" onclick="switchProfileTab('analytics')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">trending_up</span>Analytics</button>
-          <button class="tab-btn" onclick="switchProfileTab('ai')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">auto_awesome</span>AI Assistant</button>
-          <button class="tab-btn" onclick="switchProfileTab('settings')"><span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">settings</span>Settings</button>
-        </div>
-
-        <!-- Dynamic Content Viewport -->
-        <div id="prof-tab-dynamic-content" class="mt16"></div>
       </div>
       </section>`;
 }
 
 
-function switchProfileTab(tab) {
-  const container = $id('prof-tab-dynamic-content');
-  if (!container) return;
+/* Kept for callers elsewhere (Home's wallet card, the swap form, the
+   profile composer): Posts, Shorty, Crypto and Library are tabs, anything
+   else opens as a section. */
+function switchProfileTab(tab) { PG.show(tab); }
 
-  document.querySelectorAll('#pane-profile .tab-btn').forEach(btn => {
-    const btnText = btn.textContent.trim().toLowerCase();
-    btn.classList.toggle('active', btnText.includes(tab) || (tab === 'communities' && btnText.includes('communities')));
-  });
-
-  showToast(`Profile: Opened ${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-  
+/* The markup for one profile section. */
+function profileSectionHTML(tab) {
   let html = '';
 
   if (tab === 'posts') {
-    const myPosts = DATA.posts.filter(p => p.author === 'Alex Vance');
-    const others = DATA.posts.slice(0, 3);
-    const allProfilePosts = myPosts.concat(others);
-    
-    html = `
-      <div class="composer card mb16" style="padding: 16px">
-        <div class="composer-row">
-          <div class="avatar av-sm" style="background:var(--g-brand); display:grid; place-items:center; color:#fff">AV</div>
-          <input class="composer-input" id="profile-post-input" placeholder="Compose a microblog post... Add emojis! 🚀🔥" style="flex:1; margin-left:12px; background:var(--bg); border:1px solid var(--border); border-radius:var(--rf); padding:8px 16px; color:var(--t1)">
-        </div>
-        <div class="composer-actions mt12 flex-between" style="align-items:center">
-          <div class="flex gap8">
-            <button class="composer-act-btn btn-ghost" onclick="$id('profile-post-input').value += ' 🔥'" style="display:inline-flex; align-items:center; justify-content:center"><span class="material-symbols-rounded" style="color:var(--orange); font-size:18px">local_fire_department</span></button>
-            <button class="composer-act-btn btn-ghost" onclick="$id('profile-post-input').value += ' 🚀'" style="display:inline-flex; align-items:center; justify-content:center"><span class="material-symbols-rounded" style="color:var(--blue); font-size:18px">rocket_launch</span></button>
-            <button class="composer-act-btn btn-ghost" onclick="$id('profile-post-input').value += ' ✨'" style="display:inline-flex; align-items:center; justify-content:center"><span class="material-symbols-rounded" style="color:var(--purple); font-size:18px">auto_awesome</span></button>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="publishProfilePost()">Post</button>
-        </div>
-      </div>
-      <div id="prof-posts-list" class="flex flex-col gap16">
-        ${allProfilePosts.map(p => renderPostCard(p)).join('')}
-      </div>
-    `;
+    html = PG.composerHTML() + PG.listHTML();
   }
   else if (tab === 'videos') {
     html = `
@@ -918,150 +824,16 @@ function switchProfileTab(tab) {
     `;
   }
   else if (tab === 'wallet') {
-    const b = typeof DATA !== 'undefined' && DATA.wallet ? DATA.wallet.balances : { USDT:0, BTC:0, ETH:0, SOL:0, TREND:0 };
-    const m = typeof DATA !== 'undefined' && DATA.cryptoMarkets ? DATA.cryptoMarkets : [];
-    
-    // Helper to get real-time price
-    const getPrice = (coin) => {
-      if (coin === 'USDT') return 1.0;
-      if (coin === 'TREND') return 0.1;
-      const pair = m.find(x => x.pair === `${coin}/USDT`);
-      return pair ? pair.price : 0;
-    };
-    
-    const usdtVal = (b.USDT * getPrice('USDT')).toFixed(2);
-    const btcVal = (b.BTC * getPrice('BTC')).toFixed(2);
-    const ethVal = (b.ETH * getPrice('ETH')).toFixed(2);
-    const solVal = (b.SOL * getPrice('SOL')).toFixed(2);
-    const trendVal = (b.TREND * getPrice('TREND')).toFixed(2);
-    const totalVal = (parseFloat(usdtVal) + parseFloat(btcVal) + parseFloat(ethVal) + parseFloat(solVal) + parseFloat(trendVal)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
+    /* The Wallet tab and the Assets page used to be two balance screens
+       that disagreed — different prices, different coins counted, and a
+       history of three invented rows. Both are one view now; WV renders
+       it from MNY, the same source the Assets page reads. */
     html = `
       <div class="section-hdr mb12">
-        <span class="section-title" style="display:inline-flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--orange)">account_balance_wallet</span> Web3 Crypto Wallet</span>
-        <span class="badge badge-purple" style="display:inline-flex; align-items:center; gap:4px"><span class="material-symbols-rounded" style="font-size:12px">lock</span> E2E Encrypted</span>
+        <span class="section-title" style="display:inline-flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--orange)">account_balance_wallet</span> Wallet</span>
+        <button class="btn btn-ghost btn-sm flex-center gap4" onclick="navigateTo('portfolio')"><span class="material-symbols-rounded" style="font-size:14px">open_in_full</span> Full assets</button>
       </div>
-      
-      <!-- Portfolio Overview -->
-      <div class="card p20 mb16 text-center" style="background: linear-gradient(135deg, var(--card2), rgba(0,0,0,0.2)); border: 1px solid var(--border);">
-        <div class="fs12 tc-3 mb4">Total Portfolio Value (Real-time Market)</div>
-        <div class="fw9 tc-1" style="font-size:32px">$${totalVal}</div>
-        <div class="fs11 tc-green mt4">+2.4% (24h)</div>
-        <div class="flex-center gap8 mt16">
-          <button class="btn btn-primary btn-sm flex-center gap4"><span class="material-symbols-rounded" style="font-size:16px">add</span> Buy Crypto</button>
-          <button class="btn btn-ghost btn-sm flex-center gap4"><span class="material-symbols-rounded" style="font-size:16px">credit_card</span> Withdraw</button>
-        </div>
-      </div>
-
-      <div class="grid-3 gap12 mb16">
-        <div class="card p16 text-center" style="background:var(--card2)">
-          <div class="fs11 tc-3">BTC Balance</div>
-          <div class="fw8 tc-1 fs18 mt4">${b.BTC} BTC</div>
-          <div class="fs10 tc-green mt2">$${parseFloat(btcVal).toLocaleString()} USD</div>
-        </div>
-        <div class="card p16 text-center" style="background:var(--card2)">
-          <div class="fs11 tc-3">ETH Balance</div>
-          <div class="fw8 tc-1 fs18 mt4">${b.ETH} ETH</div>
-          <div class="fs10 tc-green mt2">$${parseFloat(ethVal).toLocaleString()} USD</div>
-        </div>
-        <div class="card p16 text-center" style="background:var(--card2)">
-          <div class="fs11 tc-3">TREND Balance</div>
-          <div class="fw8 tc-1 fs18 mt4">${b.TREND} TREND</div>
-          <div class="fs10 tc-blue mt2">$${parseFloat(trendVal).toLocaleString()} USD</div>
-        </div>
-      </div>
-      
-      <div class="grid-2 gap16">
-        <!-- Send Crypto -->
-        <div class="card p20">
-          <h3 class="fw8 mb12 tc-1" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--green)">send</span> Send Crypto</h3>
-          <div class="form-group">
-            <label class="form-label">Recipient Wallet or @handle</label>
-            <input class="input" type="text" id="wallet-recipient" placeholder="@alex_vance or 0x...">
-          </div>
-          <div class="form-group mt8">
-            <label class="form-label">Coin Amount</label>
-            <div class="flex gap4">
-              <input class="input" type="number" id="wallet-amount" placeholder="0.0">
-              <select class="input" id="wallet-coin" style="width:100px">
-                <option value="TREND">TREND</option>
-                <option value="USDT">USDT</option>
-                <option value="BTC">BTC</option>
-                <option value="ETH">ETH</option>
-                <option value="SOL">SOL</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-primary mt12" style="width:100%" onclick="submitCryptoTransfer()">Send Payment</button>
-        </div>
-
-        <!-- Token Swap (DEX) -->
-        <div class="card p20">
-          <h3 class="fw8 mb12 tc-1" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--pink)">currency_exchange</span> Swap Tokens</h3>
-          <div class="form-group">
-            <label class="form-label">You Pay</label>
-            <div class="flex gap4">
-              <input class="input" type="number" id="swap-amount-in" placeholder="0.0">
-              <select class="input" id="swap-coin-in" style="width:100px" onchange="updateSwapEstimate()">
-                <option value="USDT">USDT</option>
-                <option value="ETH">ETH</option>
-              </select>
-            </div>
-          </div>
-          <div class="text-center my4 tc-3"><span class="material-symbols-rounded" style="font-size:16px">arrow_downward</span></div>
-          <div class="form-group">
-            <label class="form-label">You Receive (Est.)</label>
-            <div class="flex gap4">
-              <input class="input" type="number" id="swap-amount-out" placeholder="0.0" disabled style="background:rgba(255,255,255,0.05)">
-              <select class="input" id="swap-coin-out" style="width:100px" onchange="updateSwapEstimate()">
-                <option value="TREND">TREND</option>
-                <option value="SOL">SOL</option>
-                <option value="BTC">BTC</option>
-              </select>
-            </div>
-          </div>
-          <div class="fs10 tc-3 mt4" style="text-align:right">Fee: 1.0% (Platform)</div>
-          <button class="btn btn-primary mt8" style="width:100%; background:var(--pink)" onclick="submitTokenSwap()">Swap Tokens</button>
-        </div>
-      </div>
-      
-      <div class="grid-2 gap16 mt16">
-        <!-- Staking Vault -->
-        <div class="card p20" style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.1), var(--card2))">
-          <h3 class="fw8 mb12 tc-1" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--purple)">lock_clock</span> Staking Vault</h3>
-          <div class="flex-between mb12">
-            <span class="fs12 tc-2">Currently Staked:</span>
-            <span class="fw8 tc-purple fs14">5,000 TREND</span>
-          </div>
-          <div class="flex-between mb12">
-            <span class="fs12 tc-2">Est. APY:</span>
-            <span class="fw8 tc-green fs14">12.5%</span>
-          </div>
-          <div class="flex gap8 mt16">
-            <button class="btn btn-primary btn-sm flex-center gap4" style="flex:1" onclick="showToast('TREND Staked! +12.5% APY active.')"><span class="material-symbols-rounded" style="font-size:14px">add</span> Stake</button>
-            <button class="btn btn-ghost btn-sm flex-center gap4" style="flex:1" onclick="showToast('TREND Unstaked.')"><span class="material-symbols-rounded" style="font-size:14px">remove</span> Unstake</button>
-          </div>
-        </div>
-
-        <!-- Ledger History -->
-        <div class="card p20 flex flex-col">
-          <h3 class="fw8 mb12 tc-1" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--blue)">receipt_long</span> Ledger History</h3>
-          <div style="flex:1; overflow-y:auto; max-height:160px" class="flex flex-col gap8 fs12" id="wallet-ledger">
-            <div class="flex-between py4" style="border-bottom:1px solid var(--border)">
-              <span class="tc-green" style="display:inline-flex; align-items:center; gap:4px"><span class="material-symbols-rounded" style="font-size:14px">arrow_downward</span> Received Deposit</span>
-              <span class="fw7">+500 TREND · Just now</span>
-            </div>
-            <div class="flex-between py4" style="border-bottom:1px solid var(--border)">
-              <span class="tc-pink" style="display:inline-flex; align-items:center; gap:4px"><span class="material-symbols-rounded" style="font-size:14px">arrow_upward</span> Sent Transfer</span>
-              <span class="fw7">-50 TREND · 2h ago</span>
-            </div>
-            <div class="flex-between py4" style="border-bottom:1px solid var(--border)">
-              <span class="tc-green" style="display:inline-flex; align-items:center; gap:4px"><span class="material-symbols-rounded" style="font-size:14px">emoji_events</span> Received Reward</span>
-              <span class="fw7">+100 TREND · 1d ago</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      ${typeof WV !== 'undefined' ? WV.html() : '<div class="card p20 tc-3">The wallet is still loading…</div>'}
     `;
   }
   else if (tab === 'communities') {
@@ -1186,11 +958,11 @@ function switchProfileTab(tab) {
           </div>
           <div class="flex-between mt16 pb8" style="border-bottom:1px solid var(--border)">
             <span class="fs12 tc-2">Estimated Ad Earnings:</span>
-            <strong class="tc-green" id="calc-ad-earns">$1,250.00</strong>
+            <strong class="tc-green" id="calc-ad-earns">$1,250.00 (0.0183 BTC)</strong>
           </div>
           <div class="flex-between mt8">
             <span class="fs12 tc-2">Estimated Royalties:</span>
-            <strong class="tc-blue" id="calc-roy-earns">$450.00</strong>
+            <strong class="tc-blue" id="calc-roy-earns">$450.00 (0.0066 BTC)</strong>
           </div>
         </div>
       </div>
@@ -1271,8 +1043,386 @@ function switchProfileTab(tab) {
     `;
   }
 
-  container.innerHTML = html;
-  if (typeof IX !== 'undefined' && IX.bindAllEmojis) {
-    IX.bindAllEmojis(container);
-  }
+  return html;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   PROFILE LAYOUT (PG)
+   Instagram's profile shape: photo and counts, name and bio, Edit and
+   Share, story highlights in circles, then Posts · Shorty · Crypto ·
+   Library. The crypto card, with its action buttons, sits above the
+   tabs, so it is on the profile whichever tab is open. Every older section is
+   still here: content types in Library, account things in the menu.
+   ══════════════════════════════════════════════════════════════════ */
+const PG = (() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const ico = (n, cls) => `<span class="material-symbols-rounded${cls ? ' ' + cls : ''}" aria-hidden="true">${n}</span>`;
+  // Whole dollars from $10,000 up, so the three amounts fit side by side on a phone.
+  const money = v => { v = Number(v) || 0; const big = Math.abs(v) >= 1e4; return '$' + v.toLocaleString('en-US', { minimumFractionDigits: big ? 0 : 2, maximumFractionDigits: big ? 0 : 2 }); };
+  const compact = n => { n = Number(n) || 0; return n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(n); };
+  const toast = m => { if (typeof showToast === 'function') showToast(m); };
+  const user = () => (typeof S !== 'undefined' && S.user) || {};
+  const guest = () => user().fname === 'Guest';
+
+  const TABS = [['posts', 'Posts', 'grid_on'], ['shorty', 'Shorty', 'slow_motion_video'], ['crypto', 'Crypto', 'token'], ['library', 'Library', 'widgets']];
+  const LIBRARY = [
+    ['videos', 'Videos', 'video_library'], ['photos', 'Photos', 'image'], ['articles', 'Articles', 'article'],
+    ['podcasts', 'Podcasts', 'podcasts'], ['music', 'Music', 'music_note'], ['livestreams', 'Livestreams', 'sensors'],
+    ['documents', 'Documents', 'description'], ['research', 'Research', 'school'], ['courses', 'Courses', 'local_library'],
+    ['communities', 'Communities', 'forum']
+  ];
+  const MENU = [
+    ['saved', 'Saved', 'bookmark'], ['liked', 'Liked', 'favorite'], ['history', 'History', 'history'],
+    ['purchases', 'Purchases', 'shopping_cart'], ['analytics', 'Analytics', 'insights'],
+    ['ai', 'AI Assistant', 'auto_awesome'], ['settings', 'Profile settings', 'tune']
+  ];
+  const CIRCLES = [
+    ['wallet', 'Wallet', 'account_balance_wallet', '#7C5CFF'], ['send', 'Send', 'send', '#2EBD85'],
+    ['receive', 'Receive', 'qr_code_2', '#3B82F6'], ['scan', 'Scan', 'qr_code_scanner', '#0EA5E9'],
+    ['swap', 'Swap', 'currency_exchange', '#EC4899'], ['trade', 'Trade', 'candlestick_chart', '#7C4DFF'],
+    ['earn', 'Earn', 'savings', '#F0B90B'], ['p2p', 'P2P', 'swap_horiz', '#26A69A'], ['nfts', 'NFTs', 'token', '#F355DA']
+  ];
+  const TITLES = Object.fromEntries([...TABS, ...LIBRARY, ...MENU].map(([k, l]) => [k, l]));
+  // Which tab stays lit while a section is open.
+  const OWNER = Object.fromEntries([...LIBRARY.map(([k]) => [k, 'library']), ['list', 'posts'], ['compose', 'posts']]);
+
+  const V = { tab: 'posts', section: null };
+  let shorts = [];
+
+  /* ── Your posts ──────────────────────────────────────────────────── */
+  function myPosts() {
+    const u = user();
+    const posts = (typeof DATA !== 'undefined' && DATA.posts) || [];
+    return posts.filter(p => p.mine || (u.handle && p.handle === u.handle));
+  }
+
+  const HUES = { crypto: 32, tech: 250, fitness: 150, motivation: 330, design: 285, sports: 200, agriculture: 95, music: 300 };
+  const hue = p => HUES[p.category] != null ? HUES[p.category] : [...String(p.body || '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+
+  function postsGridHTML() {
+    const list = myPosts();
+    if (!list.length) return emptyHTML('photo_camera', 'Share your first post', 'Posts you publish show up here, on your profile.', 'compose', 'Create a post');
+    return `<div class="pg-grid">${list.map((p, i) => {
+      const text = String(p.body || '').replace(/\s+/g, ' ').trim();
+      const kind = p.type === 'poll' ? 'ballot' : p.type === 'emoji' ? 'mood' : '';
+      return `<button type="button" class="pg-tile${kind ? ' has-k' : ''}" data-pg="post" data-i="${i}" style="--h:${hue(p)}" aria-label="${esc(text.slice(0, 80) || 'Post')}">
+        <span class="pg-tile-t">${esc(text.slice(0, 160))}</span>
+        ${kind ? `<span class="pg-tile-k">${ico(kind)}</span>` : ''}
+        <span class="pg-tile-o">${ico('favorite')}${compact(p.likes)}&nbsp;&nbsp;${ico('chat_bubble')}${compact(p.comments)}</span>
+      </button>`;
+    }).join('')}</div>`;
+  }
+
+  function composerHTML() {
+    const u = user();
+    const src = window.PME && PME.photo ? PME.photo() : '';
+    const ini = `${(u.fname || '?')[0]}${(u.lname || '')[0] || ''}`.toUpperCase();
+    return `<div class="composer card mb16 pg-composer">
+        <div class="composer-row">
+          <div class="avatar av-sm"${src ? ` style="background:url('${src}') center / cover"` : ''}>${src ? '' : esc(ini)}</div>
+          <input class="composer-input" id="profile-post-input" placeholder="What's on your mind?" aria-label="Write a post" onkeydown="if(event.key==='Enter')publishProfilePost()">
+        </div>
+        <div class="composer-actions mt12 flex-between" style="align-items:center">
+          <div class="flex gap8">
+            <button type="button" class="composer-act-btn btn-ghost" onclick="$id('profile-post-input').value += ' 🔥'" aria-label="Add fire">${ico('local_fire_department')}</button>
+            <button type="button" class="composer-act-btn btn-ghost" onclick="$id('profile-post-input').value += ' 🚀'" aria-label="Add rocket">${ico('rocket_launch')}</button>
+            <button type="button" class="composer-act-btn btn-ghost" onclick="$id('profile-post-input').value += ' ✨'" aria-label="Add sparkles">${ico('auto_awesome')}</button>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="publishProfilePost()">Post</button>
+        </div>
+      </div>`;
+  }
+
+  function listHTML() {
+    const list = myPosts();
+    return `<div id="prof-posts-list" class="pg-list">${list.length && typeof renderPostCard === 'function'
+      ? list.map(p => renderPostCard(p)).join('')
+      : '<p class="pg-muted">Nothing posted yet.</p>'}</div>`;
+  }
+
+  /* ── Shorty ──────────────────────────────────────────────────────── */
+  function shortyHTML(list, loading) {
+    if (loading) return `<div class="pg-grid pg-tall">${'<span class="pg-tile pg-skel"></span>'.repeat(3)}</div>`;
+    if (!list.length) return emptyHTML('slow_motion_video', 'Create your first Shorty', 'Short videos you record or import show up here. They are stored on this device.', 'shorty-new', 'Create a Shorty');
+    return `<div class="pg-grid pg-tall">${list.map((s, i) => `
+      <button type="button" class="pg-tile pg-reel" data-pg="reel" data-i="${i}" aria-label="Play ${esc(s.title || s.caption || 'your Shorty')}">
+        ${s.coverUrl ? `<img src="${esc(s.coverUrl)}" alt="" loading="lazy">` : s.src ? `<video src="${esc(s.src)}" muted playsinline preload="metadata"></video>` : ''}
+        <span class="pg-tile-o on">${ico('play_arrow')}${compact(s.views)}</span>
+      </button>`).join('')}</div>`;
+  }
+
+  async function fillShorty() {
+    let list = [];
+    try { list = window.SH && SH.mine ? await SH.mine() : []; } catch (e) { list = []; }
+    if (V.tab !== 'shorty' || V.section) return;
+    shorts = list;
+    const body = $('prof-tab-dynamic-content');
+    if (body) body.innerHTML = shortyHTML(list);
+  }
+
+  /* ── Crypto ──────────────────────────────────────────────────────── */
+  /* One source, so the number on this card matches the Wallet tab and the
+     Assets page. It used to count five named coins at prices from a
+     static mock table, which left the rest of the wallet out and drifted
+     from every other total on screen. */
+  function walletTotal() {
+    if (typeof MNY !== 'undefined') return MNY.total('funding').value;
+    const b = (typeof DATA !== 'undefined' && DATA.wallet && DATA.wallet.balances) || {};
+    return Object.keys(b).reduce((t, c) => t + (Number(b[c]) || 0) * (c === 'USDT' ? 1 : 0), 0);
+  }
+
+  function paintCrypto() {
+    const set = (id, v) => { const el = $(id); if (el && el.textContent !== v) el.textContent = v; };
+    set('pg-cx-equity', window.TR && TR.equity ? money(TR.equity()) : '—');
+    set('pg-cx-wallet', money(walletTotal()));
+    set('pg-cx-staked', window.EN && EN.stakedValue ? money(EN.stakedValue()) : '—');
+  }
+
+  const cryptoHTML = () => `<div class="pg-crypto">${profileSectionHTML('wallet')}<div id="pg-nfts" class="pg-anchor"></div>${profileSectionHTML('nfts')}</div>`;
+
+  function pay(fn) {
+    if (window.PAY && typeof PAY[fn] === 'function') PAY[fn]();
+    else show('crypto');
+  }
+
+  /* ── Library, sections, empty states ─────────────────────────────── */
+  const libraryHTML = () => `<div class="pg-lib">${LIBRARY.map(([k, l, i]) =>
+    `<button type="button" class="pg-lib-i" data-pg="${k}">${ico(i)}<span>${l}</span></button>`).join('')}</div>`;
+
+  const headHTML = title => `<div class="pg-sec-h"><button type="button" class="pg-ib" data-pg="back" aria-label="Back">${ico('arrow_back')}</button><h2>${esc(title)}</h2></div>`;
+
+  const emptyHTML = (icon, title, text, action, label) => `
+    <div class="pg-empty">
+      <span class="pg-empty-ic">${ico(icon)}</span>
+      <b>${esc(title)}</b>
+      <p>${esc(text)}</p>
+      ${action ? `<button type="button" data-pg="${action}">${esc(label)}</button>` : ''}
+    </div>`;
+
+  /* ── Showing a tab or a section ──────────────────────────────────── */
+  function show(name, focus) {
+    const body = $('prof-tab-dynamic-content');
+    if (!body) return;
+    if (name === 'wallet') name = 'crypto';
+    if (name === 'nfts' || name === 'swap') { focus = focus || name; name = 'crypto'; }
+    if (name === 'reels') name = 'shorty';
+    const isTab = TABS.some(t => t[0] === name);
+    if (isTab) { V.tab = name; V.section = null; } else V.section = name;
+    paintTabs();
+
+    let html = '';
+    if (name === 'posts') html = postsGridHTML();
+    else if (name === 'shorty') html = shortyHTML(shorts, true);
+    else if (name === 'crypto') html = cryptoHTML();
+    else if (name === 'library') html = libraryHTML();
+    else if (name === 'list') html = headHTML('Posts') + listHTML();
+    else if (name === 'compose') html = headHTML('New post') + composerHTML() + listHTML();
+    else html = headHTML(TITLES[name] || name) + profileSectionHTML(name);
+    body.innerHTML = html;
+    if (typeof IX !== 'undefined' && IX.bindAllEmojis) IX.bindAllEmojis(body);
+    if (name === 'shorty') fillShorty();
+    paint();
+
+    if (focus === 'swap') reveal(document.getElementById('wv-swap-amt'));
+    else if (focus === 'nfts') reveal($('pg-nfts'));
+    else if (typeof focus === 'number') reveal(($('prof-posts-list') || body).children[focus]);
+    else if (!isTab) reveal($('pg-tabs'));
+    if (name === 'compose') { const inp = $('profile-post-input'); if (inp) inp.focus({ preventScroll: true }); }
+  }
+
+  // Brings an element to the top of the page, just under the sticky tabs.
+  function reveal(el) {
+    const pane = $('pane-profile');
+    const tabs = $('pg-tabs');
+    if (!el || !pane) return;
+    const card = el.closest('.card') || el;
+    requestAnimationFrame(() => {
+      const offset = card === tabs ? 0 : (tabs ? tabs.offsetHeight + 8 : 0);
+      const top = card.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop - offset;
+      if (card === tabs && tabs.getBoundingClientRect().top <= pane.getBoundingClientRect().top + 1) return;
+      pane.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    });
+  }
+
+  function paintTabs() {
+    const bar = $('pg-tabs');
+    if (!bar) return;
+    if (!bar.childElementCount) {
+      bar.innerHTML = TABS.map(([k, l, i]) =>
+        `<button type="button" class="pg-tab" role="tab" data-pg="tab:${k}" data-tab="${k}" aria-label="${l}" title="${l}">${ico(i)}<span>${l}</span></button>`).join('');
+    }
+    const on = V.section ? (OWNER[V.section] || '') : V.tab;
+    bar.querySelectorAll('.pg-tab').forEach(b => {
+      const a = b.dataset.tab === on;
+      b.classList.toggle('on', a);
+      b.setAttribute('aria-selected', a ? 'true' : 'false');
+    });
+  }
+
+  /* Crypto actions as buttons in the crypto card. Wallet is already the
+     card's Wallet box, so it isn't repeated. The circles hold highlights. */
+  function paintCircles() {
+    const acts = $('pg-cx-acts');
+    if (acts && !acts.childElementCount) {
+      acts.innerHTML = CIRCLES.filter(([k]) => k !== 'wallet').map(([k, l, i, c]) =>
+        `<button type="button" class="pg-act" data-pg="${k}" style="--c:${c}">${ico(i)}<span>${l}</span></button>`).join('');
+    }
+    if (window.HL && HL.paint) HL.paint();
+  }
+
+  /* ── The header: name, handle, counts ────────────────────────────── */
+  function paint() {
+    if (!$('pane-profile') || !document.querySelector('#pane-profile .pg')) return;
+    const u = user();
+    const g = guest();
+    const handle = g ? '@guest' : (u.handle || '@user');
+    const top = $('pg-top-handle');
+    if (top) top.textContent = handle.replace(/^@/, '');
+    const ph = $('profile-handle');
+    if (ph && g) ph.textContent = '@guest';
+    const posts = $('profile-stat-posts');
+    if (posts) posts.textContent = compact(myPosts().length);
+    const loc = $('profile-location');
+    const wrap = $('profile-location-wrap');
+    if (wrap) wrap.style.display = !loc || /not set/i.test(loc.textContent) || !loc.textContent.trim() ? 'none' : '';
+    paintCircles();
+    paintTabs();
+    paintCrypto();
+  }
+
+  /* ── Sheets: Create and the menu ─────────────────────────────────── */
+  let sheetFrom = null;
+  function sheet(label, rows) {
+    closeSheet();
+    sheetFrom = document.activeElement;
+    const el = document.createElement('div');
+    el.id = 'pg-sheet';
+    el.className = 'mob-scrim';
+    el.innerHTML = `<div class="mob-sheet pg-sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}">
+        <span class="mob-grab" aria-hidden="true"></span>
+        ${rows.map(([k, l, i, danger]) => `<button type="button" class="pg-row${danger ? ' danger' : ''}" data-pg="${k}">${ico(i)}<span>${esc(l)}</span>${ico('chevron_right', 'pg-row-go')}</button>`).join('')}
+      </div>`;
+    el.addEventListener('click', e => { if (e.target === el) closeSheet(); });
+    document.body.appendChild(el);
+    document.addEventListener('keydown', sheetKey, true);
+    requestAnimationFrame(() => { el.classList.add('open'); const f = el.querySelector('.pg-row'); if (f) f.focus({ preventScroll: true }); });
+  }
+  function closeSheet() {
+    const el = $('pg-sheet');
+    if (!el) return;
+    el.remove();
+    document.removeEventListener('keydown', sheetKey, true);
+    if (sheetFrom && document.contains(sheetFrom)) { try { sheetFrom.focus({ preventScroll: true }); } catch (e) {} }
+    sheetFrom = null;
+  }
+  function sheetKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSheet(); return; }
+    if (e.key !== 'Tab') return;
+    const f = [...document.querySelectorAll('#pg-sheet .pg-row')];
+    const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  }
+
+  const menu = () => sheet('Menu', [
+    ...MENU,
+    ['app-settings', 'Settings and privacy', 'settings'],
+    guest() ? ['signin', 'Sign in', 'login'] : ['signout', 'Sign out', 'logout', true]
+  ]);
+  const create = () => sheet('Create', [['compose', 'Post', 'edit_square'], ['shorty-new', 'Shorty', 'slow_motion_video']]);
+
+  /* ── Share and discover ──────────────────────────────────────────── */
+  async function share() {
+    const u = user();
+    if (guest()) { toast('Sign in to share your profile.'); if (typeof openAuthModal === 'function') openAuthModal(); return; }
+    const h = String(u.handle || '').replace(/^@/, '');
+    const url = `https://trending.app/${encodeURIComponent(h)}`;
+    const name = `${u.fname || ''} ${u.lname || ''}`.trim() || '@' + h;
+    if (navigator.share) {
+      try { await navigator.share({ title: `${name} on Trending`, text: `Follow @${h} on Trending`, url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(url); toast('Profile link copied'); }
+    catch (e) { toast(url); }
+  }
+
+  function people() {
+    if (window.MOB && MOB.openSearch) MOB.openSearch();
+    else if (window.DX && DX.open) DX.open();
+    if (window.DX && DX.chip) DX.chip('creators');
+  }
+
+  /* ── One click handler for the page and its sheets ───────────────── */
+  function act(k, el, e) {
+    if (el.closest('#pg-sheet')) closeSheet();
+    if (k.indexOf('tab:') === 0) {
+      const t = k.slice(4);
+      if (V.tab === t && !V.section && t !== 'posts') return;
+      show(t);
+      if (el.classList.contains('pg-stat')) reveal($('pg-tabs'));
+      return;
+    }
+    switch (k) {
+      case 'back': show(V.tab); reveal($('pg-tabs')); return;
+      case 'post': show('list', +el.dataset.i); return;
+      case 'reel': if (window.SH && SH.openAt) SH.openAt(+el.dataset.i, shorts); return;
+      case 'compose': show('compose'); return;
+      case 'shorty-new': if (window.SH && SH.openCreate) SH.openCreate(); else if (typeof navigateTo === 'function') navigateTo('reels'); return;
+      case 'create': create(); return;
+      case 'menu': menu(); return;
+      case 'share': share(); return;
+      case 'people': people(); return;
+      case 'link': {
+        const a = el.getAttribute('href') || '#';
+        if (a !== '#') return;                     // a real website opens normally
+        e.preventDefault();
+        if (guest() || /add a link/i.test(el.textContent)) { if (typeof toggleEditForm === 'function') toggleEditForm(); }
+        else share();
+        return;
+      }
+      case 'wallet': show('crypto'); reveal($('pg-tabs')); return;
+      case 'swap': case 'nfts': show('crypto', k); return;
+      case 'send': pay('openHub'); return;
+      case 'receive': pay('openMyQR'); return;
+      case 'scan': pay('openScan'); return;
+      case 'portfolio': case 'trade': case 'earn': case 'p2p':
+        if (typeof navigateTo === 'function') navigateTo(k); return;
+      case 'app-settings': if (typeof navigateTo === 'function') navigateTo('settings'); return;
+      case 'signout': if (typeof signOut === 'function') signOut(); return;
+      case 'signin': if (typeof openAuthModal === 'function') openAuthModal(); return;
+      default: show(k);
+    }
+  }
+
+  let ready = false;
+  function init() {
+    if (ready) return;
+    ready = true;
+    document.addEventListener('click', e => {
+      const el = e.target.closest('[data-pg]');
+      if (!el || !(el.closest('#pane-profile') || el.closest('#pg-sheet'))) return;
+      act(el.dataset.pg, el, e);
+    });
+    // Name, handle or photo changes (sign-in, Edit profile) repaint the header.
+    if (typeof window.updateUserUI === 'function' && !window.updateUserUI.__pg) {
+      const up = window.updateUserUI;
+      const wrapped = function () {
+        const r = up.apply(this, arguments);
+        try { if ($('pane-profile')) { syncProfileIdentity(); paint(); } } catch (err) {}
+        return r;
+      };
+      wrapped.__pg = true;
+      window.updateUserUI = wrapped;
+    }
+    // Prices move; keep the crypto card current while the profile is open.
+    setInterval(() => { if (typeof S !== 'undefined' && S.pane === 'profile' && !document.hidden) paintCrypto(); }, 10000);
+  }
+
+  return {
+    init, show, paint, paintCrypto, myPosts, composerHTML, listHTML, closeSheet,
+    get state() { return { tab: V.tab, section: V.section }; }
+  };
+})();
+
+window.PG = PG;

@@ -1,7 +1,5 @@
 // ── THEME & HEADER INTERACTION ─────────────────────────────────────
 function setupHeader() {
-  const btn = $id('theme-btn');
-  if (btn) btn.addEventListener('click', toggleTheme);
   
   const av = $id('header-av');
   if (av) {
@@ -129,14 +127,56 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function toggleTheme() {
-  const html = document.documentElement;
-  const isLight = html.getAttribute('data-theme') === 'light';
-  html.setAttribute('data-theme', isLight ? 'dark' : 'light');
-  S.theme = isLight ? 'dark' : 'light';
-  const icon = $id('theme-icon');
-  if (icon) icon.textContent = isLight ? 'dark_mode' : 'light_mode';
+/* ── Appearance ──────────────────────────────────────────────────────
+   The app is light by default. The choice is stored, so it survives a
+   reload, and "system" follows the operating system as it changes.
+   The control itself lives in Settings → Appearance. */
+
+const THEME_KEY = 'ts_theme';
+
+function themePref() {
+  try { return localStorage.getItem(THEME_KEY) || 'light'; } catch (e) { return 'light'; }
 }
+
+function systemDark() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+function resolvedTheme(pref) {
+  const p = pref || themePref();
+  return p === 'system' ? (systemDark() ? 'dark' : 'light') : (p === 'dark' ? 'dark' : 'light');
+}
+
+function applyTheme(pref) {
+  const mode = resolvedTheme(pref);
+  document.documentElement.setAttribute('data-theme', mode);
+  if (typeof S !== 'undefined') S.theme = mode;
+  // Colours the browser chrome on mobile to match the app.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', mode === 'dark' ? '#0A0B0E' : '#F6F7F9');
+  return mode;
+}
+
+function setTheme(pref) {
+  try { localStorage.setItem(THEME_KEY, pref); } catch (e) {}
+  const mode = applyTheme(pref);
+  if (typeof renderSettings === 'function' && document.getElementById('pane-settings')) renderSettings();
+  return mode;
+}
+
+/* Kept for anything that still asks for a straight flip. */
+function toggleTheme() {
+  return setTheme(resolvedTheme() === 'dark' ? 'light' : 'dark');
+}
+
+/* Follow the system while the preference is "system". */
+if (window.matchMedia) {
+  try {
+    window.matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', () => { if (themePref() === 'system') applyTheme('system'); });
+  } catch (e) { /* older browsers: the stored choice still applies */ }
+}
+applyTheme();
 
 function openAuthModal() {
   const modal = $id('auth-modal');
@@ -159,109 +199,8 @@ function closeAuthModal() {
   }
 }
 
-function signInWithGoogle() {
-  const mainView = $id('auth-main-view');
-  const loadingView = $id('auth-loading-view');
-  const statusLbl = $id('auth-loading-status');
-  
-  if (mainView && loadingView && statusLbl) {
-    mainView.style.display = 'none';
-    loadingView.style.display = 'flex';
-    loadingView.classList.remove('hidden');
-    
-    // Simulate stages of OAuth
-    statusLbl.textContent = 'Contacting Google Accounts services...';
-    
-    setTimeout(() => {
-      statusLbl.textContent = 'Verifying secure OAuth2 credentials...';
-    }, 1200);
-    
-    setTimeout(() => {
-      statusLbl.textContent = 'Applying secure user profile tokens...';
-    }, 2400);
-
-    setTimeout(() => {
-      S.user = {
-        fname: 'Google',
-        lname: 'Creator',
-        handle: '@gmail_creator',
-        bio: 'Logged in via secure Google OAuth2 🛡️. Creating digital fashion experiences.'
-      };
-      
-      updateUserUI();
-      closeAuthModal();
-      showToast('Successfully signed in with Google! 🚀🔑');
-      
-      if (typeof IX !== 'undefined' && IX.burstReaction) {
-        IX.burstReaction('🔑', window.innerWidth/2, window.innerHeight/2, 12);
-      }
-    }, 3600);
-  }
-}
-
-function signInWithGmail(event) {
-  if (event) event.preventDefault();
-  
-  const emailInput = $id('auth-email');
-  const passInput = $id('auth-password');
-  if (!emailInput || !passInput) return;
-  
-  const email = emailInput.value.trim();
-  const password = passInput.value.trim();
-  
-  if (!email || !password) return;
-  
-  const mainView = $id('auth-main-view');
-  const loadingView = $id('auth-loading-view');
-  const statusLbl = $id('auth-loading-status');
-  
-  if (mainView && loadingView && statusLbl) {
-    mainView.style.display = 'none';
-    loadingView.style.display = 'flex';
-    loadingView.classList.remove('hidden');
-    
-    statusLbl.textContent = 'Validating Gmail credentials...';
-    
-    setTimeout(() => {
-      statusLbl.textContent = 'Generating encrypted user session...';
-    }, 1500);
-
-    setTimeout(() => {
-      const username = email.split('@')[0];
-      const displayName = username.charAt(0).toUpperCase() + username.slice(1);
-      
-      S.user = {
-        fname: displayName,
-        lname: 'Vance',
-        handle: `@${username}`,
-        bio: `Authenticated securely via ${email} 🛡️`
-      };
-      
-      updateUserUI();
-      closeAuthModal();
-      showToast(`Welcome back, ${displayName}! 🌟`);
-      
-      emailInput.value = '';
-      passInput.value = '';
-      
-      if (typeof IX !== 'undefined' && IX.burstReaction) {
-        IX.burstReaction('📩', window.innerWidth/2, window.innerHeight/2, 12);
-      }
-    }, 3000);
-  }
-}
-
-function signOut() {
-  if (confirm('Sign out of Trending?')) {
-    S.user = {
-      fname: 'Guest',
-      lname: 'User',
-      handle: '@guest_user',
-      bio: 'Explore Trending as a guest! Sign in to publish posts and buy digital fashion outfits.'
-    };
-    updateUserUI();
-    showToast('Signed out of ecosystem! 👤');
-    openAuthModal();
-  }
-}
+// ── AUTH FUNCTIONS ──
+// Real signInWithGoogle(), signInWithGmail(), and signOut() 
+// are defined in firebase-auth.js using real Firebase Auth SDK.
+// openAuthModal() and closeAuthModal() remain here for UI control.
 

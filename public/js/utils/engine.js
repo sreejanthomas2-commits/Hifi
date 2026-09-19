@@ -35,76 +35,9 @@ window.toggleAnonymousMode = function(checked) {
   }
 };
 
-const TRANSLATIONS = {
-  en: {
-    feeds: "Home",
-    explore: "Explore",
-    reels: "Reels",
-    shop: "Shop",
-    fitness: "Fitness",
-    gaming: "Gaming",
-    learn: "Democracy Enclave",
-    creator: "AI Studio",
-    messages: "Messages",
-    community: "Community",
-    profile: "Profile",
-    composer_placeholder: "What's trending with you today?",
-    search_placeholder: "Search Trending...",
-    post_btn: "Post",
-    publish_success: "Published successfully! ✨ Check your Home Feed."
-  },
-  hi: {
-    feeds: "मुख्य",
-    explore: "अन्वेषण",
-    reels: "रील्स",
-    shop: "दुकान",
-    fitness: "फिटनेस",
-    gaming: "गेमिंग",
-    learn: "ज्ञान एवं गिग्स",
-    creator: "एआई स्टूडियो",
-    messages: "संदेश",
-    community: "समुदाय",
-    profile: "प्रोफ़ाइल",
-    composer_placeholder: "आज आपके साथ क्या ट्रेंड कर रहा है?",
-    search_placeholder: "ट्रेंडिंग पर खोजें...",
-    post_btn: "पोस्ट",
-    publish_success: "सफलतापूर्वक प्रकाशित हुआ! अपना होम फ़ीड देखें।"
-  },
-  es: {
-    feeds: "Inicio",
-    explore: "Explorar",
-    reels: "Reels",
-    shop: "Tienda",
-    fitness: "Fitness",
-    gaming: "Juegos",
-    learn: "Aprender",
-    creator: "Estudio AI",
-    messages: "Mensajes",
-    community: "Comunidad",
-    profile: "Perfil",
-    composer_placeholder: "¿Qué es tendencia contigo hoy?",
-    search_placeholder: "Buscar en Trending...",
-    post_btn: "Publicar",
-    publish_success: "¡Publicado con éxito! Revisa tu feed de inicio."
-  },
-  ja: {
-    feeds: "ホーム",
-    explore: "探検",
-    reels: "リール",
-    shop: "ショップ",
-    fitness: "フィットネス",
-    gaming: "ゲーム",
-    learn: "学習＆ギグ",
-    creator: "AIスタジオ",
-    messages: "メッセージ",
-    community: "コミュニティ",
-    profile: "プロフィール",
-    composer_placeholder: "今日のあなたのトレンドは何ですか？",
-    search_placeholder: "トレンドで検索...",
-    post_btn: "投稿",
-    publish_success: "正常に投稿されました！フィードを確認してください。"
-  }
-};
+/* Interface strings live in js/data/i18n.js, which loads first. Kept under
+   the old name so nothing else has to change. */
+const TRANSLATIONS = window.I18N || {};
 
 const MODE_CATEGORY_MAP = {
   entertainment: ['design', 'art', 'music', 'gaming', 'ent'],
@@ -165,76 +98,59 @@ function formatRelativeTime(val) {
 }
 
 function applyLanguage(lang) {
-  S.lang = lang;
-  localStorage.setItem('ts_lang', lang);
-  
-  const trans = TRANSLATIONS[lang] || TRANSLATIONS.en;
-  
-  // 1. Translate Sidebar Nav items
-  const sidebarMapping = {
-    'feeds': trans.feeds,
-    'explore': trans.explore,
-    'reels': trans.reels,
-    'shop': trans.shop,
-    'fitness': trans.fitness,
-    'gaming': trans.gaming,
-    'learn': trans.learn,
-    'creator': trans.creator,
-    'messages': trans.messages,
-    'community': trans.community,
-    'profile': trans.profile
-  };
-  
-  Object.keys(sidebarMapping).forEach(paneKey => {
-    const navItem = document.querySelector(`.nav-item[data-pane="${paneKey}"] .nav-label`);
-    if (navItem) navItem.textContent = sidebarMapping[paneKey];
-    const mNavItem = document.querySelector(`.m-nav-btn[data-pane="${paneKey}"] span:not(.material-symbols-rounded)`);
-    if (mNavItem) mNavItem.textContent = sidebarMapping[paneKey];
-  });
-  
-  // 2. Translate Pane Titles dynamically
-  const paneTitles = {
-    'feeds': lang === 'en' ? '<span>Home</span> Feed' : (lang === 'hi' ? '<span>मुख्य</span> फ़ीड' : (lang === 'es' ? '<span>Inicio</span> Feed' : '<span>ホーム</span>フィード')),
-    'explore': lang === 'en' ? '<span>Explore</span> Universe' : (lang === 'hi' ? '<span>खोज</span> ब्रह्मांड' : (lang === 'es' ? '<span>Explorar</span> Universo' : '<span>探検</span>宇宙')),
-    'reels': lang === 'en' ? '<span>Reels</span> & Shorts' : (lang === 'hi' ? '<span>रील्स</span> और शॉर्ट्स' : (lang === 'es' ? '<span>Reels</span> y Shorts' : '<span>リール</span>＆ショート')),
-    'fitness': lang === 'en' ? '💪 <span>Fitness</span> Hub' : (lang === 'hi' ? '💪 <span>फिटनेस</span> हब' : (lang === 'es' ? '💪 <span>Fitness</span> Centro' : '💪 <span>フィットネス</span>ハブ')),
-    'gaming': lang === 'en' ? '🎮 <span>Game</span> Hub' : (lang === 'hi' ? '🎮 <span>गेम</span> हब' : (lang === 'es' ? '🎮 <span>Juegos</span> Centro' : '🎮 <span>ゲーム</span>ハブ')),
-    'learn': lang === 'en' ? '🎓 <span>Democracy</span> Enclave' : (lang === 'hi' ? '🎓 <span>लोकतंत्र</span> एन्क्लेव' : (lang === 'es' ? '🎓 <span>Democracia</span> Enclave' : '🎓 <span>民主</span>飞地')),
-    'creator': lang === 'en' ? '✨ <span>Creator</span> Studio' : (lang === 'hi' ? '✨ <span>क्रिएटर</span> स्टूडियो' : (lang === 'es' ? '✨ <span>Creador</span> Estudio' : '✨ <span>クリエイター</span>スタジオ')),
-    'community': lang === 'en' ? '🌐 <span>Community</span>' : (lang === 'hi' ? '🌐 <span>समुदाय</span>' : (lang === 'es' ? '🌐 <span>Comunidad</span>' : '🌐 <span>コミュニティ</span>'))
-  };
-  
-  Object.keys(paneTitles).forEach(paneKey => {
-    const titleEl = document.querySelector(`#pane-${paneKey} .pane-title`);
-    if (titleEl) titleEl.innerHTML = paneTitles[paneKey];
-  });
-  
-  // Translate shop hero title
-  const shopHeroTitle = document.querySelector('.shop-hero-title');
-  if (shopHeroTitle) shopHeroTitle.innerHTML = `🛒 ${trans.shop}`;
-  
-  // 3. Translate Search Bar Placeholders
-  const searchInput = $id('global-search');
-  if (searchInput) searchInput.placeholder = trans.search_placeholder;
-  const exploreSearch = $id('explore-search');
-  if (exploreSearch) exploreSearch.placeholder = trans.search_placeholder;
-  
-  // 4. Translate Post Composer Placeholders & Buttons
-  const postInp = $id('post-input');
-  if (postInp) postInp.placeholder = trans.composer_placeholder;
-  const postBtn = document.querySelector('button[onclick="publishPost()"]');
-  if (postBtn) postBtn.textContent = trans.post_btn;
-  
-  // 5. Translate Server Latency Node Label
-  const nodeLabelText = lang === 'hi' ? 'वैश्विक सर्वर नोड:' : (lang === 'es' ? 'Nodo del Servidor Global:' : (lang === 'ja' ? 'グローバルサーバーノード:' : 'Global Server Node:'));
-  const lbl = $id('server-node-lbl');
-  if (lbl) lbl.textContent = nodeLabelText;
+  const table = window.I18N || {};
+  const en = table.en || {};
+  // A region code falls back to its base language, then to English, key by key.
+  const exact = table[lang] || table[String(lang).split('-')[0]] || {};
+  const t = k => (exact[k] !== undefined ? exact[k] : (en[k] !== undefined ? en[k] : ''));
+  const esc = v => (typeof escapeHTML === 'function' ? escapeHTML(String(v)) : String(v));
 
-  // 6. Update language select dropdown value
-  const selector = $id('lang-selector');
-  if (selector) selector.value = lang;
-  
-  showToast(`Language updated to: ${selector ? selector.options[selector.selectedIndex].text : lang} 🌍`);
+  S.lang = lang;
+  try { localStorage.setItem('ts_lang', lang); } catch (e) {}
+
+  const info = (window.LANGS || []).find(l => l.c === lang);
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', info && info.r ? 'rtl' : 'ltr');
+
+  // 1. Sidebar and mobile nav labels
+  const labels = {
+    feeds: t('feeds'), explore: t('explore'), reels: t('reels'), shop: t('shop'),
+    gaming: t('gaming'), messages: t('messages'), community: t('community'), profile: t('profile')
+  };
+  Object.keys(labels).forEach(pane => {
+    if (!labels[pane]) return;
+    const navItem = document.querySelector(`.nav-item[data-pane="${pane}"] .nav-label`);
+    if (navItem) navItem.textContent = labels[pane];
+    const mNavItem = document.querySelector(`.m-nav-btn[data-pane="${pane}"] span:not(.material-symbols-rounded)`);
+    if (mNavItem) mNavItem.textContent = labels[pane];
+  });
+
+  // 2. Pane titles. Cryptoverse and Shorty are product names, so they stand.
+  const paneTitles = {
+    feeds: `<span>${esc(t('feeds'))}</span> ${esc(t('word_feed'))}`,
+    explore: '<span>Crypto</span>verse',
+    reels: '<span>Shorty</span>',
+    gaming: `🎮 <span>${esc(t('gaming'))}</span> ${esc(t('word_hub'))}`,
+    community: `🌐 <span>${esc(t('community'))}</span>`
+  };
+  Object.keys(paneTitles).forEach(pane => {
+    const titleEl = document.querySelector(`#pane-${pane} .pane-title`);
+    if (titleEl) titleEl.innerHTML = paneTitles[pane];
+  });
+
+  const shopHeroTitle = document.querySelector('.shop-hero-title');
+  if (shopHeroTitle) shopHeroTitle.innerHTML = `🛒 ${esc(t('shop'))}`;
+
+  // 3. Search and composer
+  const searchInput = $id('global-search');
+  if (searchInput) searchInput.placeholder = t('search_placeholder');
+  const exploreSearch = $id('explore-search');
+  if (exploreSearch) exploreSearch.placeholder = t('search_placeholder');
+
+  const postInp = $id('post-input');
+  if (postInp) postInp.placeholder = t('composer_placeholder');
+  const postBtn = document.querySelector('button[onclick="publishPost()"]');
+  if (postBtn) postBtn.textContent = t('post_btn');
 }
 
 function savePostsToLocal() {
@@ -243,21 +159,6 @@ function savePostsToLocal() {
 
 function saveCommentsToLocal() {
   localStorage.setItem('ts_comments_db', JSON.stringify(DATA.commentsDb));
-}
-
-function initNetworkLatencyTracker() {
-  const latencyVal = $id('latency-val');
-  if (!latencyVal) return;
-  
-  setInterval(() => {
-    const lat = Math.floor(18 + Math.random() * 19); // Fluctuates 18ms-36ms
-    const activeWord = S.lang === 'hi' ? 'सक्रिय' : (S.lang === 'es' ? 'Activo' : (S.lang === 'ja' ? 'アクティブ' : 'Active'));
-    
-    latencyVal.innerHTML = `
-      <span style="width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block; box-shadow:0 0 8px var(--green)"></span> 
-      ${activeWord} (${lat}ms)
-    `;
-  }, 4000);
 }
 
 // ── AD REVENUE ACCRUAL ON SCROLL ──
@@ -270,21 +171,16 @@ function initAdRevenueAccrual() {
       if (now - lastScrollTime > 300) {
         lastScrollTime = now;
         
-        // 1. Healthy scroll reminder system
-        S.scrollCount = (S.scrollCount || 0) + 1;
-        if (S.scrollCount >= 15) {
-          S.scrollCount = 0;
-          if (typeof triggerMindfulnessIntervention === 'function') {
-            triggerMindfulnessIntervention();
-          }
-        }
-
-        // 2. Dynamically increment ad revenue by a fraction of a cent
+        // Dynamically increment ad revenue by a fraction of a cent
         const shareEl = $id('ew-ad-share');
         if (shareEl) {
-          const currentVal = parseFloat(shareEl.textContent.replace('$', ''));
-          const newVal = currentVal + (0.01 + Math.random()*0.02);
-          shareEl.textContent = `$${newVal.toFixed(2)}`;
+          const match = shareEl.textContent.match(/\$([0-9.]+)/);
+          if (match) {
+            const currentVal = parseFloat(match[1]);
+            const newVal = currentVal + (0.01 + Math.random()*0.02);
+            const btcVal = (newVal / (window.liveBtcPrice || 68450)).toFixed(4);
+            shareEl.textContent = `$${newVal.toFixed(2)} (${btcVal} BTC)`;
+          }
         }
       }
     });
@@ -292,14 +188,20 @@ function initAdRevenueAccrual() {
 }
 
 function simulateCreatorTip() {
-  const amount = (10 + Math.random()*40).toFixed(2);
-  showToast(`🎁 Tipped active creator $${amount} from your ecosystem balance!`);
+  const amount = parseFloat((10 + Math.random()*40).toFixed(2));
+  const btcAmount = (amount / (window.liveBtcPrice || 68450)).toFixed(4);
+  showToast(`🎁 Tipped active creator $${amount.toFixed(2)} (${btcAmount} BTC) from your ecosystem balance!`);
   
   const balanceEl = $id('ew-ad-share');
   if (balanceEl) {
-    const currentVal = parseFloat(balanceEl.textContent.replace('$', ''));
-    if (currentVal >= amount) {
-      balanceEl.textContent = `$${(currentVal - amount).toFixed(2)}`;
+    const match = balanceEl.textContent.match(/\$([0-9.]+)/);
+    if (match) {
+      const currentVal = parseFloat(match[1]);
+      if (currentVal >= amount) {
+        const newVal = currentVal - amount;
+        const btcVal = (newVal / (window.liveBtcPrice || 68450)).toFixed(4);
+        balanceEl.textContent = `$${newVal.toFixed(2)} (${btcVal} BTC)`;
+      }
     }
   }
   
@@ -307,90 +209,220 @@ function simulateCreatorTip() {
   if (typeof IX !== 'undefined' && IX.burstReaction) {
     IX.burstReaction('💸', window.innerWidth/2, window.innerHeight/2);
   }
+
+  // Tipping is a contribution to the network, so it counts toward reputation.
+  if (typeof SF !== 'undefined') SF.rep('gave_tip');
 }
 
-// ── CRYPTO TIPPING ENGINE ─────────────────────────────────────────
-window.openTipModal = function(authorName, handle) {
-  // Remove existing if any
-  const existing = document.getElementById('tip-modal-overlay');
-  if (existing) existing.remove();
-  
-  const overlay = document.createElement('div');
-  overlay.id = 'tip-modal-overlay';
-  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(8px); animation:pane-in 0.3s ease';
-  
-  overlay.innerHTML = `
-    <div class="card" style="width:90%; max-width:400px; padding:24px; position:relative;">
-      <button class="icon-btn" onclick="document.getElementById('tip-modal-overlay').remove()" style="position:absolute; top:12px; right:12px;"><span class="material-symbols-rounded">close</span></button>
-      <div class="text-center mb16">
-        <div class="avatar av-lg mx-auto" style="background:var(--g-brand); display:grid; place-items:center; color:#fff; font-size:24px;">💎</div>
-        <h3 class="fw9 tc-1 mt12">Tip ${authorName}</h3>
-        <div class="fs12 tc-3">${handle}</div>
-      </div>
-      
-      <div class="form-group mb12">
-        <label class="form-label">Select Coin & Amount</label>
-        <div class="flex gap8">
-          <input class="input" type="number" id="tip-amount" placeholder="0.0" style="flex:1">
-          <select class="input" id="tip-coin" style="width:100px">
-            <option value="USDT">USDT</option>
-            <option value="TREND">TREND</option>
-            <option value="BTC">BTC</option>
-            <option value="ETH">ETH</option>
-            <option value="SOL">SOL</option>
-            <option value="DOGE">DOGE</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="fs11 tc-3 mb16" style="text-align:right">Platform Fee: <span class="tc-pink fw7">1.0%</span></div>
-      
-      <button class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, var(--blue), var(--purple))" onclick="submitTip('${authorName}', '${handle}')">Send Tip Now</button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
+/* ── COIN ICONS ────────────────────────────────────────────────────
+   Every coin renders with its official logo, straight from the
+   CoinGecko payload (`image`) that fetchCryptoPrices already stores.
+   A tinted monogram sits underneath the artwork and is only ever seen
+   if the image fails to load, or for tokens CoinGecko doesn't carry
+   (TREND, NEON). Its hue is derived from the ticker, so a given coin
+   always gets the same colour. */
+const TOKEN_MONOGRAM = { TREND: 'T', NEON: 'N' };
+
+/* Real currency glyphs — for the one place markup can't go: <option>. */
+const CURRENCY_GLYPH = {
+  BTC:'₿', ETH:'Ξ', SOL:'◎', DOGE:'Ð', USDT:'₮', USDC:'$', XRP:'✕',
+  LTC:'Ł', BCH:'Ƀ', DASH:'Đ', XMR:'ɱ', ADA:'₳', TREND:'⬥', NEON:'◈'
 };
 
-window.submitTip = function(authorName, handle) {
+const normSym = s => String(s || '').split('/')[0].trim().toUpperCase();
+
+function coinHue(sym) {
+  let h = 0;
+  for (let i = 0; i < sym.length; i++) h = (h * 31 + sym.charCodeAt(i)) % 360;
+  return h;
+}
+
+/* Premium 2D chip: official artwork layered over a monogram fallback. */
+/* Exchange tickers for coins whose CoinGecko symbol isn't one. The feed key
+   stays as CoinGecko sends it (Binance streams use it); only the label
+   changes. 币安人生 trades as BINANCELIFE on most exchanges. */
+const TICKER_ALIAS = { '币安人生': 'BINANCELIFE' };
+window.tickerOf = sym => TICKER_ALIAS[normSym(sym)] || normSym(sym);
+
+window.coinIcon = function(symbol, size = 28) {
+  const sym = normSym(symbol);
+  if (!sym) return '';
+  let live = (window.liveCryptoPrices || {})[sym] || {};
+  // Tokenized stocks keep their logos in TokenMarkets, not the crypto feed.
+  if (!live.image && window.TokenMarkets && TokenMarkets.info) {
+    const tm = TokenMarkets.info(sym);
+    if (tm) live = { name: tm.name, image: tm.image };
+  }
+  const name = live.name || sym;
+  const shown = TICKER_ALIAS[sym] || sym;
+  const label = TOKEN_MONOGRAM[sym] || (shown.length <= 3 ? shown : shown.slice(0, 3));
+  const ratio = label.length >= 3 ? 0.30 : (label.length === 2 ? 0.38 : 0.44);
+  const fs = Math.max(7, Math.round(size * ratio));
+  // Both layers are decorative: every call site prints the ticker next to
+  // the chip, so exposing them would read the symbol twice.
+  const mono = `<span class="coin-ic-mono" aria-hidden="true" style="--h:${coinHue(sym)}; font-size:${fs}px">${escapeHTML(label)}</span>`;
+  const img = /^https:\/\/[^\s"'<>]+$/.test(String(live.image || '')) ? live.image : '';
+  const art = img
+    ? `<img class="coin-ic-img" src="${escapeHTML(img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
+    : '';
+  return `<span class="coin-ic" style="--sz:${size}px" title="${escapeHTML(name)}">${mono}${art}</span>`;
+};
+
+/* Text-only symbol, for <option> and other markup-free contexts. */
+window.coinGlyph = function(symbol) {
+  return CURRENCY_GLYPH[normSym(symbol)] || '';
+};
+
+// ── CRYPTO TIPPING ENGINE ─────────────────────────────────────────
+/* Tips are creator payments, so they come out of the social wallet
+   (DATA.wallet.balances) — the same account SocialFi pays rewards into.
+
+   Fixed here:
+   · The overlay sat at z-index 9999, under the Shorty player (10000),
+     so tipping from a short opened an invisible window.
+   · Author and handle were pasted raw into an onclick string, so a name
+     with an apostrophe broke the button. They now ride on dataset.
+   · You couldn't see what you had; the balance now shows and updates.   */
+const TIP_FEE = 0.01;
+/* The coins tipping starts with. Anything else you hold is appended by
+   tipCoins() below — the fixed list meant a coin in the wallet could not
+   be tipped, while chat and Pay both accepted it. */
+const TIP_COINS = ['USDT', 'TREND', 'BTC', 'ETH', 'SOL', 'DOGE'];
+
+function tipCoins() {
+  if (typeof MNY === 'undefined') return TIP_COINS;
+  const out = TIP_COINS.slice();
+  MNY.holdings().forEach(r => { if (r.priced && out.indexOf(r.sym) === -1) out.push(r.sym); });
+  return out;
+}
+
+/* Spendable across Funding and Spot, the same figure the payment itself
+   uses — the old one read Funding only and refused tips a user could
+   plainly afford. */
+function tipHave(coin) {
+  if (typeof MNY !== 'undefined') return MNY.spendable(coin);
+  const b = tipWallet() || {};
+  return Number(b[coin]) || 0;
+}
+
+function tipWallet() {
+  return (typeof DATA !== 'undefined' && DATA.wallet) ? DATA.wallet.balances : null;
+}
+
+function tipFmt(n) {
+  return (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: n >= 1 ? 2 : 6 });
+}
+
+window.openTipModal = function(authorName, handle) {
+  const existing = document.getElementById('tip-modal-overlay');
+  if (existing) existing.remove();
+
+  const esc = s => (typeof escapeHTML === 'function' ? escapeHTML(String(s || '')) : String(s || ''));
+  const first = tipCoins().find(c => tipHave(c) > 0) || 'USDT';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tip-modal-overlay';
+  overlay.className = 'tip-scrim';
+  overlay.dataset.author = authorName || '';
+  overlay.dataset.handle = handle || '';
+  overlay.innerHTML = `
+    <div class="tip-card" role="dialog" aria-label="Send a tip">
+      <button class="icon-btn tip-x" onclick="closeTipModal()" aria-label="Close">
+        <span class="material-symbols-rounded">close</span></button>
+      <div class="tip-head">
+        <div class="tip-av">${esc(String(authorName || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase())}</div>
+        <div class="tip-to">Tip <b>${esc(authorName)}</b></div>
+        <div class="tip-handle">${esc(handle)}</div>
+      </div>
+
+      <label class="tip-lbl">Amount</label>
+      <div class="tip-row">
+        <input class="input" type="number" id="tip-amount" min="0" step="any" placeholder="0.00" oninput="updateTipSummary()">
+        <select class="input" id="tip-coin" onchange="updateTipSummary()">
+          ${tipCoins().map(c => `<option value="${c}"${c === first ? ' selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="tip-quick">${[1, 5, 10, 25].map(n => `<button class="tip-q" onclick="setTipAmount(${n})">${n}</button>`).join('')}</div>
+
+      <div class="tip-sum" id="tip-summary"></div>
+      <button class="btn btn-primary tip-send" id="tip-send" onclick="submitTip()">Send tip</button>
+      <div class="tip-note">Paid from your social wallet. Paper balance — no real funds move.</div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeTipModal(); });
+  document.body.appendChild(overlay);
+  updateTipSummary();
+  const amt = document.getElementById('tip-amount');
+  if (amt) amt.focus();
+};
+
+window.closeTipModal = function() {
+  const o = document.getElementById('tip-modal-overlay');
+  if (o) o.remove();
+};
+
+window.setTipAmount = function(n) {
+  const el = document.getElementById('tip-amount');
+  if (el) { el.value = n; updateTipSummary(); }
+};
+
+/* Live balance, fee and total — and the send button only enables when the
+   tip is actually affordable, so the error never has to be a surprise. */
+window.updateTipSummary = function() {
+  const box = document.getElementById('tip-summary');
+  const btn = document.getElementById('tip-send');
+  if (!box) return;
+  const coin = (document.getElementById('tip-coin') || {}).value || 'USDT';
+  const amt = parseFloat((document.getElementById('tip-amount') || {}).value) || 0;
+  const have = tipHave(coin);
+  const fee = amt * TIP_FEE, total = amt + fee;
+  const short = amt > 0 && total > have;
+  box.innerHTML = `
+    <div class="tip-line"><span>Available</span><b>${tipFmt(have)} ${coin}</b></div>
+    <div class="tip-line"><span>Fee (${TIP_FEE * 100}%)</span><b>${tipFmt(fee)} ${coin}</b></div>
+    <div class="tip-line tip-total"><span>Total</span><b class="${short ? 'tc-red' : ''}">${tipFmt(total)} ${coin}</b></div>
+    ${short ? `<div class="tip-warn">Not enough ${coin} — you have ${tipFmt(have)}.</div>` : ''}`;
+  if (btn) btn.disabled = !(amt > 0) || short;
+};
+
+window.submitTip = function() {
+  const overlay = document.getElementById('tip-modal-overlay');
+  if (!overlay) return;
+  const authorName = overlay.dataset.author, handle = overlay.dataset.handle;
   const amt = parseFloat(document.getElementById('tip-amount').value);
   const coin = document.getElementById('tip-coin').value;
-  
-  if (!amt || amt <= 0) {
-    showToast('Enter a valid tip amount ❌');
-    return;
+
+  if (!amt || amt <= 0) { showToast('Enter a tip amount.'); return; }
+
+  const totalCost = amt * (1 + TIP_FEE);
+
+  /* Through MNY, so the tip is one ledger line, draws on the same money
+     a chat send does, and repaints every balance on screen. The old
+     version wrote straight to the wallet object and pushed a row into
+     whatever history element happened to be in the DOM — which vanished
+     on reload. */
+  if (typeof MNY !== 'undefined') {
+    const out = MNY.spend(coin, totalCost, {
+      kind: 'tip', via: 'Tip', to: handle || authorName,
+      note: `Tip to ${authorName || handle}` + (TIP_FEE ? ` (incl. ${TIP_FEE * 100}% fee)` : '')
+    });
+    if (!out.ok) { showToast(out.msg); updateTipSummary(); return; }
+    closeTipModal();
+    showToast(`Sent ${tipFmt(amt)} ${coin} to ${authorName}${out.moved > 0 ? ` · ${tipFmt(out.moved)} from Spot` : ''}`);
+  } else {
+    const b = tipWallet();
+    if (!b || (b[coin] || 0) < totalCost) {
+      showToast(`Not enough ${coin} (including the 1% fee).`);
+      updateTipSummary();
+      return;
+    }
+    b[coin] -= totalCost;        // the wallet proxy persists this
+    closeTipModal();
+    showToast(`Sent ${tipFmt(amt)} ${coin} to ${authorName}`);
   }
-  
-  const totalCost = amt * 1.01; // 1% fee
-  const b = typeof DATA !== 'undefined' && DATA.wallet ? DATA.wallet.balances : null;
-  
-  if (!b || !b[coin] || b[coin] < totalCost) {
-    showToast(`Insufficient ${coin} balance (includes 1% fee) ❌`);
-    return;
-  }
-  
-  // Deduct
-  b[coin] -= totalCost;
-  
-  // Log to ledger
-  const ledger = document.getElementById('wallet-ledger');
-  if (ledger) {
-    const div = document.createElement('div');
-    div.className = "flex-between py4";
-    div.style.borderBottom = "1px solid var(--border)";
-    div.innerHTML = `
-      <span class="tc-pink" style="display:inline-flex; align-items:center; gap:4px"><span class="material-symbols-rounded" style="font-size:14px">volunteer_activism</span> Tipped ${handle}</span>
-      <span class="fw7">-${totalCost.toFixed(4)} ${coin}</span>
-    `;
-    ledger.prepend(div);
-  }
-  
-  document.getElementById('tip-modal-overlay').remove();
-  showToast(`Sent ${amt} ${coin} tip to ${authorName}! 💎`);
-  
-  // Rain animation
+
   if (typeof IX !== 'undefined' && IX.burstReaction) {
-    for(let i=0; i<5; i++) {
-      setTimeout(() => IX.burstReaction('💎', window.innerWidth/2 + (Math.random()*100-50), window.innerHeight/2), i*100);
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => IX.burstReaction('💎', window.innerWidth / 2 + (Math.random() * 100 - 50), window.innerHeight / 2), i * 100);
     }
   }
 };

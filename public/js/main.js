@@ -6,7 +6,7 @@
 
 // ── BOOT ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  _safe(initApp, 'initApp');
+  _safe('initApp', 'initApp');
 });
 
 function initApp() {
@@ -27,28 +27,19 @@ function initApp() {
   }
 
   updateUserUI();
-  _safe(renderCategoryGrid, 'renderCategoryGrid');
-  _safe(setupNav,       'setupNav');
-  _safe(setupHeader,    'setupHeader');
-  _safe(setupMessages,  'setupMessages');
-  _safe(setupAI,        'setupAI');
-  _safe(setupUniversalSearch, 'setupUniversalSearch');
-  _safe(populateCategorySidebar, 'populateCategorySidebar');
+  _safe('renderCategoryGrid', 'renderCategoryGrid');
+  _safe('setupNav',       'setupNav');
+  _safe('setupHeader',    'setupHeader');
+  _safe('setupMessages',  'setupMessages');
+  _safe('setupAI',        'setupAI');
+  _safe('setupUniversalSearch', 'setupUniversalSearch');
+  _safe('populateCategorySidebar', 'populateCategorySidebar');
   
-  // Set up language selector
-  const langSel = $id('lang-selector');
-  if (langSel) {
-    langSel.addEventListener('change', e => {
-      applyLanguage(e.target.value);
-    });
-    // Restore saved language or default to en
-    const savedLang = localStorage.getItem('ts_lang') || 'en';
-    applyLanguage(savedLang);
-  }
+  // Language is chosen in Settings now; here we just restore the choice.
+  const savedLang = localStorage.getItem('ts_lang') || 'en';
+  _safe(() => applyLanguage(savedLang), 'applyLanguage');
 
-  // Set up latency tracker
-  _safe(initNetworkLatencyTracker, 'initNetworkLatencyTracker');
-  _safe(initAdRevenueAccrual, 'initAdRevenueAccrual');
+  _safe('initAdRevenueAccrual', 'initAdRevenueAccrual');
   
   navigateTo('feeds');
 }

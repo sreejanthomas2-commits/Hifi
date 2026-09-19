@@ -1,7 +1,15 @@
 // ── HOME FEED ────────────────────────────────────────────────────
 function renderStories() {
   const el = $id('stories-row'); if (!el) return;
-  const myStory = `<div class="story-item" onclick="openStoryComposer()"><div class="story-ring"><div class="story-inner" style="font-size:18px;background:var(--card2);display:grid;place-items:center;"><span class="material-symbols-rounded" style="color:var(--t3)">add</span></div></div><div class="story-name">Your Story</div></div>`;
+  const mine = (window.CR && CR.myStories) ? CR.myStories() : [];
+  const last = mine[mine.length - 1];
+  const myStory = last
+    ? `<div class="story-item" onclick="CR.viewMyStory()"><div class="story-ring"><div class="story-inner" style="display:grid; place-items:center; overflow:hidden">${
+        last.kind === 'image'
+          ? `<img src="${escapeHTML(last.src)}" alt="" style="width:100%;height:100%;object-fit:cover">`
+          : `<span class="material-symbols-rounded" style="color:var(--brand-hi)">amp_stories</span>`
+      }</div></div><div class="story-name">Your Story</div></div>`
+    : `<div class="story-item" onclick="CR.open('story')"><div class="story-ring"><div class="story-inner" style="font-size:18px;background:var(--card2);display:grid;place-items:center;"><span class="material-symbols-rounded" style="color:var(--t3)">add</span></div></div><div class="story-name">Your Story</div></div>`;
   const stories = DATA.stories.map(s => {
     const iconData = get3DIconForEmoji(s.emoji);
     return `
@@ -21,74 +29,423 @@ function renderFeed(query = '') {
   const el = $id('feed-posts'); if (!el) return;
   const q = (query || ($id('global-search') ? $id('global-search').value : '')).toLowerCase();
   
+  // Render the universal ticker
+  renderUniversalTicker();
+
   let posts = DATA.posts;
 
-  // Mode-based category filtering
-  const modeCats = MODE_CATEGORY_MAP[S.feedMode || 'entertainment'];
-  if (modeCats) {
-    posts = posts.filter(p => modeCats.includes(p.category));
-  }
-  
   // Dual feed filter
   if (S.dualFeed === 'growth') {
-    posts = posts.filter(p => ['tech','fitness','science','motivation'].includes(p.category));
+    posts = posts.filter(p => ['tech','fitness','science','motivation','agriculture'].includes(p.category));
   }
+  if (window.HX && HX.filterPosts) posts = HX.filterPosts(posts);
   
   const filtered = posts.filter(p => !q || p.body.toLowerCase().includes(q) || p.tags.join(' ').toLowerCase().includes(q));
   el.innerHTML = filtered.map(p => renderPostCard(p)).join('');
+  if (!filtered.length && window.HX && HX.emptyFeed) el.innerHTML = HX.emptyFeed(q);
+}
+
+/* Prices small enough to read at a glance, precise enough to be useful
+   across a range that spans $100k (BTC) down to $0.000005 (SHIB). Long
+   runs of zeros collapse the way exchanges show them: $0.0₅5123. */
+function tickerPrice(v) {
+  if (v === null || v === undefined || isNaN(v) || v <= 0) return '$0.00';
+  if (v >= 1000) return '$' + v.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (v >= 1)    return '$' + v.toFixed(2);
+  if (v >= 0.01) return '$' + v.toFixed(4);
+  let zeros = Math.floor(-Math.log10(v));
+  if (zeros < 4) return '$' + v.toFixed(zeros + 4).replace(/0+$/, '');
+  let digits = Math.round(v * Math.pow(10, zeros + 4));
+  if (digits >= 10000) { zeros--; digits = Math.round(digits / 10); }
+  const SUB = '₀₁₂₃₄₅₆₇₈₉';
+  return '$0.0' + String(zeros).split('').map(d => SUB[d]).join('') + String(digits).replace(/0+$/, '');
+}
+
+/* ── Global markets ticker ──────────────────────────────────────────
+   Rotates the coins through a RECYCLED set of ~8 chips.
+
+   The previous version rendered every coin twice (2,100 nodes, 300 images)
+   into a single 57,000px-wide element and animated it in CSS. That is far
+   past the GPU's max texture size, so the layer could never be composited
+   and the browser repainted the whole thing every frame — measured at
+   51fps with frames as long as 100ms.
+
+   Here the track holds only enough chips to cover the viewport plus one
+   spare. When a chip scrolls off the left it is re-bound to the next coin
+   and moved to the end, so the DOM stays tiny and the track stays a few
+   thousand pixels wide — small enough to composite properly.
+
+   Chips are a FIXED width, which keeps the loop pure arithmetic: no
+   offsetWidth reads, so no forced layout on any frame.
+
+   It pauses on hover, while a finger is on it, while the tab is hidden
+   and while Home isn't the pane on screen. With reduced motion switched
+   on it doesn't move at all: every coin is laid out and scrolls by hand.
+
+   In a narrow column (the Home sidebar card, marked .vertical) the same
+   recycling runs upward as a list of rows instead of sideways. */
+const TickerFX = (() => {
+  let SPEED  = 70;             // px per second — slower when running vertically
+  let CHIP_W = 190;            // chip width, or row height when vertical; measured once per build
+  let vertical = false, sizeObs = null, boxH = -1;
+
+  let track = null, pane = null, chips = [], syms = [], next = 0;
+  let offset = 0, raf = null, lastT = 0;
+  let hover = false, touch = false, hidden = false, touchTimer = null;
+  let still = false;
+
+  const live = () => window.liveCryptoPrices || {};
+  const calm = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function bind(el, sym) {
+    const c = live()[sym];
+    if (!c) return;
+    const chg = c.usd_24h_change || 0;
+    const up = chg >= 0;
+    el.dataset.sym = sym;
+    el.title = `${c.name || sym} — open token page`;
+    el.setAttribute('aria-label', `${c.name || sym}, ${tickerPrice(c.usd)}, ${up ? 'up' : 'down'} ${Math.abs(chg).toFixed(2)} percent in 24 hours`);
+    el.innerHTML =
+      `${coinIcon(sym, 18)}` +
+      `<strong class="mkt-sym">${escapeHTML(sym)}</strong>` +
+      `<span class="mkt-px">${tickerPrice(c.usd)}</span>` +
+      `<span class="mkt-ch ${up ? 'up' : 'down'}">${up ? '▲' : '▼'}${Math.abs(chg).toFixed(2)}%</span>`;
+  }
+
+  const nextSym = () => { const s = syms[next % syms.length]; next++; return s; };
+
+  function chip(sym) {
+    const el = document.createElement('button');
+    el.className = 'mkt-chip';
+    el.onclick = () => { if (typeof W3 !== 'undefined') W3.openToken(el.dataset.sym); };
+    bind(el, sym);
+    return el;
+  }
+
+  function build(ticker) {
+    track = ticker;
+    pane = ticker.closest('.pane');
+    track.innerHTML = '';
+    track.style.transform = '';
+    chips = [];
+    offset = 0;
+    next = 0;
+    still = calm();
+    vertical = !!(track.parentElement && track.parentElement.classList.contains('vertical'));
+    SPEED = vertical ? 16 : 70;
+
+    // One layout read per build, never per frame: the chip's CSS size.
+    const probe = chip(syms[0]);
+    track.appendChild(probe);
+    CHIP_W = (vertical ? probe.offsetHeight : probe.offsetWidth) || (vertical ? 40 : 190);
+    probe.remove();
+
+    // Reduced motion: every coin, laid out once, scrolled by hand.
+    const box = vertical ? (track.parentElement.clientHeight || 240) : (track.parentElement.clientWidth || 600);
+    const need = still ? syms.length : Math.ceil(box / CHIP_W) + 2;
+    for (let i = 0; i < need; i++) {
+      const el = chip(nextSym());
+      track.appendChild(el);
+      chips.push(el);
+    }
+    if (track.parentElement) track.parentElement.classList.toggle('still', still);
+  }
+
+  function frame(now) {
+    if (!track || !track.isConnected) { raf = null; return; }
+    if (!lastT) lastT = now;
+    const dt = Math.min((now - lastT) / 1000, 0.05);   // clamp after a stall
+    lastT = now;
+
+    // boxH 0 means the card is display:none (the sidebar hides on small screens).
+    const offscreen = (pane && !pane.classList.contains('active')) || boxH === 0;
+    if (!(hover || touch || hidden || offscreen)) {
+      offset -= SPEED * dt;
+      // Recycle whole chips off the leading edge — no measurement needed.
+      while (offset <= -CHIP_W && chips.length) {
+        offset += CHIP_W;
+        const el = chips.shift();
+        bind(el, nextSym());
+        track.appendChild(el);
+        chips.push(el);
+      }
+      track.style.transform = vertical ? `translate3d(0,${offset.toFixed(2)}px,0)` : `translate3d(${offset.toFixed(2)}px,0,0)`;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start(ticker, symbols) {
+    syms = (symbols && symbols.length) ? symbols.slice() : [];
+    if (!syms.length) return;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    build(ticker);
+    lastT = 0;
+
+    const wrap = ticker.parentElement;
+    if (wrap && !wrap.dataset.tickerBound) {
+      wrap.dataset.tickerBound = '1';
+      wrap.addEventListener('mouseenter', () => { hover = true; });
+      wrap.addEventListener('mouseleave', () => { hover = false; });
+      // Touch screens have no hover: hold still while a finger is down,
+      // and for a moment after, so a coin can be read and tapped.
+      wrap.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') { clearTimeout(touchTimer); touch = true; } });
+      const release = e => { if (e.pointerType !== 'mouse') { clearTimeout(touchTimer); touchTimer = setTimeout(() => { touch = false; }, 1800); } };
+      wrap.addEventListener('pointerup', release);
+      wrap.addEventListener('pointercancel', release);
+    }
+    // Hidden and shown again (sidebar collapsing at a breakpoint): rebuild
+    // so the number of rows matches the space it has.
+    if (sizeObs) sizeObs.disconnect();
+    if (window.ResizeObserver && wrap) {
+      boxH = -1;
+      sizeObs = new ResizeObserver(entries => {
+        const h = Math.round(entries[0].contentRect.height);
+        const wasHidden = boxH === 0;
+        boxH = h;
+        if (wasHidden && h > 0 && track && !still) { build(track); lastT = 0; }
+      });
+      sizeObs.observe(wrap);
+    }
+    if (!document.body.dataset.tickerVis) {
+      document.body.dataset.tickerVis = '1';
+      document.addEventListener('visibilitychange', () => { lastT = 0; hidden = document.hidden; });
+    }
+
+    if (!still) raf = requestAnimationFrame(frame);
+  }
+
+  /* Price refresh: rewrite the visible chips in place. The track and its
+     animation are never touched, so the scroll doesn't stutter. */
+  function refresh() {
+    chips.forEach(el => bind(el, el.dataset.sym));
+  }
+
+  /* A changed coin list slots in without restarting the scroll: chips
+     pick up the new list as they come round. */
+  function setSymbols(list) {
+    if (!list || !list.length) return;
+    const same = list.length === syms.length && list.every((s, i) => s === syms[i]);
+    if (same) return;
+    syms = list.slice();
+    next = next % syms.length;
+    if (still && track) { build(track); return; }
+    chips.forEach(el => { if (syms.indexOf(el.dataset.sym) < 0) bind(el, nextSym()); });
+  }
+
+  const isRunning = () => raf !== null || (still && chips.length > 0);
+  const symbolCount = () => syms.length;
+
+  return { start, refresh, setSymbols, isRunning, symbolCount, get CHIP_W() { return CHIP_W; }, get count() { return chips.length; } };
+})();
+
+/* Which coins the home ticker carries. "Global markets" means the coins
+   people actually follow: the majors first, then the rest of the top by
+   market cap — without stablecoins sitting at $1.00, or wrapped and staked
+   copies of coins that are already on the list. */
+const TICKER_SIZE = 40;
+const TICKER_MAJORS = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'TRX', 'TON', 'AVAX', 'LINK', 'DOT', 'SUI', 'LTC', 'SHIB', 'XLM', 'BCH', 'NEAR', 'APT', 'PEPE'];
+const TICKER_STABLE = new Set(('USDT USDC DAI FDUSD USDE USDS PYUSD TUSD USDD FRAX BUSD USD1 RLUSD USDX GUSD USDP LUSD USDY BUIDL USDTB USD0 ' +
+  'EURC SUSDE SUSDS USDF USDG BFUSD USDB USDO OUSG USTB USYC').split(' '));
+const TICKER_DERIV_NAME = /\b(wrapped|staked|bridged|restaked|liquid staking|binance-peg|heloc|tokeni[sz]ed|treasury)\b/i;
+const TICKER_DERIV_SYM = /^(W|ST|WST|CB|R|M|WE|EZ|RS|LB|SOLV|JITO|BN|B|K|JUP|UNI)(BTC|ETH|SOL|BNB)$/;
+
+function tickerCoins(live) {
+  const ok = s => {
+    const c = live[s];
+    // The five hard-coded fallback prices have neither a name nor a live
+    // stream behind them; they must never be shown as market data.
+    if (!c || !(c.name || c.live) || !(c.usd > 0)) return false;
+    if (!/^[A-Z0-9]{2,8}$/.test(s)) return false;
+    if (TICKER_STABLE.has(s)) return false;
+    if (/\busd\b|dollar|stablecoin/i.test(c.name || '') && Math.abs(c.usd - 1) < 0.05) return false;
+    if (TICKER_DERIV_NAME.test(c.name || '') || TICKER_DERIV_SYM.test(s)) return false;
+    return true;
+  };
+  const all = Object.keys(live).filter(ok);
+  const majors = TICKER_MAJORS.filter(s => all.indexOf(s) > -1);
+  const rest = all.filter(s => live[s].mcap && majors.indexOf(s) < 0).sort((a, b) => live[b].mcap - live[a].mcap);
+  return majors.concat(rest).slice(0, TICKER_SIZE);
+}
+
+/* Live when the Binance stream is carrying prices, Delayed when only the
+   CoinGecko poll is, Offline when nothing has arrived. */
+function paintTickerStatus(list) {
+  const el = $id('ticker-count');
+  if (!el) return;
+  const streaming = typeof MD !== 'undefined' && MD.isLive && MD.isLive();
+  const since = window.__tickerAt ? Math.round((Date.now() - window.__tickerAt) / 1000) : null;
+  let state, label, tip;
+  if (!list.length) {
+    state = window.__tickerOffline ? 'offline' : 'sync';
+    label = window.__tickerOffline ? 'Offline' : 'Syncing';
+    tip = window.__tickerOffline ? 'Live prices are unavailable right now. Retrying in the background.' : 'Fetching live prices…';
+  } else {
+    state = streaming ? 'live' : 'delayed';
+    label = streaming ? 'Live' : 'Delayed';
+    tip = `Top ${list.length} coins — the majors, then by market cap. Stablecoins and wrapped tokens are left out. ` +
+      (streaming ? 'Streaming from Binance.' : 'Prices from CoinGecko, refreshed about every 30 seconds.') +
+      (since != null ? ` Updated ${since < 5 ? 'just now' : since + 's ago'}.` : '');
+  }
+  el.className = 'mkt-status ' + state;
+  el.textContent = label;
+  el.title = tip;
+}
+
+/* ── Phones: the sidebar as a swipeable row ─────────────────────────
+   Below 768px the right column used to be display:none, so Portfolio,
+   Market Pulse, Earn, the wallet, Trending, Suggested Friends and Global
+   Markets simply disappeared. CSS now lays those cards out as one
+   sideways-swiping row between the composer and the posts; this keeps
+   the dots under it in step with the swipe and lets a dot jump to its
+   card. On wider screens it does nothing. */
+const SideRow = (() => {
+  const mq = window.matchMedia ? matchMedia('(max-width: 768px)') : null;
+  let raf = 0;
+  let watched = [];
+  const ro = window.ResizeObserver ? new ResizeObserver(() => schedule()) : null;
+
+  const side = () => document.querySelector('#pane-feeds .trend-sidebar');
+  const cardsOf = el => [...el.querySelectorAll(':scope > .trend-card, :scope > #hc-side > .trend-card')];
+  // The card's own heading, without the icon's ligature name or the header's link.
+  const titleOf = c => {
+    const hdr = c.querySelector('.section-hdr');
+    const t = c.querySelector('.section-title') || (hdr && hdr.firstElementChild);
+    if (!t) return 'Card';
+    const copy = t.cloneNode(true);
+    copy.querySelectorAll('.material-symbols-rounded').forEach(i => i.remove());
+    return copy.textContent.replace(/\s+/g, ' ').trim() || 'Card';
+  };
+
+  function paint() {
+    raf = 0;
+    const el = side();
+    const dots = $id('side-dots');
+    if (!el || !dots) return;
+    if (!mq || !mq.matches) { if (dots.childElementCount) dots.innerHTML = ''; el.style.height = ''; return; }
+    const cards = cardsOf(el);
+    // Cards change height as their content loads. HC repaints its three on
+    // every price tick, so re-watch only when the set of cards changed —
+    // and drop the old ones rather than holding on to them.
+    if (ro && (cards.length !== watched.length || cards.some((c, i) => c !== watched[i]))) {
+      ro.disconnect();
+      cards.forEach(c => ro.observe(c));
+      watched = cards;
+    }
+    if (dots.childElementCount !== cards.length) {
+      dots.innerHTML = cards.map((c, i) => `<button type="button" data-i="${i}" aria-label="${escapeHTML(titleOf(c))}"></button>`).join('');
+    }
+    const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    let active = 0, best = Infinity;
+    cards.forEach((c, i) => {
+      const d = Math.abs(c.offsetLeft - pad - el.scrollLeft);
+      if (d < best) { best = d; active = i; }
+    });
+    [...dots.children].forEach((b, i) => {
+      b.classList.toggle('on', i === active);
+      b.setAttribute('aria-current', i === active ? 'true' : 'false');
+    });
+    // The row takes the height of the card on screen, so a short card
+    // doesn't leave the space of the tallest one under it.
+    if (cards[active]) {
+      const cs = getComputedStyle(el);
+      el.style.height = Math.ceil(cards[active].offsetHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) + 'px';
+    }
+  }
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(paint); };
+
+  function wire() {
+    const el = side();
+    const dots = $id('side-dots');
+    if (!el || !dots) return;
+    if (!el.dataset.rowBound) {
+      el.dataset.rowBound = '1';
+      el.addEventListener('scroll', schedule, { passive: true });
+      dots.addEventListener('click', e => {
+        const b = e.target.closest('button[data-i]');
+        if (!b) return;
+        const card = cardsOf(el)[+b.dataset.i];
+        const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+        if (card) el.scrollTo({ left: card.offsetLeft - pad, behavior: 'smooth' });
+      });
+      // Portfolio, Market Pulse and Earn are painted in later by HC.
+      const hc = $id('hc-side');
+      if (hc && window.MutationObserver) new MutationObserver(schedule).observe(hc, { childList: true });
+      if (mq) { try { mq.addEventListener('change', schedule); } catch (e) { mq.addListener(schedule); } }
+    }
+    schedule();
+  }
+
+  return { wire, paint };
+})();
+
+function renderUniversalTicker() {
+  SideRow.wire();
+  const ticker = $id('universal-market-ticker');
+  if (!ticker) return;
+
+  const list = tickerCoins(window.liveCryptoPrices || {});
+
+  if (!list.length) {
+    // Give the feeds a fair chance before admitting they're down.
+    if (!window.__tickerWait) {
+      window.__tickerWait = setTimeout(() => {
+        if (tickerCoins(window.liveCryptoPrices || {}).length) return;
+        window.__tickerOffline = true;
+        const t = $id('universal-market-ticker');
+        if (t && !t.querySelector('.mkt-chip')) t.innerHTML = '<span class="tc-3 fs11">Live prices are unavailable right now — retrying.</span>';
+        paintTickerStatus([]);
+      }, 20000);
+    }
+    if (!ticker.querySelector('.mkt-chip')) {
+      ticker.innerHTML = `<span class="tc-3 fs11">${window.__tickerOffline ? 'Live prices are unavailable right now — retrying.' : 'Syncing live market data…'}</span>`;
+    }
+    paintTickerStatus([]);
+    return;
+  }
+
+  window.__tickerOffline = false;
+  window.__tickerAt = Date.now();
+  paintTickerStatus(list);
+  if (!window.__tickerClock) window.__tickerClock = setInterval(() => paintTickerStatus(tickerCoins(window.liveCryptoPrices || {})), 15000);
+
+  /* Already running: take any change to the list without restarting the
+     scroll, then update prices in place. */
+  if (TickerFX.isRunning() && ticker.querySelector('.mkt-chip')) {
+    TickerFX.setSymbols(list);
+    TickerFX.refresh();
+    return;
+  }
+
+  TickerFX.start(ticker, list);
+}
+
+/* Initials, not the sparkle that was stamped on every mock author. */
+function postInitials(name) {
+  return String(name || '?').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
 function renderPostCard(p) {
-  // Setup Reality Score and Time Value metrics dynamically
-  const tvMap = {
-    1: { badge: '⏱️ 5m Learn = 2h Scroll', val: '5m = 2h Scroll' },
-    2: { badge: '🔥 10m Gym = 1h Scroll', val: '10m = 1h Scroll' },
-    3: { badge: '💡 1m Motivation = 30m Scroll', val: '1m = 30m Scroll' },
-    4: { badge: '⏱️ 10m Study = 3h Scroll', val: '10m = 3h Scroll' },
-    5: { badge: '💡 8m Design = 2.5h Scroll', val: '8m = 2.5h Scroll' },
-    6: { badge: '🔥 5m Action = 1h Scroll', val: '5m = 1h Scroll' }
-  };
-  const rsMap = {
-    1: { score: 94, bias: 'Center-Left', ai: 12, trust: 98 },
-    2: { score: 99, bias: 'Center', ai: 2, trust: 97 },
-    3: { score: 91, bias: 'Center', ai: 8, trust: 96 },
-    4: { score: 97, bias: 'Center', ai: 5, trust: 99 },
-    5: { score: 98, bias: 'Center', ai: 1, trust: 98 },
-    6: { score: 95, bias: 'Center', ai: 4, trust: 97 }
-  };
-  const eliMap = {
-    1: "I spent 3 weeks working hard and finally finished my cool computer project today! It feels so good to see it work! 🚀",
-    2: "I woke up early and exercised. Starting your day with movement is super important to stay healthy! 💪",
-    3: "Stop waiting for the perfect day to start making stuff. The best time was in the past, but the next best time is right now! Just go for it! 🌟",
-    4: "Here are the smart robot helpers I use every day to brainstorm, draw pictures, write code, and organize my thoughts! What helpers do you use? 🤖",
-    5: "Leaving blank space on a screen isn't wasting space. It gives your eyes a rest and makes the important parts look much cleaner and easier to read! 🎨",
-    6: "I just ran super fast and beat my personal speed record! Working hard every day is totally worth it! Never give up! ⚡"
-  };
-
-  const tv = tvMap[p.id] || { badge: '⏱️ 2m Learn = 30m Scroll', val: '2m = 30m Scroll' };
-  const rs = rsMap[p.id] || { score: 95, bias: 'Center', ai: 4, trust: 97 };
-  const eliText = eliMap[p.id] || "This is a super simple, easy to understand version of my post. Hope you like it! ✨";
-
-  // Use state to check if ELI15 is active for this post
-  S.postEli15 = S.postEli15 || {};
-  const isEli15Active = S.postEli15[p.id];
-  const postBodyText = isEli15Active ? eliText : p.body;
-  const eliBadge = isEli15Active ? `<span class="eli15-badge ml8">ELI15 Active ✨</span>` : '';
-
-  const emojiBlock = p.emoji_block ? `<div class="post-emoji-block">${p.emoji_block}</div>` : '';
-  const tags = p.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+  const tags = p.tags.map(t => `<span class="post-tag">${escapeHTML(t)}</span>`).join('');
   
   let pollHTML = '';
   if (p.type === 'poll' && p.options) {
-    const totalVotes = p.options.reduce((sum, opt) => sum + opt.votes, 0);
+    const totalVotes = p.options.reduce((sum, opt) => sum + (opt.votes || 0), 0);
+    const maxVotes = Math.max(...p.options.map(o => o.votes || 0));
+    // String ids (mock/Firestore posts) must stay quoted in the onclick.
+    const pollId = typeof p.id === 'string' ? `'${p.id}'` : p.id;
+    // votedIdx remembers which option you picked; hasVoted covers older stored polls.
+    const votedIdx = typeof p.votedIdx === 'number' ? p.votedIdx : -1;
+    const hasVoted = votedIdx > -1 || !!p.hasVoted;
     pollHTML = '<div class="post-poll mt12">';
     p.options.forEach((opt, idx) => {
-      const pct = totalVotes === 0 ? 0 : Math.round((opt.votes / totalVotes) * 100);
-      const isWinner = totalVotes > 0 && opt.votes === Math.max(...p.options.map(o=>o.votes));
+      const pct = totalVotes === 0 ? 0 : Math.round(((opt.votes || 0) / totalVotes) * 100);
+      const isWinner = totalVotes > 0 && (opt.votes || 0) === maxVotes;
+      const isMine = votedIdx === idx;
+      const hover = hasVoted ? '' : ` onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'"`;
       pollHTML += `
-        <div class="poll-option mb8" style="cursor:pointer; padding:8px; border:1px solid var(--border); border-radius:var(--r2); transition:var(--tr)" onclick="votePoll(${p.id}, ${idx})" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'">
+        <div class="poll-option mb8" style="cursor:${hasVoted ? 'default' : 'pointer'}; padding:8px; border:1px solid ${isMine ? 'var(--blue)' : 'var(--border)'}; border-radius:var(--r2); transition:var(--tr)" onclick="votePoll(${pollId}, ${idx})"${hover}>
           <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px; font-weight:500; color:var(--t1)">
-            <span>${opt.text}</span>
+            <span>${isMine ? '✓ ' : ''}${escapeHTML(opt.text)}</span>
             <span>${pct}%</span>
           </div>
           <div class="poll-bar-bg" style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden">
@@ -97,152 +454,110 @@ function renderPostCard(p) {
         </div>
       `;
     });
-    pollHTML += `<div class="fs11 tc-3 mt4">${totalVotes} votes</div></div>`;
+    pollHTML += `<div class="fs11 tc-3 mt4">${totalVotes} vote${totalVotes === 1 ? '' : 's'}${hasVoted ? ' · you voted' : ''}</div></div>`;
   }
+
+  const idStr = typeof p.id === 'string' ? `'${p.id}'` : p.id;
+  const authorSafe = p.author ? p.author.replace(/'/g, "\\'") : '';
+  const handleSafe = p.handle ? p.handle.replace(/'/g, "\\'") : '';
 
   return `
   <div class="post-card" id="post-${p.id}">
     <div class="post-header">
-      <div class="avatar av-sm" style="background:var(--g-brand)">${p.emoji}</div>
-      <div class="post-author" style="flex:1">
-        <div class="post-author-name">${p.author} <span style="font-size:11px;color:var(--t3);font-weight:500">${p.handle}</span></div>
-        <div class="post-meta">${formatRelativeTime(p.time)} · 🌐 Public</div>
+      <div class="avatar av-sm post-av">${escapeHTML(postInitials(p.author))}</div>
+      <div class="post-author" style="flex:1; min-width:0">
+        <div class="post-author-name">
+          <span class="sf-author-link" onclick="SF.openCreatorPage('${handleSafe}','${authorSafe}')" title="Open creator page">${escapeHTML(p.author)}</span>
+          <span class="post-handle">${escapeHTML(p.handle)}</span>
+          ${p.mine ? '' : SF.followBtn(p.handle, p.author, 'sf-inline-follow')}
+        </div>
+        <div class="post-meta">${formatRelativeTime(p.time)}${
+          p.repostOf ? ` · <span class="material-symbols-rounded post-meta-ic">sync</span> reposted from <b>${escapeHTML(p.repostOf.author)}</b>` : ''}</div>
       </div>
-      
-      <!-- Time Value and Reality Score indicators -->
-      <div style="display:flex; align-items:center; gap:8px; margin-right:12px;">
-        <span class="time-value-badge" title="Time Value Indicator: scroll efficiency ratio">${tv.badge}</span>
-        <button class="reality-score-pill" onclick="toggleRealityScorecard(${p.id}, event)" title="Reality Score: Fact reliability & bias rating">
-          <span class="material-symbols-rounded" style="font-size:14px">verified_user</span> ${rs.score}%
-        </button>
-      </div>
-      
-      <button class="icon-btn" style="width:30px;height:30px;font-size:14px" title="More">···</button>
     </div>
-    
-    <div class="post-body" id="post-body-${p.id}">${escapeHTML(postBodyText).replace(/\n/g,'<br>')} ${eliBadge}</div>
-    ${emojiBlock}
+
+    <div class="post-body${p.bg ? ' post-body-bg' : ''}" id="post-body-${p.id}"${p.bg ? ` style="background:${escapeHTML(p.bg)}"` : ''}>${escapeHTML(p.body).replace(/\n/g,'<br>')}</div>
+    ${Array.isArray(p.media) && p.media.length ? `<div class="post-media${p.media.length > 1 ? ' many' : ''}">${p.media.map(m => m.kind === 'video'
+        ? `<video src="${escapeHTML(m.src)}" controls playsinline preload="metadata"></video>`
+        : `<img src="${escapeHTML(m.src)}" alt="" loading="lazy">`).join('')}</div>` : ''}
+    ${p.place ? `<div class="post-place"><span class="material-symbols-rounded">location_on</span>${escapeHTML(p.place)}</div>` : ''}
     ${pollHTML}
-    
-    <!-- Reality Scorecard Drawer -->
-    <div class="reality-score-scorecard hidden" id="scorecard-${p.id}" onclick="event.stopPropagation()">
-      <div class="fw8 fs12 tc-1" style="border-bottom:1px solid var(--border); padding-bottom:6px; display:flex; align-items:center; gap:4px">
-        <span class="material-symbols-rounded tc-green" style="font-size:16px">verified_user</span> Reality Score Verification Tally
-      </div>
-      
-      <div class="reality-score-gauge-row mt4">
-        <span class="tc-2">Fact Reliability:</span>
-        <div class="reality-score-bar"><div class="reality-score-fill" style="width:${rs.score}%; background:var(--green)"></div></div>
-        <strong class="tc-green">${rs.score}%</strong>
-      </div>
-      
-      <div class="reality-score-gauge-row">
-        <span class="tc-2">Rhetorical Bias:</span>
-        <div class="reality-score-bar"><div class="reality-score-fill" style="width:100%; background:var(--blue)"></div></div>
-        <strong class="tc-blue">${rs.bias}</strong>
-      </div>
-      
-      <div class="reality-score-gauge-row">
-        <span class="tc-2">AI-Gen Probability:</span>
-        <div class="reality-score-bar"><div class="reality-score-fill" style="width:${rs.ai}%; background:var(--pink)"></div></div>
-        <strong class="tc-pink">${rs.ai}%</strong>
-      </div>
-      
-      <div class="reality-score-gauge-row">
-        <span class="tc-2">Community Trust:</span>
-        <div class="reality-score-bar"><div class="reality-score-fill" style="width:${rs.trust}%; background:var(--orange)"></div></div>
-        <strong class="tc-orange">${rs.trust}%</strong>
-      </div>
-      <div class="fs10 tc-3 mt4 text-center">Verified via double-consensus ledger &amp; AI NLP validators.</div>
-    </div>
-    
-    <div class="post-tags">${tags}</div>
+
+    ${tags ? `<div class="post-tags">${tags}</div>` : ''}
     <div class="post-actions">
-      <button class="post-act-btn${p.liked?' liked':''}" onclick="likePost(event, ${p.id})">
-        <span class="material-symbols-rounded" style="font-size:16px; margin-right:4px; font-variation-settings: 'FILL' ${p.liked?1:0}">favorite</span> ${p.likes}
+      <button class="post-act-btn${p.liked?' liked':''}" onclick="likePost(event, ${idStr})" title="Like">
+        <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' ${p.liked?1:0}">favorite</span> ${p.likes}
       </button>
-      <button class="post-act-btn" onclick="toggleComments(${p.id})">
-        <span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">chat_bubble</span> ${p.comments}
+      <button class="post-act-btn" onclick="toggleComments(${idStr})" title="Comment">
+        <span class="material-symbols-rounded">chat_bubble</span> ${p.comments}
       </button>
-      <button class="post-act-btn" onclick="showToast('Post reshared! 🚀 ')">
-        <span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">sync</span> ${p.shares}
+      <button class="post-act-btn${SF.hasReposted(p.id) ? ' liked' : ''}" onclick="SF.repost(${idStr})" title="Repost to your feed">
+        <span class="material-symbols-rounded">sync</span> ${p.shares}
       </button>
-      <button class="post-act-btn" onclick="togglePostELI15(${p.id}, event)" style="color:var(--orange)">
-        <span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">child_care</span> ELI15 Explainer
+      <button class="post-act-btn post-tip" onclick="openTipModal('${authorSafe}', '${handleSafe}')" title="Tip in crypto">
+        <span class="material-symbols-rounded">toll</span> Tip
       </button>
-      <button class="post-act-btn" onclick="narratePost(${p.id})">
-        <span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">volume_up</span> Narrate
-      </button>
-      <button class="post-act-btn" onclick="openTipModal('${p.author}', '${p.handle}')" style="color:var(--pink)">
-        <span class="material-symbols-rounded" style="font-size:16px; margin-right:4px">volunteer_activism</span> Tip 💎
-      </button>
-      <button class="post-act-btn" style="margin-left:auto" onclick="showToast('Share link copied to clipboard! 📋')">
-        <span class="material-symbols-rounded" style="font-size:16px">send</span>
+      <button class="post-act-btn post-share" onclick="sharePost(${idStr})" title="Copy link">
+        <span class="material-symbols-rounded">ios_share</span>
       </button>
     </div>
   </div>`;
 }
 
-function toggleRealityScorecard(id, event) {
-  if (event) event.stopPropagation();
-  const el = $id(`scorecard-${id}`);
-  if (!el) return;
-  el.classList.toggle('hidden');
-  
-  // Haptic reaction burst
-  if (typeof IX !== 'undefined' && IX.burstReaction) {
-    const rect = event.target.getBoundingClientRect();
-    IX.burstReaction('🛡️', rect.left + rect.width / 2, rect.top + rect.height / 2, 6);
+/* Share used to toast "copied" without copying anything. It now copies a
+   real link and only claims success when the clipboard accepted it. */
+function sharePost(id) {
+  const url = `${location.origin}${location.pathname}#post-${id}`;
+  const done = () => showToast('Link copied');
+  const fail = () => showToast('Couldn\'t copy — ' + url);
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(done, fail);
+  } else {
+    fail();
   }
 }
+window.sharePost = sharePost;
 
-function togglePostELI15(id, event) {
-  if (event) event.stopPropagation();
-  S.postEli15 = S.postEli15 || {};
-  S.postEli15[id] = !S.postEli15[id];
-  
-  // Rerender the specific post text in body
-  const bodyEl = $id(`post-body-${id}`);
-  if (!bodyEl) return;
-  
-  const eliMap = {
-    1: "I spent 3 weeks working hard and finally finished my cool computer project today! It feels so good to see it work! 🚀",
-    2: "I woke up early and exercised. Starting your day with movement is super important to stay healthy! 💪",
-    3: "Stop waiting for the perfect day to start making stuff. The best time was in the past, but the next best time is right now! Just go for it! 🌟",
-    4: "Here are the smart robot helpers I use every day to brainstorm, draw pictures, write code, and organize my thoughts! What helpers do you use? 🤖",
-    5: "Leaving blank space on a screen isn't wasting space. It gives your eyes a rest and makes the important parts look much cleaner and easier to read! 🎨",
-    6: "I just ran super fast and beat my personal speed record! Working hard every day is totally worth it! Never give up! ⚡"
-  };
-  const originalPost = DATA.posts.find(x => x.id === id);
-  if (!originalPost) return;
-  
-  const eliText = eliMap[id] || "This is a super simple, easy to understand version of my post. Hope you like it! ✨";
-  const textToShow = S.postEli15[id] ? eliText : originalPost.body;
-  const eliBadge = S.postEli15[id] ? `<span class="eli15-badge ml8">ELI15 Active ✨</span>` : '';
-  
-  bodyEl.innerHTML = `${escapeHTML(textToShow).replace(/\n/g,'<br>')} ${eliBadge}`;
-  
-  showToast(S.postEli15[id] ? "ELI15 Mode: Simplified explanation active ✨" : "Original post text restored.");
-  
-  // Haptic reaction burst
-  if (typeof IX !== 'undefined' && IX.burstReaction) {
-    const rect = event.target.getBoundingClientRect();
-    IX.burstReaction('💡', rect.left + rect.width / 2, rect.top + rect.height / 2, 6);
-  }
-}
-
-function likePost(e, id) {
-  
+async function likePost(e, id) {
   const p = DATA.posts.find(x => x.id === id);
   if (!p) return;
-  p.liked = !p.liked;
-  p.likes += p.liked ? 1 : -1;
   
+  // Check login
+  if (!S.user || S.user.fname === 'Guest') {
+    showToast('Please sign in to like posts!');
+    if (typeof openAuthModal === 'function') openAuthModal();
+    return;
+  }
+
+  p.liked = !p.liked;
+  const change = p.liked ? 1 : -1;
+  p.likes += change;
+
+  // Engagement on a post mints creator rewards (90% creator / 10% platform).
+  if (p.liked && typeof SF !== 'undefined') SF.accrueEngagement('like');
+
   if (p.liked && e && typeof IX !== 'undefined' && IX.burstReaction) {
     IX.burstReaction('❤️', e.clientX, e.clientY, 8);
   }
   
-  savePostsToLocal();
+  // If it's a Firestore post (string ID), update the cloud database
+  if (typeof id === 'string' && window.db && window.firebaseDoc && window.firebaseUpdateDoc) {
+    try {
+      const postRef = window.firebaseDoc(window.db, 'posts', id);
+      await window.firebaseUpdateDoc(postRef, {
+        likes: window.firebaseIncrement ? window.firebaseIncrement(change) : p.likes
+      });
+    } catch (err) {
+      console.error("Error updating likes:", err);
+      // Revert local UI if failed
+      p.liked = !p.liked;
+      p.likes -= change;
+      showToast('Error liking post.');
+    }
+  } else {
+    savePostsToLocal();
+  }
+  
   renderFeed();
 }
 
@@ -290,7 +605,7 @@ function renderWhoToFollow() {
     return `
     <div class="trend-item flex-between" style="padding:10px 0; border-bottom:1px solid var(--border)">
       <div class="flex gap8" style="align-items:center; flex:1; min-width:0">
-        <div class="avatar av-xs" style="background:var(--g-brand); display:grid; place-items:center; color:#fff; font-size:12px; font-weight:700">${f.emoji}</div>
+        <div class="avatar av-xs" style="background:var(--g-brand); display:grid; place-items:center; color:#fff; font-size:11px; font-weight:800">${escapeHTML(postInitials(f.name))}</div>
         <div style="flex:1; min-width:0">
           <div class="fw8 tc-1" style="font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${f.name} <span class="badge badge-blue fs9" style="margin-left:4px; padding:2px 4px">${f.match} match</span></div>
           <div class="fs10 tc-3" style="margin-top:2px">Shared: ${f.shared.join(', ')}</div>
@@ -330,24 +645,137 @@ function sendFriendRequest(id, event) {
     }
   }, 3000);
 }
-function publishPost() {
+async function publishPost() {
   const input = $id('post-input'); if (!input) return;
   const text = input.value.trim();
   if (!text) { input.focus(); return; }
-  const currentMode = S.feedMode || 'entertainment';
-  const categoryToUse = (typeof MODE_CATEGORY_MAP !== 'undefined' && MODE_CATEGORY_MAP[currentMode]) ? MODE_CATEGORY_MAP[currentMode][0] : 'ent';
+
+  // Check login
+  if (!S.user || S.user.fname === 'Guest') {
+    showToast('Please sign in to post!');
+    if (typeof openAuthModal === 'function') openAuthModal();
+    return;
+  }
+
   const isAnon = S.anonymousMode;
-  const authorName = isAnon ? 'Anonymous User' : (typeof S !== 'undefined' && S.user ? `${S.user.fname} ${S.user.lname}` : 'Alex Vance');
-  const handleName = isAnon ? '@ghost_user' : (typeof S !== 'undefined' && S.user ? S.user.handle : '@alex_vance');
+  const authorName = isAnon ? 'Anonymous' : `${S.user.fname} ${S.user.lname}`.trim();
+  const handleName = isAnon ? '@anonymous' : S.user.handle;
+
+  // Tags come from the hashtags actually written in the post, not a fixed
+  // pair left over from when this app was a farming network.
+  const writtenTags = [...new Set((text.match(/#[\p{L}\p{N}_]+/gu) || []).map(t => t.toLowerCase()))].slice(0, 6);
 
   const newPost = {
-    id: Date.now(), author: authorName, handle: handleName, emoji:'\u2728',
-    time: Date.now(), body: text, tags: ['#trending'], likes:0, comments:0, shares:0, liked:false, type:'text', category: categoryToUse
+    author: authorName,
+    handle: handleName,
+    uid: S.user.uid || 'anon',
+    time: window.firebaseServerTimestamp ? window.firebaseServerTimestamp() : Date.now(),
+    body: text,
+    tags: writtenTags,
+    likes: 0,
+    comments: 0,
+    shares: 0,
+    type: 'text',
+    category: 'general'
   };
-  DATA.posts.unshift(newPost);
+
   input.value = '';
-  savePostsToLocal();
-  renderFeed();
+  
+  if (window.db && window.firebaseCollection && window.firebaseAddDoc) {
+    try {
+      const postsRef = window.firebaseCollection(window.db, 'posts');
+      await window.firebaseAddDoc(postsRef, newPost);
+      showToast('Post published to the global network! 🌍');
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      showToast('Error publishing post. ❌');
+    }
+  } else {
+    // Fallback to local
+    newPost.id = Date.now();
+    newPost.time = Date.now();
+    newPost.mine = true;
+    DATA.posts.unshift(newPost);
+    savePostsToLocal();
+    renderFeed();
+  }
+
+  // Social-to-earn: publishing is a contribution, so it pays (up to a daily cap).
+  if (typeof SF !== 'undefined') SF.earn('publish_post');
+}
+
+// ── REAL-TIME FIRESTORE LISTENER ──
+/* Retries used to fire every second forever. When Firestore is simply not
+   provisioned — as it is here — that's an endless 1Hz loop of work and
+   console noise for something that will never succeed, and it showed up
+   as periodic long tasks. Back off, then stop and run on local data. */
+let _feedRetries = 0;
+const FEED_MAX_RETRIES = 6;
+
+function listenToGlobalFeed() {
+  if (!window.db || !window.firebaseCollection || !window.firebaseOnSnapshot) {
+    if (_feedRetries >= FEED_MAX_RETRIES) {
+      console.warn('Firestore unavailable — continuing with local posts.');
+      return;
+    }
+    const wait = 1000 * Math.pow(2, _feedRetries++);   // 1s, 2s, 4s … 32s
+    setTimeout(listenToGlobalFeed, wait);
+    return;
+  }
+  _feedRetries = 0;
+
+  const q = window.firebaseQuery(
+    window.firebaseCollection(window.db, 'posts'),
+    window.firebaseOrderBy('time', 'desc')
+  );
+
+  window.firebaseOnSnapshot(q, (snapshot) => {
+    const cloudPosts = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      cloudPosts.push({
+        id: doc.id,
+        author: data.author,
+        handle: data.handle,
+        emoji: data.emoji || '✨',
+        time: data.time ? (data.time.toMillis ? data.time.toMillis() : data.time) : Date.now(),
+        body: data.body,
+        tags: data.tags || [],
+        likes: data.likes || 0,
+        comments: data.comments || 0,
+        shares: data.shares || 0,
+        liked: false,
+        type: data.type || 'text',
+        category: data.category || 'general'
+      });
+    });
+
+    // Merge with mock posts to keep the feed populated if cloud is empty
+    if (cloudPosts.length > 0) {
+      // Create a map to merge correctly, prioritizing cloud posts
+      const merged = [...cloudPosts];
+      DATA.posts.forEach(mock => {
+        if (!cloudPosts.find(cp => cp.id === mock.id || cp.body === mock.body)) {
+          merged.push(mock);
+        }
+      });
+      // Sort by time
+      merged.sort((a,b) => b.time - a.time);
+      DATA.posts = merged;
+    }
+
+    renderFeed();
+    console.log(`📡 Real-time feed updated: ${cloudPosts.length} cloud posts fetched.`);
+  }, (error) => {
+    console.error("Firebase feed listener error:", error);
+  });
+}
+
+// Start listener when this file runs
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', listenToGlobalFeed);
+} else {
+  listenToGlobalFeed();
 }
 function openPostComposer() { $id('post-input') && $id('post-input').focus(); }
 
@@ -438,13 +866,13 @@ function openStoryComposer() {
       })
       .catch(function(err) {
         console.warn("Camera access denied or unavailable: ", err);
-        // Fallback gradient if camera fails
+        // Fallback gradient if camera fails (--g-brand is itself a gradient)
         videoEl.style.display = 'none';
-        modal.style.background = 'linear-gradient(135deg, var(--g-brand))';
+        modal.style.background = 'var(--g-brand)';
       });
   } else {
     videoEl.style.display = 'none';
-    modal.style.background = 'linear-gradient(135deg, var(--g-brand))';
+    modal.style.background = 'var(--g-brand)';
   }
 }
 
@@ -669,38 +1097,13 @@ function viewStory(name) {
 
 // ── EXPLORE ──────────────────────────────────────────────────────
 function renderExplore() {
-  const tg = $id('topic-grid');
-  if (tg) {
-    tg.innerHTML = DATA.topics.map(t => {
-      const iconData = get3DIconForEmoji(t.emoji);
-      return `
-      <div class="topic-card" onclick="clickCategory('${t.cat || 'tech'}')">
-        <div class="topic-emoji" style="display:grid; place-items:center; width:48px; height:48px; border-radius:var(--r2); background:var(--card2); border:1px solid var(--border)">
-          <span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:${iconData.color}">${iconData.icon}</span>
-        </div>
-        <div class="topic-name">${t.name}</div>
-        <div class="topic-count" style="${t.live ? 'color:#34A853; font-weight:700' : ''}">${t.count} ${t.live ? '🔥 (Google Live)' : ''}</div>
-      </div>`;
-    }).join('');
-  }
-  const tc = $id('topic-chips');
-  if (tc) {
-    const cats = [
-      { icon: 'local_fire_department', color: 'var(--orange)', label: 'Trending', filter: 'all' },
-      { icon: 'smart_toy', color: 'var(--purple)', label: 'AI', filter: 'ai' },
-      { icon: 'fitness_center', color: 'var(--green)', label: 'Fitness', filter: 'fitness' },
-      { icon: 'sports_esports', color: 'var(--orange)', label: 'Gaming', filter: 'gaming' },
-      { icon: 'public', color: 'var(--blue)', label: 'Travel', filter: 'travel' },
-      { icon: 'palette', color: 'var(--pink)', label: 'Design', filter: 'design' },
-      { icon: 'terminal', color: 'var(--blue)', label: 'Code', filter: 'tech' },
-      { icon: 'restaurant', color: 'var(--orange)', label: 'Food', filter: 'food' }
-    ];
-    tc.innerHTML = cats.map((c,i) => `
-      <span class="chip${i===0?' active':''}" onclick="filterTopicGrid('${c.filter}', this)" style="display:inline-flex; align-items:center; gap:4px">
-        <span class="material-symbols-rounded" style="font-size:14px; color:${c.color}">${c.icon}</span>
-        ${c.label}
-      </span>`).join('');
-  }
+  // Repaint the sentiment gauge — the pane is built lazily, so #fgi-root
+  // only exists from the first visit onward.
+  if (typeof FGI !== 'undefined') FGI.paint();
+
+  // Cryptoverse: live market discovery replaces the old topic grid + chips.
+  if (typeof CV !== 'undefined') CV.render();
+
   const cg = $id('creator-grid');
   if (cg) {
     cg.innerHTML = DATA.users.map(u => {
@@ -719,75 +1122,43 @@ function renderExplore() {
 
 
 function getFeedsTemplate() {
-  return `<section id="pane-feeds" class="pane active">
-        <!-- HORIZONTAL CATEGORY BAR -->
-        <div class="category-scroll-bar" id="category-bar" style="margin-bottom: 16px;">
-          <button class="cat-chip active" onclick="clickCategory('all')">All</button>
-          <button class="cat-chip" onclick="clickCategory('science')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">science</span>Science</button>
-          <button class="cat-chip" onclick="clickCategory('politics')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">newspaper</span>Politics &amp; News</button>
-          <button class="cat-chip" onclick="clickCategory('crypto')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">monetization_on</span>Crypto &amp; Finance</button>
-          <button class="cat-chip" onclick="clickCategory('music')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">music_note</span>Music</button>
-          <button class="cat-chip" onclick="clickCategory('tech')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">terminal</span>Tech &amp; AI</button>
-          <button class="cat-chip" onclick="clickCategory('wildlife')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">forest</span>Wildlife &amp; Nature</button>
-          <button class="cat-chip" onclick="clickCategory('local')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">location_on</span>Local Civic</button>
-          <button class="cat-chip" onclick="toggleCategorySidebar()"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:4px">folder</span>Expand All 50+</button>
-        </div>
-
-        <div class="flex-between mb16">
+  return `<section id="pane-feeds" class="pane active hx">
+        <div class="flex-between mb16 hx-title">
           <h1 class="pane-title" style="margin-bottom:0"><span>Home</span> Feed</h1>
-          <!-- Dual Feed Toggle -->
-          <div class="dual-feed-toggle">
-            <button class="df-btn active" id="df-ent-btn" onclick="toggleDualFeed('entertainment')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">theater_comedy</span>Entertainment</button>
-            <button class="df-btn" id="df-gro-btn" onclick="toggleDualFeed('growth')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">spa</span>Growth Feed</button>
-          </div>
         </div>
 
-        <!-- Sliding Feed Modes -->
-        <div class="feed-modes-wrapper mb16">
-          <span class="fs11 fw8 tc-3 mr8" style="text-transform:uppercase; letter-spacing:0.05em">Mode:</span>
-          <div class="feed-modes-scroll" id="feed-modes">
-            <button class="mode-btn active" onclick="switchFeedMode('entertainment')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">theater_comedy</span>Entertainment</button>
-            <button class="mode-btn" onclick="switchFeedMode('focus')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">track_changes</span>Focus</button>
-            <button class="mode-btn" onclick="switchFeedMode('study')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">menu_book</span>Study</button>
-            <button class="mode-btn" onclick="switchFeedMode('chill')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">bedtime</span>Night Chill</button>
-            <button class="mode-btn" onclick="switchFeedMode('motivation')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">bolt</span>Motivation</button>
-            <button class="mode-btn" onclick="switchFeedMode('news')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">campaign</span>Breaking News</button>
-            <button class="mode-btn" onclick="switchFeedMode('wellness')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">self_improvement</span>Wellness</button>
-            <button class="mode-btn" onclick="switchFeedMode('productivity')"><span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle; margin-right:4px">trending_up</span>Productivity</button>
-          </div>
-        </div>
+        <!-- Search and scan — HX.paint() -->
+        <div id="hx-search"></div>
+
+        <!-- Full-width stories; the feed and sidebar start below this row. -->
+        <div class="stories-row" id="stories-row"></div>
+
+        <!-- Balance, Add Funds, promo, P2P and Send — HX.paint() -->
+        <div class="hx-dash" id="hx-dash"></div>
+
+        <!-- Crypto quick rail — one tap into the services people reach for -->
+        <div id="hc-rail"></div>
+
+        <!-- Favorites / Hot / Gainers / Losers / Stocks — HX.paint() -->
+        <div id="hx-mkts"></div>
+
+        <!-- Discover / Following / Crypto / Stocks, pinned while scrolling -->
+        <div class="hx-sheet" id="hx-sheet"></div>
 
         <div class="home-layout">
           <!-- Left Column -->
           <div>
-            <!-- Stories Row -->
-            <div class="stories-row" id="stories-row"></div>
-
-            <!-- Composer -->
-            <div class="composer card">
-              <div class="composer-row">
-                <div class="avatar av-sm" id="composer-av">AV</div>
-                <input class="composer-input" id="post-input" type="text" placeholder="What's trending with you today?">
-              </div>
-              <div id="composer-preview" style="display:none; padding:8px 12px; margin:8px 0; background:var(--surface); border-radius:var(--r2); border:1px solid var(--border); font-size:12px; color:var(--t2)"></div>
-              <input type="file" id="composer-file-photo" accept="image/*" style="display:none" onchange="handleComposerFile(this, 'photo')">
-              <input type="file" id="composer-file-video" accept="video/*" style="display:none" onchange="handleComposerFile(this, 'video')">
-              <div class="composer-actions">
-                <button class="composer-act-btn" onclick="document.getElementById('composer-file-photo').click()"><span class="material-symbols-rounded" style="font-size:16px; color:var(--blue); vertical-align:middle; margin-right:4px">photo_camera</span>Photo</button>
-                <button class="composer-act-btn" onclick="document.getElementById('composer-file-video').click()"><span class="material-symbols-rounded" style="font-size:16px; color:var(--pink); vertical-align:middle; margin-right:4px">movie</span>Video</button>
-                <button class="composer-act-btn" onclick="createPoll()"><span class="material-symbols-rounded" style="font-size:16px; color:var(--green); vertical-align:middle; margin-right:4px">bar_chart</span>Poll</button>
-                <button class="btn btn-primary btn-sm" onclick="publishPost()" style="margin-left:auto">Post</button>
-              </div>
-            </div>
-
-            <!-- Feed Posts -->
+                        <!-- Feed Posts -->
             <div id="feed-posts"></div>
           </div>
 
           <!-- Right Column -->
           <div class="trend-sidebar">
+            <!-- Portfolio, Market Pulse and Earn — injected by HC.paint() -->
+            <div id="hc-side"></div>
+
             <!-- Creator Wallet & Live Earnings Card -->
-            <div class="trend-card mb12" style="background:linear-gradient(135deg, rgba(24, 25, 36, 0.9), rgba(155, 60, 44, 0.1)); border:1px solid var(--border)">
+            <div class="trend-card mb12 wallet-card" style="border:1px solid var(--border)">
               <div class="section-hdr">
                 <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--orange)">payments</span> Creator Economy Wallet</span>
                 <span class="badge badge-green">Active Share</span>
@@ -799,41 +1170,17 @@ function getFeedsTemplate() {
                 </div>
                 <div class="flex-between mt4">
                   <span class="fs11 tc-3">Ad Share Earnings:</span>
-                  <strong class="fs13 tc-green" id="ew-ad-share">$248.15</strong>
+                  <strong class="fs13 tc-green" id="ew-ad-share">$248.15 (0.0036 BTC)</strong>
                 </div>
                 <div class="flex-between mt4">
                   <span class="fs11 tc-3">Escrow In Hold:</span>
-                  <strong class="fs12 tc-blue" id="ew-escrow-hold">$0.00</strong>
+                  <strong class="fs12 tc-blue" id="ew-escrow-hold">$0.00 (0.0000 BTC)</strong>
                 </div>
               </div>
               <div class="flex gap8 mt12">
                 <button class="btn btn-primary btn-sm flex-center gap4" onclick="navigateTo('profile'); switchProfileTab('wallet');" style="flex:1"><span class="material-symbols-rounded" style="font-size:12px">account_balance_wallet</span> Open Wallet</button>
                 <button class="btn btn-ghost btn-sm" onclick="simulateCreatorTip()" title="Tip active creator">🎁 Tip Creator</button>
               </div>
-            </div>
-
-            <!-- Mindfulness Widget -->
-            <div class="trend-card mb12">
-              <div class="section-hdr">
-                <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--green)">self_improvement</span> Mindfulness Space</span>
-                <span class="badge badge-pink">Active</span>
-              </div>
-              <div class="wellness-stats mt8">
-                <div class="flex-between fs12 mb8">
-                  <span class="tc-2">Daily Screen Time Limit</span>
-                  <span class="fw7 tc-blue" id="screen-time-val">18m / 45m</span>
-                </div>
-                <div class="progress-bar mb12"><div class="progress-fill" style="width: 40%; background: var(--blue)"></div></div>
-                <div class="flex-between fs12 mb4">
-                  <span class="tc-2">Emotional Balance Status</span>
-                  <span class="fw7 tc-green" id="emotional-status">Calm &amp; Focused</span>
-                </div>
-                <div class="flex-between fs12">
-                  <span class="tc-2">Focus Session Streak</span>
-                  <span class="fw7 tc-pink" style="display:inline-flex; align-items:center; gap:4px">3 Days <span class="material-symbols-rounded" style="font-size:14px; color:var(--orange)">local_fire_department</span></span>
-                </div>
-              </div>
-              <button class="btn btn-ghost btn-sm mt12" style="width:100%" onclick="startFocusSession()">Start 25m Focus Block</button>
             </div>
 
             <div class="trend-card">
@@ -850,8 +1197,28 @@ function getFeedsTemplate() {
               </div>
               <div id="who-to-follow"></div>
             </div>
+
+            <!-- Global markets — live coin ticker, scrolling upward -->
+            <div class="trend-card mt12 mkt-card">
+              <div class="section-hdr">
+                <span class="section-title" style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded">public</span> Global Markets</span>
+                <span id="ticker-count" class="mkt-status sync" title="Fetching live prices…">Syncing</span>
+              </div>
+              <div class="mkt-ticker-mask vertical">
+                <div id="universal-market-ticker">
+                  <!-- Populated by renderUniversalTicker() -->
+                  <span class="tc-3 fs11">Syncing live market data…</span>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- Phones only: which card of the swipe row is showing -->
+          <div class="side-dots" id="side-dots" role="group" aria-label="Home cards"></div>
         </div>
+
+        <!-- Phones: the feed tabs peek from the bottom until you reach them -->
+        <div class="hx-peek" id="hx-peek" aria-hidden="true" inert></div>
       </section>`;
 }
 
@@ -878,53 +1245,167 @@ function clearComposerFile() {
 }
 
 // ── POLL LOGIC ───────────────────────────────────────────────────
+const POLL_MAX_OPTIONS = 4;
+
+/* A poll must land in a category the active filter actually shows, or it
+   publishes straight into an invisible bucket. With feed modes gone, the
+   Growth toggle is the only filter left. Mirrors renderFeed(). */
+function pollCategoryForCurrentFeed() {
+  return S.dualFeed === 'growth' ? 'tech' : 'ent';
+}
+
 function createPoll() {
-  const q = prompt('Enter your poll question:');
-  if (!q) return;
-  const opt1 = prompt('Enter Option 1:');
-  if (!opt1) return;
-  const opt2 = prompt('Enter Option 2:');
-  if (!opt2) return;
-  
+  closePollModal();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'poll-modal-overlay';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(8px); animation:pane-in 0.3s ease; padding:20px';
+  overlay.onclick = e => { if (e.target === overlay) closePollModal(); };
+
+  overlay.innerHTML = `
+    <div class="card" style="width:100%; max-width:440px; padding:24px; position:relative; max-height:88vh; overflow-y:auto">
+      <button class="icon-btn" onclick="closePollModal()" style="position:absolute; top:12px; right:12px" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+
+      <h3 class="fw9 tc-1" style="display:flex; align-items:center; gap:6px">
+        <span class="material-symbols-rounded" style="color:var(--green)">bar_chart</span> Create a poll
+      </h3>
+      <div class="fs12 tc-3 mt4 mb16">Ask the feed something. Two options minimum, ${POLL_MAX_OPTIONS} max.</div>
+
+      <div class="form-group mb12">
+        <label class="form-label" for="poll-q">Question</label>
+        <input class="input" id="poll-q" maxlength="140" placeholder="What should I build next?" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Options</label>
+        <div id="poll-opts"></div>
+      </div>
+
+      <button class="btn btn-ghost btn-sm" id="poll-add-opt" onclick="addPollOption()">
+        <span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle">add</span> Add option
+      </button>
+
+      <div class="fs11 mt12" id="poll-error" style="color:var(--red); min-height:16px"></div>
+
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="closePollModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitPoll()">Publish poll</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  addPollOption();
+  addPollOption();
+  document.addEventListener('keydown', pollKeyHandler);
+  setTimeout(() => $id('poll-q') && $id('poll-q').focus(), 50);
+}
+
+function pollKeyHandler(e) {
+  if (!$id('poll-modal-overlay')) return;
+  if (e.key === 'Escape') { closePollModal(); return; }
+  if (e.key === 'Enter' && e.target && e.target.classList.contains('input')) {
+    e.preventDefault();
+    submitPoll();
+  }
+}
+
+window.closePollModal = function() {
+  document.removeEventListener('keydown', pollKeyHandler);
+  const el = $id('poll-modal-overlay');
+  if (el) el.remove();
+};
+
+window.addPollOption = function() {
+  const host = $id('poll-opts');
+  if (!host || host.children.length >= POLL_MAX_OPTIONS) return;
+  const row = document.createElement('div');
+  row.className = 'poll-opt-row';
+  row.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:8px';
+  row.innerHTML = `
+    <input class="input poll-opt-input" maxlength="60" placeholder="Option ${host.children.length + 1}" autocomplete="off" style="flex:1">
+    <button class="icon-btn poll-opt-del" title="Remove option" onclick="removePollOption(this)" style="flex-shrink:0"><span class="material-symbols-rounded" style="font-size:18px">close</span></button>`;
+  host.appendChild(row);
+  syncPollOptionUI();
+  row.querySelector('.input').focus();
+};
+
+window.removePollOption = function(btn) {
+  const host = $id('poll-opts');
+  if (!host || host.children.length <= 2) return;
+  const row = btn.closest('.poll-opt-row');
+  if (row) row.remove();
+  syncPollOptionUI();
+};
+
+function syncPollOptionUI() {
+  const host = $id('poll-opts');
+  if (!host) return;
+  const rows = Array.from(host.children);
+  rows.forEach((r, i) => {
+    const inp = r.querySelector('.poll-opt-input');
+    if (inp && !inp.value) inp.placeholder = `Option ${i + 1}`;
+    const del = r.querySelector('.poll-opt-del');
+    if (del) del.style.visibility = rows.length > 2 ? 'visible' : 'hidden';
+  });
+  const add = $id('poll-add-opt');
+  if (add) add.style.display = rows.length >= POLL_MAX_OPTIONS ? 'none' : '';
+}
+
+window.submitPoll = function() {
+  const err = $id('poll-error');
+  const fail = m => { if (err) err.textContent = m; };
+
+  const qEl = $id('poll-q');
+  const q = qEl ? qEl.value.trim() : '';
+  const opts = Array.from(document.querySelectorAll('.poll-opt-input'))
+    .map(i => i.value.trim())
+    .filter(Boolean);
+
+  if (!q) return fail('Give your poll a question.');
+  if (opts.length < 2) return fail('Fill in at least two options.');
+  if (new Set(opts.map(o => o.toLowerCase())).size !== opts.length) return fail('Options must be different from each other.');
+
   const newPost = {
     id: Date.now(),
     type: 'poll',
-    author: S.user.fname + ' ' + S.user.lname,
+    author: `${S.user.fname} ${S.user.lname}`.trim(),
     handle: S.user.handle,
-    emoji: `${(S.user.fname||'A')[0]}${(S.user.lname||'V')[0]}`.toUpperCase(),
+    emoji: `${(S.user.fname || 'A')[0]}${(S.user.lname || 'V')[0]}`.toUpperCase(),
     body: q,
+    time: Date.now(),
     tags: ['#poll', '#community'],
     likes: 0,
     comments: 0,
     shares: 0,
-    category: S.feedMode || 'entertainment',
-    options: [
-      { text: opt1, votes: 0 },
-      { text: opt2, votes: 0 }
-    ]
+    liked: false,
+    mine: true,
+    category: pollCategoryForCurrentFeed(),
+    options: opts.map(t => ({ text: t, votes: 0 }))
   };
-  
+
   DATA.posts.unshift(newPost);
-  localStorage.setItem('ts_posts', JSON.stringify(DATA.posts));
+  savePostsToLocal();
+  closePollModal();
   renderFeed();
-  showToast('Poll published! dY"Z');
-}
+  showToast('Poll published 🗳️');
+  if (typeof SF !== 'undefined') SF.earn('create_poll');
+};
 
 window.votePoll = function(postId, optIdx) {
-  const p = DATA.posts.find(x => x.id === postId);
-  if (!p || p.type !== 'poll') return;
-  
-  if (p.hasVoted) {
+  const p = DATA.posts.find(x => x.id === postId || String(x.id) === String(postId));
+  if (!p || p.type !== 'poll' || !p.options || !p.options[optIdx]) return;
+
+  if (typeof p.votedIdx === 'number' || p.hasVoted) {
     showToast('You already voted on this poll.');
     return;
   }
-  
-  p.options[optIdx].votes++;
+
+  p.options[optIdx].votes = (p.options[optIdx].votes || 0) + 1;
+  p.votedIdx = optIdx;
   p.hasVoted = true;
-  localStorage.setItem('ts_posts', JSON.stringify(DATA.posts));
-  
+  savePostsToLocal();
   renderFeed();
-  showToast('Vote recorded!');
+  showToast('Vote recorded ✅');
 };
 
 function filterTopicGrid(cat, chipEl) {
