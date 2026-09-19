@@ -1029,7 +1029,7 @@ window.openCreateReelModal = () => SH.openCreate();
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('pages/reels.js', {
   SH: () => SH, getReelsTemplate: () => getReelsTemplate,
   renderReels: () => renderReels

@@ -272,7 +272,7 @@ function profileSectionHTML(tab) {
           </div>
           <div class="fw8 fs13 tc-1 mt8">UI Design Secrets</div>
           <div class="fs11 tc-pink mt4" style="display:inline-flex; align-items:center; gap:2px"><span class="material-symbols-rounded" style="font-size:12px">favorite</span> 24.5K Likes</div>
-          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="openShortyPopup(5)">
+          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="navigateTo('reels').then(() =&gt; openShortyPopup(5))">
             <span class="material-symbols-rounded" style="font-size:14px">play_arrow</span> Play Shorty
           </button>
         </div>
@@ -282,7 +282,7 @@ function profileSectionHTML(tab) {
           </div>
           <div class="fw8 fs13 tc-1 mt8">5AM Cardio Hustle</div>
           <div class="fs11 tc-pink mt4" style="display:inline-flex; align-items:center; gap:2px"><span class="material-symbols-rounded" style="font-size:12px">favorite</span> 18.2K Likes</div>
-          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="openShortyPopup(1)">
+          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="navigateTo('reels').then(() =&gt; openShortyPopup(1))">
             <span class="material-symbols-rounded" style="font-size:14px">play_arrow</span> Play Shorty
           </button>
         </div>
@@ -292,7 +292,7 @@ function profileSectionHTML(tab) {
           </div>
           <div class="fw8 fs13 tc-1 mt8">Methane synthesis lab</div>
           <div class="fs11 tc-pink mt4" style="display:inline-flex; align-items:center; gap:2px"><span class="material-symbols-rounded" style="font-size:12px">favorite</span> 31.7K Likes</div>
-          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="openShortyPopup(4)">
+          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="navigateTo('reels').then(() =&gt; openShortyPopup(4))">
             <span class="material-symbols-rounded" style="font-size:14px">play_arrow</span> Play Shorty
           </button>
         </div>
@@ -302,7 +302,7 @@ function profileSectionHTML(tab) {
           </div>
           <div class="fw8 fs13 tc-1 mt8">CSS Glassmorphism in 15s</div>
           <div class="fs11 tc-pink mt4" style="display:inline-flex; align-items:center; gap:2px"><span class="material-symbols-rounded" style="font-size:12px">favorite</span> 15.9K Likes</div>
-          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="openShortyPopup(3)">
+          <button class="btn btn-ghost btn-sm mt12 flex-center gap4" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:4px" onclick="navigateTo('reels').then(() =&gt; openShortyPopup(3))">
             <span class="material-symbols-rounded" style="font-size:14px">play_arrow</span> Play Shorty
           </button>
         </div>
@@ -1442,7 +1442,7 @@ window.PG = PG;
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('pages/profile.js', {
   renderProfile: () => renderProfile,
   syncProfileIdentity: () => syncProfileIdentity,

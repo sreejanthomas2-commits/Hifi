@@ -13,13 +13,26 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static frontend files from 'public' directory.
-// Assets are cache-busted via ?v= query strings, so long cache is safe;
-// index.html itself must always revalidate.
+// Assets are cache-busted via ?v= query strings, so a long cache is safe
+// in production; index.html itself must always revalidate.
+//
+// In development that long cache is a trap. The ?v= on a module lives in
+// whatever IMPORTS it, so editing a file and forgetting to bump its
+// importer leaves the browser serving a week-old copy with nothing on
+// screen to say so. That cost three separate debugging detours in one
+// afternoon - globals.js, lazy.js and the converted page modules each
+// "did not take" until the version in their importer changed, and the
+// symptom every time was code that looked wrong rather than code that
+// was stale. So outside production, script and style are never stored.
+const DEV = process.env.NODE_ENV !== 'production';
+
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '7d',
+  maxAge: DEV ? 0 : '7d',
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('index.html')) {
       res.setHeader('Cache-Control', 'no-cache');
+    } else if (DEV && /\.(?:js|mjs|css)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-store, must-revalidate');
     }
   }
 }));

@@ -2249,7 +2249,7 @@ function renderFashionVerse(brand = 'All') {
           <div class="product-name tc-1">${p.name}</div>
           <div class="product-rating tc-3">${p.rating}</div>
           <div class="flex-between" style="margin-top:12px; align-items:flex-end">
-            <div class="product-price">$${p.price.toFixed(2)}</div>
+            <div class="product-price">${p.price > 0 ? '$' + p.price.toFixed(2) : 'Free Drop'}</div>
             ${arButton}
           </div>
           <button class="btn btn-primary mt12 flex-center gap4" style="width:100%; border-radius:12px;" onclick="addToCart('${p.name}', ${p.price})">
@@ -2877,7 +2877,7 @@ window.renderCryptoHub = async function(tab = 'markets') {
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('pages/explore.js', {
   populateCategorySidebar: () => populateCategorySidebar,
   toggleCategorySidebar: () => toggleCategorySidebar,

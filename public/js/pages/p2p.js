@@ -544,7 +544,7 @@ function renderP2p() { P2P.paint(); }
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('pages/p2p.js', {
   P2P: () => P2P, getP2pTemplate: () => getP2pTemplate,
   renderP2p: () => renderP2p

@@ -4,7 +4,7 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-import { ensurePane } from './lazy.js?v=1';
+import { ensurePane } from './lazy.js?v=1789834943';
 
 function setupNav() {
   document.querySelectorAll('.nav-item[data-pane]').forEach(el => {
@@ -117,7 +117,11 @@ async function navigateTo(pane) {
   if (pane === 'community') _safe('renderCommunity', 'renderCommunity');
   if (pane === 'profile') _safe('renderProfile', 'renderProfile');
   if (pane === 'messages') _safe('setupMessages', 'setupMessages');
-  if (pane === 'designstudio') _safe('renderDesignStudio', 'renderDesignStudio');
+  /* The pane's shell is getFashionverseTemplate in fashionverse.js; the
+     grid that fills it is renderFashionVerse in explore.js, which is
+     also where the AR Try-On modal it links to lives. Two files, one
+     page. fashionverse.js has its own renderFashionVerseShop, which
+     nothing calls. */
   if (pane === 'fashionverse') _safe('renderFashionVerse', 'renderFashionVerse');
   if (pane === 'earn') _safe('renderEarn', 'renderEarn');
   if (pane === 'settings') _safe('renderSettings', 'renderSettings');
@@ -146,7 +150,7 @@ function closeSidebar() {
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from './globals.js?v=2';
+import { publish } from './globals.js?v=3';
 publish('router.js', {
   setupNav: () => setupNav, navigateTo: () => navigateTo,
   toggleSidebar: () => toggleSidebar, closeSidebar: () => closeSidebar

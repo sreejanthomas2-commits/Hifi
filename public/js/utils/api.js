@@ -580,7 +580,7 @@ Always provide concise, highly actionable, and accurate responses.`;
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('utils/api.js', {
   CG_CACHE_KEY: () => CG_CACHE_KEY,
   CG_CACHE_MAX_AGE: () => CG_CACHE_MAX_AGE,

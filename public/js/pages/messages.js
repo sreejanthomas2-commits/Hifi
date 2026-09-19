@@ -1205,8 +1205,12 @@ function mockCall(type) {
     return;
   }
   
-  const activeUser = DATA.conversations.find(c => c.id === activeChat);
-  const name = activeUser ? activeUser.name : 'Unknown User';
+  /* Whose call this is comes from TG, which owns the open thread. This
+     read a bare `activeChat` - a global no module has declared since the
+     pre-modular app.js - so every tap on the video button threw a
+     ReferenceError here and the overlay was never built. */
+  const chat = (typeof TG !== 'undefined') ? TG.activeChat() : null;
+  const name = chat ? chat.name : 'Unknown User';
   
   let callOverlay = document.getElementById('video-call-overlay');
   if (!callOverlay) {
@@ -1348,7 +1352,7 @@ function makePipDraggable() {
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('pages/messages.js', {
   setupAI: () => setupAI, toggleAI: () => toggleAI,
   setAlinaState: () => setAlinaState, sendAI: () => sendAI,

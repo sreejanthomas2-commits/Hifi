@@ -415,16 +415,22 @@ function endMockCall() {
   if (duration > 0) {
     showToast(`📞 Call ended · Duration: ${(m+'').padStart(2,'0')}:${(s+'').padStart(2,'0')}`);
 
-    // Add call log to chat history
-    if (DATA.chatHistory[activeChat]) {
+    /* Log the call into the open thread. Both names this reached for -
+       `activeChat` and renderMessages() - are leftovers from the
+       pre-modular app.js and neither exists any more, so ending a
+       connected call threw here every time. TG owns the thread, and
+       only a real conversation has a chatHistory to append to. */
+    const chat = (typeof TG !== 'undefined') ? TG.activeChat() : null;
+    const chatId = (chat && chat.src === 'convo') ? chat.raw.id : null;
+    if (chatId && DATA.chatHistory[chatId]) {
       const now = new Date();
       const time = now.getHours()+':'+(now.getMinutes()+'').padStart(2,'0')+' '+((now.getHours()>=12)?'PM':'AM');
-      DATA.chatHistory[activeChat].push({
+      DATA.chatHistory[chatId].push({
         me: true,
         text: `📞 Call ended · Duration ${(m+'').padStart(2,'0')}:${(s+'').padStart(2,'0')}`,
         time
       });
-      renderMessages(activeChat);
+      TG.paintThread();
     }
   } else {
     showToast('Call declined.');
@@ -671,7 +677,7 @@ function closeCloudStream() {
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('pages/modals.js', {
   switchCourseDetailTab: () => switchCourseDetailTab,
   swipeStartup: () => swipeStartup, toggleCallMute: () => toggleCallMute,

@@ -94,7 +94,15 @@ function renderCategoryGrid() {
       <div class="fw6 tc-1 fs14">${cat.name}</div>
     </div>
   `).join('');
-}function handleUserAuthClick() {
+}
+
+/* This sat on the same line as the brace above it: `}function ...`. It
+   was a top-level declaration either way, but the bridge generator
+   looks for declarations at the start of a line, so it was never
+   published to the global object - and index.html's sidebar calls it
+   from an onclick, which had silently done nothing since the module
+   conversion. */
+function handleUserAuthClick() {
   const isGuest = S.user && S.user.fname === 'Guest';
   if (isGuest) {
     if (typeof openAuthModal === 'function') openAuthModal();
@@ -113,8 +121,9 @@ function renderCategoryGrid() {
    like a declaration. publish() calls each thunk and skips the ones
    that do not resolve, so a phantom costs one caught error and not a
    dead module graph. */
-import { publish } from '../globals.js?v=2';
+import { publish } from '../globals.js?v=3';
 publish('components/ui.js', {
+  handleUserAuthClick: () => handleUserAuthClick,
   updateUserUI: () => updateUserUI,
   renderCategoryGrid: () => renderCategoryGrid
 });
