@@ -1,15 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+
+<html lang="en" data-theme="light">
 <head>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('ts_theme') || 'light';
+        var mode = saved === 'system'
+          ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : saved;
+        document.documentElement.setAttribute('data-theme', mode === 'dark' ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F6F7F9">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="description" content="Trending — Your next-generation digital universe.">
   <title>Trending — Your Digital Universe</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-  <link rel="stylesheet" href="css/index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+  <link rel="stylesheet" href="css/index.css?v=166">
+<link rel="stylesheet" href="css/signin.css?v=1">
 </head>
 <body>
 
@@ -37,7 +51,7 @@
     <!-- Call Info Overlay -->
     <div class="call-info-overlay">
       <div class="call-type-badge" id="call-type-badge">
-        <span class="material-symbols-rounded" style="font-size:16px">videocam</span>
+        <span class="material-symbols-rounded ms-16">videocam</span>
         <span id="call-type-text">Video Call</span>
       </div>
       <h2 class="call-contact-name" id="call-name">Sarah Chen</h2>
@@ -79,55 +93,27 @@
 </div>
 
 <!-- SECURE AUTH MODAL (Hidden by Default) -->
-<div id="auth-modal" class="auth-modal-overlay hidden">
-  <div class="auth-card card p24" style="background:var(--card); border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3)">
-    <div class="auth-header text-center mb20">
-      <div class="brand-logo emoji-3d" style="background:var(--g-brand); display:grid; place-items:center; margin: 0 auto 12px; width:48px; height:48px; border-radius:50%; animation:ix-float-idle 3s ease-in-out infinite">
-        <span class="material-symbols-rounded" style="color:#fff; font-size:24px; font-variation-settings:'FILL' 1">diamond</span>
-      </div>
-      <h2 class="fw9 tc-1 fs18" style="letter-spacing:-0.03em">Welcome to Trending</h2>
-      <p class="tc-2 fs12 mt4">Unlock your next-generation digital universe</p>
-    </div>
-    
-    <!-- Sign-in view -->
+<div id="auth-modal" class="auth-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="signin-title">
+ <div class="ts-signin">
+  <aside class="ts-story">
+   <div class="ts-brand"><span class="ts-mark">◇</span> Trending<span class="ts-brand-dot">.</span></div>
+   <div class="ts-story-main"><span class="ts-eyebrow">YOUR PEOPLE. YOUR POSSIBILITIES.</span><h1>A whole world.<br>Your kind of<br><em>connection.</em></h1><p>Find your community. Share what moves you.<br>Make your next big thing happen.</p>
+   <div class="ts-orbit" aria-hidden="true"><div class="ts-orbit-inner"></div><span class="ts-orbit-word">t<span>.</span></span><span class="ts-chip ts-chip-one"><span class="material-symbols-rounded">groups</span> Find your people</span><span class="ts-chip ts-chip-two"><span class="material-symbols-rounded">auto_awesome</span> Create something new</span><span class="ts-chip ts-chip-three"><span class="material-symbols-rounded">public</span> Explore your universe</span></div></div>
+   <div class="ts-story-foot"><span>ONE ACCOUNT. ALL OF TRENDING.</span><span>✦</span></div>
+  </aside>
+  <main class="ts-entry"><button type="button" class="ts-top-guest" onclick="continueAsGuest()">Just exploring? <b>Browse as guest ↗</b></button>
+   <div class="ts-form-wrap"><div class="ts-mobile-brand">◇ Trending.</div><span class="ts-eyebrow">GOOD TO SEE YOU AGAIN</span><h2 id="signin-title">Welcome back<span>.</span></h2><p class="ts-subtitle">Your universe is right where you left it.</p>
     <div id="auth-main-view">
-      <!-- Google Sign-In Button -->
-      <button class="btn w100 flex-center gap12 mb12" id="google-signin-btn" onclick="signInWithGoogle()" style="background:#fff; color:#1f1f1f; border:1px solid #dadce0; height:42px; justify-content:center; font-weight:600; display:flex; width:100%; border-radius:var(--r2); transition:var(--tr); cursor:pointer">
-        <svg style="width:18px; height:18px; margin-right:8px" viewBox="0 0 24 24">
-          <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.137 4.114-3.465 0-6.274-2.81-6.274-6.275 0-3.465 2.81-6.274 6.274-6.274 1.543 0 2.957.566 4.05 1.49l2.973-2.973C18.913 2.193 15.78 1 12.24 1 6.032 1 12.24 6.032 12.24 12.24s5.032 11.24 11.24 11.24c6.48 0 10.78-4.55 10.78-10.96 0-.74-.067-1.424-.2-2.235H12.24z"/>
-        </svg>
-        Sign in with Google
-      </button>
-
-      <div class="auth-divider mb12 text-center tc-3 fs11" style="display:flex; align-items:center; gap:8px; margin: 16px 0">
-        <span style="flex:1; height:1px; background:var(--border)"></span>
-        <span style="color:var(--t3); font-weight:500">or use Gmail credentials</span>
-        <span style="flex:1; height:1px; background:var(--border)"></span>
-      </div>
-
-      <!-- Gmail Login Form -->
-      <form id="gmail-login-form" onsubmit="signInWithGmail(event)" style="display:flex; flex-direction:column; gap:12px">
-        <div class="form-group">
-          <input type="email" id="auth-email" class="input" placeholder="username@gmail.com" required style="width:100%; background:var(--card2); border:1px solid var(--border); border-radius:var(--r2); padding:10px 14px; color:var(--t1); outline:none">
-        </div>
-        <div class="form-group" style="margin-bottom:6px">
-          <input type="password" id="auth-password" class="input" placeholder="Password" required style="width:100%; background:var(--card2); border:1px solid var(--border); border-radius:var(--r2); padding:10px 14px; color:var(--t1); outline:none">
-        </div>
-        <button type="submit" class="btn btn-primary w100 flex-center gap8" style="justify-content:center; height:42px; font-weight:600; cursor:pointer; width:100%; display:inline-flex; align-items:center">
-          Continue with Gmail <span class="material-symbols-rounded" style="font-size:16px; margin-left:4px">arrow_forward</span>
-        </button>
-      </form>
-    </div>
-
-    <!-- Loading view (Interactive Google Dialog Simulator) -->
-    <div id="auth-loading-view" class="hidden text-center p20" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px 0">
-      <div class="google-spinner" style="margin:20px auto; width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--purple); border-radius:50%; animation:spin 0.8s linear infinite"></div>
-      <h3 class="fw8 tc-1 fs14" id="auth-loading-status">Connecting to secure servers...</h3>
-      <p class="tc-3 fs11 mt6">Verifying secure OAuth2 keys & certificates...</p>
-    </div>
-  </div>
+     <button type="button" class="ts-google" onclick="signInWithGoogle()"><span class="ts-google-g" aria-hidden="true">G</span> Continue with Google</button>
+     <div class="ts-divider"><span></span>or continue with email<span></span></div>
+     <form id="gmail-login-form" onsubmit="signInWithGmail(event)"><label for="auth-email">Email address</label><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><div class="ts-password-label"><label for="auth-password">Password</label><button type="button" class="ts-text-btn" id="ts-reset">Forgot password?</button></div><div class="ts-password"><input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6"><button type="button" id="ts-show" aria-label="Show password" aria-pressed="false"><span class="material-symbols-rounded">visibility</span></button></div><p id="ts-auth-feedback" role="status"></p><button type="submit" class="ts-submit" id="ts-submit">Sign in <span>↗</span></button></form>
+     <p class="ts-signup">New to Trending? <button type="button" class="ts-text-btn" id="ts-mode">Create an account</button></p>
+     <div class="ts-wallet"><span class="material-symbols-rounded">account_balance_wallet</span><div><b>Your wallet works here, too.</b><span>Connect to explore Web3.</span></div><button type="button" onclick="WL.openChooser('connect')" aria-label="Connect wallet">Connect ↗</button></div><button type="button" class="ts-create-wallet" onclick="WL.openChooser('create')">Create a new wallet</button>
+    </div><div id="auth-loading-view" class="hidden" style="display:none" role="status"><div class="google-spinner"></div><h3 id="auth-loading-status">Signing you in…</h3><p>Just a moment. Your world is waiting.</p></div>
+   </div><footer class="ts-entry-foot"><span>© 2026 Trending</span><span><span class="material-symbols-rounded">lock</span> Your connection starts here</span></footer>
+  </main>
+ </div>
 </div>
-
 
 <!-- CATEGORY GRID SIDEBAR MODAL (Hidden by Default) -->
 <div id="category-modal" class="category-modal-overlay hidden">
@@ -137,8 +123,8 @@
         <span class="material-symbols-rounded emoji-3d" style="color:var(--blue); font-size:24px">public</span>
         <span>Expandable Category Universe</span>
       </h3>
-      <button class="icon-btn" onclick="toggleCategorySidebar()" style="display:inline-flex; align-items:center; justify-content:center">
-        <span class="material-symbols-rounded" style="font-size:18px">close</span>
+      <button class="icon-btn" onclick="toggleCategorySidebar()">
+        <span class="material-symbols-rounded ms-18">close</span>
       </button>
     </div>
     <div class="category-grid-links" id="full-category-grid">
@@ -152,77 +138,67 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="brand-logo emoji-3d" style="background:var(--g-brand); display:grid; place-items:center; animation:ix-float-idle 3s ease-in-out infinite; width:36px; height:36px; border-radius:50%">
-        <span class="material-symbols-rounded" style="color:#fff; font-size:20px; font-variation-settings:'FILL' 1">diamond</span>
-      </div>
-      <span class="brand-name">Trending</span>
+      <span class="brand-wm-wrap"><img class="brand-wm brand-wm-ink" src="img/brand/trending-logo.svg?v=2" alt="Trending" width="125" height="44" decoding="async"><img class="brand-wm brand-wm-light" src="img/brand/trending-logo-light.svg?v=2" alt="Trending" width="125" height="44" decoding="async"></span>
+      <button class="icon-btn sidebar-x" onclick="closeSidebar()" aria-label="Close menu" title="Close menu">
+        <span class="material-symbols-rounded ms-20">close</span>
+      </button>
     </div>
 
     <nav class="sidebar-nav">
       <a class="nav-item active" data-pane="feeds" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">home</span>
+        <span class="nav-icon material-symbols-rounded emoji-3d ms-22">home</span>
         <span class="nav-label">Home</span>
       </a>
-      <a class="nav-item" data-pane="explore" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">search</span>
-        <span class="nav-label">Explore</span>
+      <a class="nav-item nav-search" href="#" onclick="event.preventDefault(); closeSidebar(); MOB.openSearch()">
+        <span class="nav-icon material-symbols-rounded emoji-3d ms-22">search</span>
+        <span class="nav-label">Search</span>
       </a>
       <a class="nav-item" data-pane="reels" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--orange)">electric_bolt</span>
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">slow_motion_video</span>
         <span class="nav-label">Shorty</span>
       </a>
-      <a class="nav-item" data-pane="fashionverse" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
-        <span class="nav-label">FashionVerse</span>
-      </a>
-      <a class="nav-item" data-pane="fitness" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">fitness_center</span>
-        <span class="nav-label">Fitness</span>
-      </a>
-      <a class="nav-item" data-pane="learn" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#4CAF50">grass</span>
-        <span class="nav-label">Global Agri Hub</span>
-      </a>
-      <a class="nav-item" data-pane="fashionhub" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
-        <span class="nav-label">Global Fashion Hub</span>
-      </a>
-      <a class="nav-item" data-pane="creator" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">auto_awesome</span>
-        <span class="nav-label">Creator Studio</span>
-      </a>
       <a class="nav-item" data-pane="messages" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">chat</span>
+        <span class="nav-icon material-symbols-rounded emoji-3d ms-22">chat</span>
         <span class="nav-label">Messages</span>
         <span class="nav-badge" id="msg-badge">3</span>
       </a>
       <a class="nav-item" data-pane="community" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">groups</span>
+        <span class="nav-icon material-symbols-rounded emoji-3d ms-22">groups</span>
         <span class="nav-label">Community</span>
       </a>
       <a class="nav-item" data-pane="profile" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">person</span>
+        <span class="nav-icon material-symbols-rounded emoji-3d ms-22">person</span>
         <span class="nav-label">Profile</span>
       </a>
+      <a class="nav-item" data-pane="cryptomarket" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#F7931A">currency_bitcoin</span>
+        <span class="nav-label">Crypto Market</span>
+      </a>
+      <a class="nav-item" data-pane="trade" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#7C4DFF">candlestick_chart</span>
+        <span class="nav-label">Trade</span>
+      </a>
+      <a class="nav-item" data-pane="p2p" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#26A69A">swap_horiz</span>
+        <span class="nav-label">P2P Trading</span>
+      </a>
+      <a class="nav-item" data-pane="portfolio" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#00BFA5">pie_chart</span>
+        <span class="nav-label">Assets</span>
+      </a>
+      <a class="nav-item" data-pane="earn" href="#">
+        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px; color:#F0B90B">savings</span>
+        <span class="nav-label">Earn</span>
+      </a>
       <a class="nav-item" data-pane="settings" href="#">
-        <span class="nav-icon material-symbols-rounded emoji-3d" style="font-size:22px">settings</span>
+        <span class="nav-icon material-symbols-rounded emoji-3d ms-22">settings</span>
         <span class="nav-label">Settings</span>
       </a>
     </nav>
 
     <div class="sidebar-divider"></div>
 
-    <div class="network-status" style="padding: 12px; background: var(--card2); border-radius: var(--r2); margin: 0 16px 16px 16px; font-size: 11px; border: 1px solid var(--border); transition: var(--tr)">
-      <div style="display: flex; flex-direction: column; gap: 4px; color: var(--t2);">
-        <span id="server-node-lbl" style="font-weight:600">Global Server Node</span>
-        <span id="latency-val" style="color: var(--green); font-weight: bold; display: flex; align-items: center; gap: 6px;">
-          <span class="material-symbols-rounded" style="font-size:12px">lock</span> 
-          Encrypted (24ms)
-        </span>
-      </div>
-    </div>
-
-    <div class="sidebar-user" onclick="handleUserAuthClick()" style="cursor:pointer; transition:background 0.2s; border-radius:var(--r2)" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+    <div class="sidebar-user" onclick="handleUserAuthClick()">
       <div class="sidebar-av emoji-3d" id="sidebar-av" style="display:grid; place-items:center; background:var(--g-brand); color:#fff; font-size:12px; font-weight:700">AV</div>
       <div class="sidebar-user-info">
         <span class="sidebar-user-name" id="sidebar-name">Alex Vance</span>
@@ -240,6 +216,15 @@
         <span class="material-symbols-rounded" style="font-size:24px">menu</span>
       </button>
 
+      <button type="button" id="cr-new" class="cr-new" onclick="CR.open()" aria-label="Create" title="Create">
+        <span class="material-symbols-rounded">add</span>
+      </button>
+
+      <!-- The Trending wordmark (img/brand). Search moved into the nav, after Home. -->
+      <a class="hdr-brand" href="#" onclick="event.preventDefault(); navigateTo('feeds')" aria-label="Trending, go to Home">
+        <img class="brand-wm brand-wm-ink" src="img/brand/trending-logo.svg?v=2" alt="" width="125" height="44" decoding="async"><img class="brand-wm brand-wm-light" src="img/brand/trending-logo-light.svg?v=2" alt="" width="125" height="44" decoding="async">
+      </a>
+
       <div class="header-search" style="position:relative; display:flex; align-items:center">
         <span class="search-logo material-symbols-rounded" style="position:absolute; left:16px; font-size:20px; opacity:0.6; color:var(--t2)">search</span>
         <input type="text" id="global-search" placeholder="Search Trending (videos, papers, articles, fact-checks)..." style="padding-left:42px; padding-right:42px">
@@ -249,20 +234,9 @@
 
 
       <div class="header-actions">
-        <div class="global-localizer" style="display: flex; align-items: center; gap: 6px; margin-right: 8px;">
-          <span class="material-symbols-rounded" style="color: var(--t2); font-size: 20px;">language</span>
-          <select id="lang-selector" style="background: var(--card2); color: var(--t1); border: 1px solid var(--border); border-radius: var(--r2); padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer; transition: var(--tr)">
-            <option value="en">English (US)</option>
-            <option value="hi">हिन्दी (IN)</option>
-            <option value="es">Español (ES)</option>
-            <option value="ja">日本語 (JP)</option>
-          </select>
-        </div>
-        <button class="icon-btn" id="theme-btn" title="Toggle theme" style="display:inline-flex; align-items:center; justify-content:center">
-          <span id="theme-icon" class="material-symbols-rounded emoji-3d" style="font-size:20px; color:var(--orange)">dark_mode</span>
-        </button>
+        <!-- Language and appearance both live in Settings now -->
         <div class="notif-btn">
-          <button class="icon-btn" style="display:inline-flex; align-items:center; justify-content:center">
+          <button class="icon-btn">
             <span class="material-symbols-rounded emoji-3d" style="font-size:20px; color:var(--purple)">notifications</span>
           </button>
           <div class="notif-dot"></div>
@@ -288,11 +262,9 @@
       <!-- ===================== PANE: REELS ===================== -->
       
 
-      <!-- ===================== PANE: FASHIONVERSE ===================== -->
-      
-
       <!-- ===================== PANE: FITNESS ===================== -->
       
+
 
       <!-- ===================== PANE: NOMAD SPACE ===================== -->
       <!-- ===================== PANE: LEARN ===================== -->
@@ -328,53 +300,69 @@
 <nav class="mobile-nav">
   <div class="mobile-nav-items">
     <button class="m-nav-btn" data-pane="feeds">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">home</span>
+      <span class="material-symbols-rounded emoji-3d ms-22">home</span>
       <span>Home</span>
     </button>
-    <button class="m-nav-btn" data-pane="explore">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">search</span>
-      <span>Explore</span>
+    <button class="m-nav-btn m-nav-search" type="button" onclick="MOB.openSearch()">
+      <span class="material-symbols-rounded emoji-3d ms-22">search</span>
+      <span>Search</span>
     </button>
-    <button class="m-nav-btn" data-pane="learn">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#4CAF50; margin-bottom:2px">grass</span>
-      <span>Global Agri Hub</span>
-    </button>
-    <button class="m-nav-btn" data-pane="creator">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">auto_awesome</span>
-      <span>Create</span>
-    </button>
-    <button class="m-nav-btn" data-pane="fashionhub">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:var(--pink)">checkroom</span>
-      <span>Fashion</span>
+    <button class="m-nav-btn" data-pane="reels">
+      <span class="material-symbols-rounded emoji-3d ms-22">slow_motion_video</span>
+      <span>Shorty</span>
     </button>
     <button class="m-nav-btn" data-pane="messages">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">chat</span>
+      <span class="material-symbols-rounded emoji-3d ms-22">chat</span>
       <span>Messages</span>
     </button>
     <button class="m-nav-btn" data-pane="community">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">groups</span>
+      <span class="material-symbols-rounded emoji-3d ms-22">groups</span>
       <span>Community</span>
     </button>
     <button class="m-nav-btn" data-pane="profile">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">person</span>
+      <span class="material-symbols-rounded emoji-3d ms-22">person</span>
       <span>Profile</span>
     </button>
-    <button class="m-nav-btn" data-pane="settings">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:22px">settings</span>
+    <button class="m-nav-btn m-nav-more" id="m-nav-more" type="button" onclick="MOB.openMore()" aria-haspopup="dialog" aria-expanded="false">
+      <span class="material-symbols-rounded ms-22">apps</span>
+      <span>More</span>
+    </button>
+    <button class="m-nav-btn m-nav-extra" data-pane="cryptomarket">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#F7931A">currency_bitcoin</span>
+      <span>Crypto Market</span>
+    </button>
+    <button class="m-nav-btn m-nav-extra" data-pane="trade">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#7C4DFF; margin-bottom:2px">candlestick_chart</span>
+      <span>Trade</span>
+    </button>
+    <button class="m-nav-btn m-nav-extra" data-pane="p2p">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#26A69A">swap_horiz</span>
+      <span>P2P</span>
+    </button>
+    <button class="m-nav-btn m-nav-extra" data-pane="portfolio">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#00BFA5">pie_chart</span>
+      <span>Assets</span>
+    </button>
+    <button class="m-nav-btn m-nav-extra" data-pane="earn">
+      <span class="material-symbols-rounded emoji-3d" style="font-size:22px; color:#F0B90B">savings</span>
+      <span>Earn</span>
+    </button>
+    <button class="m-nav-btn m-nav-extra" data-pane="settings">
+      <span class="material-symbols-rounded emoji-3d ms-22">settings</span>
       <span>Settings</span>
     </button>
   </div>
 </nav>
 
 <!-- COURSE DETAIL MODAL -->
-<div id="course-detail-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+<div id="course-detail-modal" class="hidden modal-overlay-full">
   <div class="card" style="width:100%; max-width:850px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3)">
-    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+    <div class="flex-between p20 bb-1">
       <div class="flex-center gap8">
         <span class="material-symbols-rounded emoji-3d" id="cd-title-icon" style="font-size:28px">school</span>
         <h2 class="fw9 tc-1 fs18" id="cd-title">Course Details</h2>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="closeCourseDetails()" style="font-size:20px; padding:4px 8px">✕</button>
+      <button class="btn btn-ghost btn-sm btn-close-x" onclick="closeCourseDetails()">✕</button>
     </div>
     <div class="p20" style="display:flex; flex-direction:column; gap:20px">
       <div class="grid-2 gap20">
@@ -411,7 +399,7 @@
           <!-- Tutor AI Tab -->
           <div id="cd-tutor-tab">
             <div class="card p12 mb12" style="background:var(--card2); border:1px dashed var(--border)">
-              <div class="flex gap8" style="align-items:center">
+              <div class="flex gap8 align-center">
                 <div class="avatar av-xs" style="background:var(--g-brand); color:#fff; display:grid; place-items:center">🎓</div>
                 <div>
                   <div class="fw8 fs12 tc-1">Study Buddy</div>
@@ -420,8 +408,8 @@
               </div>
               <p class="tc-2 fs11 mt8" id="cd-mentor-welcome">Ask me to summarize any lecture or design a custom schedule using my synthesized voice.</p>
               <div class="flex gap8 mt12">
-                <button class="btn btn-primary btn-sm flex-center gap4" onclick="mentorSpeakConcept()"><span class="material-symbols-rounded" style="font-size:14px">volume_up</span> Voice Explain Concept</button>
-                <button class="btn btn-ghost btn-sm flex-center gap4" onclick="mentorGenerateSchedule()"><span class="material-symbols-rounded" style="font-size:14px">auto_awesome</span> Create Study Plan</button>
+                <button class="btn btn-primary btn-sm flex-center gap4" onclick="mentorSpeakConcept()"><span class="material-symbols-rounded ms-14">volume_up</span> Voice Explain Concept</button>
+                <button class="btn btn-ghost btn-sm flex-center gap4" onclick="mentorGenerateSchedule()"><span class="material-symbols-rounded ms-14">auto_awesome</span> Create Study Plan</button>
               </div>
             </div>
             <div id="cd-tutor-output" class="hidden card p12 fs11 tc-2" style="background:var(--card2); max-height:150px; overflow-y:auto; line-height:1.5"></div>
@@ -441,14 +429,14 @@
 </div>
 
 <!-- GIG WORKSPACE MODAL -->
-<div id="gig-workspace-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+<div id="gig-workspace-modal" class="hidden modal-overlay-full">
   <div class="card" style="width:100%; max-width:950px; max-height:92vh; overflow-y:auto; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3)">
-    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+    <div class="flex-between p20 bb-1">
       <div class="flex-center gap8">
         <span class="material-symbols-rounded emoji-3d" style="font-size:28px; color:var(--blue)">work</span>
         <h2 class="fw9 tc-1 fs18" id="gw-title">Ecosystem Contract Workspace</h2>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="closeGigWorkspace()" style="font-size:20px; padding:4px 8px">✕</button>
+      <button class="btn btn-ghost btn-sm btn-close-x" onclick="closeGigWorkspace()">✕</button>
     </div>
     <div class="p20 grid-2 gap20">
       <!-- Left Column: Collaborative Whiteboard -->
@@ -461,9 +449,9 @@
         <p class="tc-3 fs10 mt4">Hold click &amp; drag to draw with client in real-time.</p>
         
         <!-- Milestones Escrow System -->
-        <div class="card mt16 p12" style="background:var(--card2)">
+        <div class="card mt16 p12 bg-card2">
           <h4 class="fw8 tc-1 fs12 flex-center gap4 mb8"><span class="material-symbols-rounded" style="color:var(--green)">lock</span> Escrow Milestones</h4>
-          <div class="flex-between py6" style="border-bottom:1px solid var(--border)">
+          <div class="flex-between py6 bb-1">
             <div>
               <div class="fs11 fw7 tc-1">Milestone 1: Prototype Layout</div>
               <div class="fs10 tc-3" id="gw-escrow-status">Status: Locked in Escrow 🔒</div>
@@ -474,14 +462,14 @@
       </div>
       
       <!-- Right Column: Live Chat & Meetings -->
-      <div style="display:flex; flex-direction:column; gap:16px">
-        <div class="card p12" style="background:var(--card2)">
+      <div class="flex-col gap16">
+        <div class="card p12 bg-card2">
           <h4 class="fw8 tc-1 fs12 mb6 flex-center gap4"><span class="material-symbols-rounded" style="color:var(--blue)">videocam</span> Client Video Meeting</h4>
           <div style="position:relative; height:120px; background:#05050a; border-radius:var(--r1); overflow:hidden" id="gw-video-frame">
             <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--t3)" id="gw-video-label">Meeting Offline</div>
           </div>
           <div class="flex gap8 mt8">
-            <button class="btn btn-primary btn-sm flex-center gap4" onclick="toggleWorkspaceVideoCall()"><span class="material-symbols-rounded" style="font-size:14px">videocam</span> Start Meeting</button>
+            <button class="btn btn-primary btn-sm flex-center gap4" onclick="toggleWorkspaceVideoCall()"><span class="material-symbols-rounded ms-14">videocam</span> Start Meeting</button>
             <button class="btn btn-ghost btn-sm" onclick="showToast('Screen sharing started!')">🖥️ Share Screen</button>
           </div>
         </div>
@@ -490,7 +478,7 @@
           <h4 class="fw8 tc-1 fs12 mb6 flex-center gap4"><span class="material-symbols-rounded" style="color:var(--orange)">forum</span> Project Feed &amp; Chat</h4>
           <div id="gw-chat-log" style="flex:1; overflow-y:auto; font-size:11px; display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
           <div class="flex gap4">
-            <input type="text" id="gw-chat-input" class="input btn-sm" placeholder="Send workspace alert..." style="flex:1">
+            <input type="text" id="gw-chat-input" class="input btn-sm flex-1" placeholder="Send workspace alert...">
             <button class="btn btn-primary btn-sm" onclick="sendWorkspaceChat()">Send</button>
           </div>
         </div>
@@ -500,14 +488,14 @@
 </div>
 
 <!-- CLOUD PLAY MODAL -->
-<div id="cloud-play-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+<div id="cloud-play-modal" class="hidden modal-overlay-full">
   <div class="card" style="width:100%; max-width:800px; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3); overflow:hidden">
-    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+    <div class="flex-between p20 bb-1">
       <div class="flex-center gap8">
-        <span class="material-symbols-rounded emoji-3d" style="font-size:28px; color:var(--orange)">sports_esports</span>
+        <span class="material-symbols-rounded emoji-3d ms-28 tc-orange">sports_esports</span>
         <h2 class="fw9 tc-1 fs18" id="cp-title">GameVerse Cloud Stream Console</h2>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="closeCloudStream()" style="font-size:20px; padding:4px 8px">✕</button>
+      <button class="btn btn-ghost btn-sm btn-close-x" onclick="closeCloudStream()">✕</button>
     </div>
     <div style="background:#000; height:380px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center" id="cp-screen">
       <div id="cp-precache" style="text-align:center; color:#fff">
@@ -530,31 +518,31 @@
 </div>
 
 <!-- PLAY STORE GAME DETAIL MODAL -->
-<div id="play-store-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+<div id="play-store-modal" class="hidden modal-overlay-full">
   <div class="card" style="width:100%; max-width:850px; max-height:92vh; overflow-y:auto; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3); background:var(--card)">
     <!-- Header -->
-    <div class="flex-between p20" style="border-bottom:1px solid var(--border)">
+    <div class="flex-between p20 bb-1">
       <div class="flex-center gap8">
-        <span class="material-symbols-rounded emoji-3d" style="font-size:28px; color:var(--orange)">storefront</span>
+        <span class="material-symbols-rounded emoji-3d ms-28 tc-orange">storefront</span>
         <h2 class="fw9 tc-1 fs18" id="ps-header-title">GameVerse Store</h2>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="closePlayStoreGame()" style="font-size:20px; padding:4px 8px">✕</button>
+      <button class="btn btn-ghost btn-sm btn-close-x" onclick="closePlayStoreGame()">✕</button>
     </div>
     
     <!-- Body Content -->
     <div class="p20" style="display:flex; flex-direction:column; gap:20px">
       <div class="grid-2 gap20">
         <!-- Left: Game Icon, Trailer, Download controls -->
-        <div style="display:flex; flex-direction:column; gap:16px">
+        <div class="flex-col gap16">
           <!-- Game Branding Info -->
-          <div class="flex gap16" style="align-items:center">
+          <div class="flex gap16 align-center">
             <div id="ps-game-icon-container" style="width:80px; height:80px; border-radius:18px; background:var(--card2); display:grid; place-items:center; border:1px solid var(--border)">
               <span class="material-symbols-rounded emoji-3d" id="ps-game-icon" style="font-size:42px">sports_esports</span>
             </div>
             <div>
               <h3 class="fw9 tc-1 fs18" id="ps-game-title" style="margin:0">Neon Runner Elite</h3>
               <div class="fs12 tc-blue mt2" id="ps-game-developer">Ecosystem DevStudio · Verified ✓</div>
-              <div class="flex gap4 mt4" style="align-items:center">
+              <div class="flex gap4 mt4 align-center">
                 <span class="badge badge-green fs10" id="ps-game-rating">4.8 ★</span>
                 <span class="fs11 tc-3" id="ps-game-downloads">500K+ Downloads</span>
               </div>
@@ -566,13 +554,13 @@
             <canvas id="ps-video-canvas" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></canvas>
             <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3)">
               <button class="btn btn-primary" id="ps-video-play-btn" onclick="togglePlayStoreVideo()" style="border-radius:50%; width:56px; height:56px; display:grid; place-items:center; padding:0">
-                <span class="material-symbols-rounded" style="font-size:28px">play_arrow</span>
+                <span class="material-symbols-rounded ms-28">play_arrow</span>
               </button>
             </div>
           </div>
           
           <!-- Download progress bars -->
-          <div class="card p12" style="background:var(--card2)">
+          <div class="card p12 bg-card2">
             <div class="flex-between">
               <span class="fs12 fw7 tc-1" id="ps-download-status">Available on GameVerse Cloud</span>
               <span class="fs11 tc-3" id="ps-download-percent">Ready</span>
@@ -582,18 +570,18 @@
             </div>
             
             <div class="flex gap8 mt8">
-              <button class="btn btn-primary flex-center gap4" id="ps-install-btn" onclick="startPlayStoreDownload()" style="flex:1">
-                <span class="material-symbols-rounded" style="font-size:16px">download</span> Download &amp; Install APK
+              <button class="btn btn-primary flex-center gap4 flex-1" id="ps-install-btn" onclick="startPlayStoreDownload()">
+                <span class="material-symbols-rounded ms-16">download</span> Download &amp; Install APK
               </button>
               <button class="btn btn-ghost flex-center gap4" id="ps-stream-btn" onclick="closePlayStoreGame(); startCloudStream(activePlayStoreGame.id);">
-                <span class="material-symbols-rounded" style="font-size:16px">cloud</span> Cloud Stream
+                <span class="material-symbols-rounded ms-16">cloud</span> Cloud Stream
               </button>
             </div>
           </div>
         </div>
         
         <!-- Right: Specs, Screenshots, Reviews -->
-        <div style="display:flex; flex-direction:column; gap:16px">
+        <div class="flex-col gap16">
           <!-- Screenshots Carousel -->
           <div>
             <h4 class="fw8 tc-1 fs12 mb8">📸 Screenshots &amp; Gameplay Previews</h4>
@@ -605,7 +593,7 @@
           </div>
           
           <!-- Specs Requirements -->
-          <div class="card p12" style="background:var(--card2)">
+          <div class="card p12 bg-card2">
             <h4 class="fw8 tc-1 fs12 mb8">⚙️ System Requirements &amp; Safety</h4>
             <div class="grid-2 gap8 fs11">
               <div><span class="tc-3">Min OS:</span> <span class="tc-1">Android 10+ / WebGL</span></div>
@@ -616,7 +604,7 @@
           </div>
           
           <!-- Comments / Reviews Ledger -->
-          <div class="card p12" style="background:var(--card2)">
+          <div class="card p12 bg-card2">
             <h4 class="fw8 tc-1 fs12 mb8">💬 Player Reviews</h4>
             <div class="flex flex-col gap6 fs11">
               <div style="border-bottom:1px solid var(--border); padding-bottom:6px">
@@ -633,10 +621,10 @@
       </div>
     </div>
 <!-- EDU REELS MODAL -->
-<div id="edu-reels-modal" class="hidden" style="position:fixed; inset:0; background:rgba(4,4,8,0.96); backdrop-filter:blur(20px); z-index:99999; display:none; place-items:center; padding:24px">
+<div id="edu-reels-modal" class="hidden modal-overlay-full">
   <div class="card" style="width:100%; max-width:420px; height:80vh; border:1px solid var(--border); box-shadow:var(--sh3); border-radius:var(--r3); position:relative; overflow:hidden">
     <div class="flex-between p12" style="position:absolute; top:0; left:0; right:0; z-index:999999; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)">
-      <span class="fw8" style="color:#fff; font-size:13px">✨ Democracy Enclave Explainer Reels</span>
+      <span class="fw8" style="color:#fff; font-size:13px">✨ Web3 Explainer Reels</span>
       <button class="btn btn-ghost btn-sm" onclick="closeEduReels()" style="font-size:18px; padding:2px 6px; color:#fff">✕</button>
     </div>
     <div id="edu-reels-container" style="height:100%; overflow-y:scroll; scroll-snap-type:y mandatory"></div>
@@ -650,10 +638,10 @@
   <div class="flex-between p16" style="border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); position:absolute; top:0; left:0; right:0; z-index:2;">
     <div style="display:flex; align-items:center; gap:8px">
       <span class="material-symbols-rounded emoji-3d" style="color:var(--pink)">view_in_ar</span>
-      <span class="fw8 tc-1" style="font-size:16px">AR Try-On</span>
+      <span class="fw8 tc-1 fs16">AR Try-On</span>
     </div>
     <button class="btn btn-ghost btn-sm flex-center" onclick="closeARTryOn()" style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); color:#fff">
-      <span class="material-symbols-rounded" style="font-size:18px">close</span>
+      <span class="material-symbols-rounded ms-18">close</span>
     </button>
   </div>
   
@@ -668,8 +656,8 @@
     
     <!-- Item Info Overlay -->
     <div id="ar-item-overlay" style="position:absolute; bottom:32px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); backdrop-filter:blur(10px); padding:16px; border-radius:var(--r3); border:1px solid rgba(255,255,255,0.1); text-align:center; min-width:280px; z-index:2; display:none; opacity:0; transition:opacity 0.3s ease;">
-      <h3 id="ar-item-name" class="fw8 tc-1 mb4" style="font-size:16px">Product Name</h3>
-      <div id="ar-item-brand" class="tc-2 mb12" style="font-size:12px">Brand</div>
+      <h3 id="ar-item-name" class="fw8 tc-1 mb4 fs16">Product Name</h3>
+      <div id="ar-item-brand" class="tc-2 mb12 fs12">Brand</div>
       <button id="ar-claim-btn" class="btn btn-primary flex-center gap4" style="width:100%; justify-content:center; display:none;" onclick="claimARTryOnPoints()">
         <span class="material-symbols-rounded">stars</span> Claim +50 XP
       </button>
@@ -680,28 +668,130 @@
 <!-- SIDEBAR OVERLAY -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <script src="js/state.js?v=2"></script>
-  <script src="js/data/mockDb.js?v=2"></script>
-  <script src="js/utils/dom.js?v=2"></script>
-  <script src="js/utils/engine.js?v=2"></script>
-  <script src="js/components/ui.js?v=2"></script>
-  <script src="js/components/theme.js?v=2"></script>
-  <script src="js/router.js?v=2"></script>
-  <script src="js/pages/feeds.js?v=2"></script>
-  <script src="js/pages/explore.js?v=2"></script>
-  <script src="js/pages/reels.js?v=2"></script>
-  <script src="js/pages/fashionverse.js?v=2"></script>
-  <script src="js/pages/fitness.js?v=2"></script>
-  <script src="js/pages/learn.js?v=2"></script>
-  <script src="js/pages/globalfashionhub.js?v=2"></script>
-  <script src="js/pages/creator.js?v=2"></script>
-  <script src="js/pages/community.js?v=2"></script>
-  <script src="js/pages/profile.js?v=2"></script>
-  <script src="js/pages/settings.js?v=2"></script>
-  <script src="js/pages/messages.js?v=2"></script>
+  <script>
+    // Failsafe initialization
+    window.db = null;
+    window.firebaseAuth = null;
+  </script>
+  <script type="module" async>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  <script src="js/main.js?v=2"></script>
-<script src="interactions.js?v=2"></script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOt5Ki8G7jj1v8r0k5snl30IdSr0xF_Hc",
+      authDomain: "trending-app-db.firebaseapp.com",
+      projectId: "trending-app-db",
+      storageBucket: "trending-app-db.firebasestorage.app",
+      messagingSenderId: "256776613409",
+      appId: "1:256776613409:web:ea299e8bb048bfe8b7bd60"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+      
+      // Expose Firestore to window
+      window.db = db;
+      window.firebaseCollection = collection;
+      window.firebaseAddDoc = addDoc;
+      window.firebaseOnSnapshot = onSnapshot;
+      window.firebaseQuery = query;
+      window.firebaseOrderBy = orderBy;
+      window.firebaseServerTimestamp = serverTimestamp;
+      window.firebaseDoc = doc;
+      window.firebaseUpdateDoc = updateDoc;
+      window.firebaseIncrement = increment;
+      
+      // Expose Auth to window
+      window.firebaseAuth = auth;
+      window.FirebaseGoogleAuthProvider = GoogleAuthProvider;
+      window.firebaseSignInWithPopup = signInWithPopup;
+      window.firebaseSignInWithEmailAndPassword = signInWithEmailAndPassword;
+      window.firebaseCreateUserWithEmailAndPassword = createUserWithEmailAndPassword;
+      window.firebaseSignOut = signOut;
+      window.firebaseOnAuthStateChanged = onAuthStateChanged;
+      
+      console.log("🔥 Firebase App + Auth + Firestore Initialized");
+    } catch (e) {
+      console.error("🔥 Firebase Initialization Blocked/Failed. Running in Offline Guest Mode.", e);
+      window.db = null;
+      window.firebaseAuth = null;
+    }
+  </script>
+
+  <script defer src="js/state.js?v=5"></script>
+  <script defer src="js/data/mockDb.js?v=8"></script>
+  <script defer src="js/data/languages.js?v=1"></script>
+  <script defer src="js/data/i18n.js?v=1"></script>
+  <script defer src="js/utils/api.js?v=20260919a"></script>
+  <script defer src="js/utils/firebase-auth.js?v=6"></script>
+  <script defer src="js/utils/dom.js?v=5"></script>
+  <script defer src="js/utils/engine.js?v=20260919a"></script>
+  <script defer src="js/features/money.js?v=1"></script>
+  <script defer src="js/components/ui.js?v=4"></script>
+  <script defer src="js/components/theme.js?v=20260917"></script>
+  <script defer src="js/router.js?v=20260918a"></script>
+  <script defer src="js/components/mobile.js?v=4"></script>
+  <script defer src="js/pages/feeds.js?v=20260918b"></script>
+  <script defer src="js/pages/explore.js?v=17"></script>
+  <script defer src="js/features/token-markets.js?v=20260916c"></script>
+  <script defer src="js/pages/cryptoverse.js?v=20260916b"></script>
+  <script defer src="js/pages/reels.js?v=20260916e"></script>
+  <script defer src="js/pages/fashionverse.js?v=4"></script>
+  <script defer src="js/features/create.js?v=4"></script>
+  <script defer src="js/features/deposit.js?v=3"></script>
+  <script defer src="js/features/withdraw.js?v=3"></script>
+  <script defer src="js/features/cryptodata.js?v=3"></script>
+  <script defer src="js/pages/cryptomarket.js?v=8"></script>
+  <script defer src="js/pages/assets.js?v=9"></script>
+  <script defer src="js/pages/trade.js?v=20260919a"></script>
+  <script defer src="js/pages/p2p.js?v=3"></script>
+  <script defer src="js/pages/web3communities.js?v=3"></script>
+  <script defer src="js/pages/earn.js?v=4"></script>
+  <script defer src="js/pages/homecrypto.js?v=20260917c"></script>
+  <script defer src="js/pages/homehub.js?v=14"></script>
+  <script defer src="js/pages/communityhub.js?v=5"></script>
+  <script defer src="js/pages/profile.js?v=20"></script>
+  <script defer src="js/features/highlights.js?v=1"></script>
+  <script defer src="js/pages/settings.js?v=20260917c"></script>
+  <script defer src="js/pages/messages.js?v=15"></script>
+  <script defer src="js/pages/telegram.js?v=4"></script>
+  <script defer src="js/pages/messenger.js?v=6"></script>
+  <script defer src="js/pages/modals.js?v=2"></script>
+  <script defer src="js/pages/web3hub.js?v=4"></script>
+  <script defer src="js/features/socialfi.js?v=3"></script>
+  <script defer src="js/features/cryptotools.js?v=20260912"></script>
+  <script defer src="js/features/assets.js?v=2"></script>
+  <script defer src="js/features/feargreed.js?v=8"></script>
+  <script defer src="js/features/wallet.js?v=4"></script>
+  <script defer src="js/features/chatfi.js?v=6"></script>
+  <script defer src="js/features/pay.js?v=3"></script>
+  <script defer src="js/features/convert.js?v=2"></script>
+  <script defer src="js/features/walletview.js?v=6"></script>
+  <script defer src="js/features/walletaddr.js?v=6"></script>
+  <script defer src="js/features/search.js?v=3"></script>
+  <script defer src="js/features/langs.js?v=1"></script>
+  <script defer src="js/features/marketdata.js?v=3"></script>
+  <script defer src="js/features/studio.js?v=5"></script>
+  <script defer src="js/features/cryptofeed.js?v=1"></script>
+  <script defer src="js/features/commune.js?v=5"></script>
+  <script defer src="js/pages/communehub.js?v=8"></script>
+  <script defer src="js/pages/communestudio.js?v=5"></script>
+  <script defer src="js/features/communeplus.js?v=2"></script>
+  <script defer src="js/pages/communeplus-hub.js?v=5"></script>
+  <script defer src="js/pages/communeplus-community.js?v=2"></script>
+  <script defer src="js/pages/communeplus-tools.js?v=4"></script>
+  <script defer src="js/pages/communeplus-studio.js?v=3"></script>
+  <script defer src="js/features/communemember.js?v=3"></script>
+  <script defer src="js/pages/communebrand.js?v=7"></script>
+  <script defer src="js/features/profileme.js?v=5"></script>
+  <script defer src="js/features/discover.js?v=10"></script>
+  <script defer src="js/features/notes.js?v=5"></script>
+
+  <script defer src="js/main.js?v=7"></script>
+<script defer src="interactions.js?v=5"></script>
 <script>
   // Simple check to bind interactions when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
@@ -717,6 +807,7 @@
   });
 </script>
 
+<script defer src="js/signin.js?v=1"></script>
 </body>
 </html>
 

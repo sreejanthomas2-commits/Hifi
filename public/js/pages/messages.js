@@ -176,7 +176,11 @@ function sendAI() {
       }).catch(err => {
         const typingEl = document.getElementById('buddy-typing');
         if (typingEl) typingEl.parentNode.remove();
-        addAIMessage(false, 'Sorry, I encountered a temporary network issue. Please try again! 🔄');
+        /* A missing key is not a network problem, and saying so sends
+           people off to check their wifi. */
+        addAIMessage(false, err && err.message === 'no-ai-key'
+          ? "I'm in simulation mode — there's no AI key set on this device, so I can't reach the model. 🔌"
+          : 'Sorry, I encountered a temporary network issue. Please try again! 🔄');
         setAlinaState('idle');
         console.error(err);
       });
@@ -189,8 +193,15 @@ function sendAI() {
 }
 
 async function callTrendingAI(prompt) {
-  const _e = [110,118,97,112,105,45,95,89,71,86,53,119,80,113,84,81,99,122,118,83,98,86,88,115,100,122,49,104,84,79,82,87,99,99,79,113,102,83,67,79,80,68,65,98,118,50,50,101,81,89,52,103,66,65,49,67,109,50,45,74,85,87,76,119,89,81,90,65,87,106];
-  const _k = _e.map(c => String.fromCharCode(c)).join('');
+  /* Read at runtime, not baked in. It used to sit here as an array of
+     character codes, which hides a key from a search but not from
+     anyone reading the file — and the file ships to every visitor.
+
+     To use one locally:  localStorage.setItem('ts_nvidia_key', '...') */
+  let _k = '';
+  try { _k = localStorage.getItem('ts_nvidia_key') || ''; } catch (e) {}
+  if (!_k) throw new Error('no-ai-key');
+
   const payload = {
     model: 'google/gemma-4-31b-it',
     messages: [
@@ -474,8 +485,9 @@ function publishProfilePost() {
   
   const newPost = {
     id: Date.now(),
-    author: 'Alex Vance',
+    author: `${S.user.fname || ''} ${S.user.lname || ''}`.trim() || S.user.handle,
     handle: S.user.handle,
+    mine: true,
     emoji: '\u2728',
     time: 'just now',
     body: text,
@@ -792,19 +804,36 @@ function generatePdfReceipt() {
   showToast('Receipt generated! PDF download initiated 🚀');
 }
 
+/* The Wallet tab's send form hands off to the payment sheet, so a transfer
+   from here is reviewed and debited exactly like one from a scanned code.
+   The tab itself is WV now and opens that sheet directly; this stays for
+   anything still calling it, and opens the sheet empty if the old fields
+   are not on the page. */
 function submitCryptoTransfer() {
-  const recip = $id('wallet-recipient').value.trim();
-  const amt = parseFloat($id('wallet-amount').value);
-  const coin = $id('wallet-coin').value;
-  
-  if (!recip || isNaN(amt) || amt <= 0) {
-    showToast('Invalid recipient address or coin amount ❌');
+  const rEl = $id('wallet-recipient'), aEl = $id('wallet-amount'), cEl = $id('wallet-coin');
+  if (!rEl || !aEl || !cEl) {
+    if (typeof PAY !== 'undefined' && PAY.openPayTo) PAY.openPayTo({});
+    else showToast('Payments are still loading…');
     return;
   }
-  
-  showToast(`Blockchain Transfer: Sent ${amt} ${coin} to ${recip}! 💸`);
-  $id('wallet-recipient').value = '';
-  $id('wallet-amount').value = '';
+  const recip = rEl.value.trim();
+  const amt = parseFloat(aEl.value);
+  const coin = cEl.value;
+
+  if (!recip || isNaN(amt) || amt <= 0) {
+    showToast('Enter a recipient and an amount ❌');
+    return;
+  }
+  if (/^0x/i.test(recip)) {
+    showToast('Paper balances stay in the app — pay an @handle or scan their code.');
+    return;
+  }
+  if (typeof PAY === 'undefined') { showToast('Payments are still loading…'); return; }
+
+  const handle = recip[0] === '@' ? recip : '@' + recip;
+  PAY.openPayTo({ handle, asset: coin, amount: amt });
+  rEl.value = '';
+  aEl.value = '';
 }
 
 function switchDiscordServer(server) {
@@ -854,11 +883,13 @@ function calculatePayouts(views) {
   const viewsK = parseInt(views);
   $id('calc-views-lbl').textContent = `Monthly Video Views: ${viewsK}K`;
   
-  const adEarns = (viewsK * 2.5).toFixed(2);
-  const royEarns = (viewsK * 0.9).toFixed(2);
+  const adEarns = (viewsK * 2.5);
+  const royEarns = (viewsK * 0.9);
+  const btcAd = (adEarns / (window.liveBtcPrice || 68450)).toFixed(4);
+  const btcRoy = (royEarns / (window.liveBtcPrice || 68450)).toFixed(4);
   
-  $id('calc-ad-earns').textContent = `$${parseFloat(adEarns).toLocaleString('en-US', {minimumFractionDigits:2})}`;
-  $id('calc-roy-earns').textContent = `$${parseFloat(royEarns).toLocaleString('en-US', {minimumFractionDigits:2})}`;
+  if ($id('calc-ad-earns')) $id('calc-ad-earns').textContent = `$${adEarns.toFixed(2)} (${btcAd} BTC)`;
+  if ($id('calc-roy-earns')) $id('calc-roy-earns').textContent = `$${royEarns.toFixed(2)} (${btcRoy} BTC)`;
 }
 
 function saveProfileBioEditor() {
@@ -932,140 +963,228 @@ function changeThemeAccent(color) {
   showToast(`Ecosystem visual accent updated to: ${color.toUpperCase()} ✨`);
 }
 
+// ── MESSAGES PANE (recreated) ─────────────────────────────────────────
 function getMessagesTemplate() {
   return `<section id="pane-messages" class="pane">
-        <div class="messages-layout">
-          <!-- Chat List -->
-          <div class="chat-list">
-            <div class="chat-list-header flex-between">
-              <span style="display:flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--blue)">chat</span> Messenger</span>
-              <button class="icon-btn" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center" title="New Chat">
-                <span class="material-symbols-rounded" style="font-size:16px">add</span>
-              </button>
-            </div>
-            
-            <div class="chat-tabs flex mb8" style="padding:0 12px; gap:4px">
-              <button class="tab-btn active btn-sm" id="chat-t-all" onclick="filterChats('all')">All</button>
-              <button class="tab-btn btn-sm" id="chat-t-group" onclick="filterChats('groups')">Groups</button>
-              <button class="tab-btn btn-sm" id="chat-t-channel" onclick="filterChats('channels')">Channels</button>
-              <button class="tab-btn btn-sm" id="chat-t-bot" onclick="filterChats('bots')">AI Bots</button>
-            </div>
+    <div class="msgr" id="msgr-root">
 
-            <div id="chat-list"></div>
+      <!-- Conversation list -->
+      <aside class="msgr-list">
+        <div class="msgr-list-head">
+          <button type="button" class="msgr-acct" onclick="NT.settings()" aria-haspopup="dialog" title="Notes and chat settings">
+            <span class="msgr-title" id="msgr-handle">Messages</span>
+            <span class="material-symbols-rounded ms-20" aria-hidden="true">expand_more</span>
+          </button>
+          <button class="icon-btn msgr-new-btn" onclick="openCreateGroupModal()" title="New group" aria-label="New group">
+            <span class="material-symbols-rounded ms-18">edit_square</span>
+          </button>
+        </div>
+
+        <div class="msgr-search">
+          <span class="material-symbols-rounded ms-18 tc-3" aria-hidden="true">manage_search</span>
+          <input type="text" id="msgr-search-input" placeholder="Search or ask ALINA" aria-label="Search conversations or ask ALINA"
+            autocomplete="off" enterkeyhint="search" oninput="searchChats(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();searchEnter(this.value)}">
+        </div>
+
+        <!-- Trending Notes — painted by NT -->
+        <div class="nt-row" id="nt-row" role="list" aria-label="Notes"></div>
+
+        <div class="msgr-sec">
+          <h2 class="msgr-sec-t" id="msgr-sec-t">Messages</h2>
+          <button type="button" class="msgr-req" id="msgr-req-btn" onclick="TG.setFolder(TG.state.folder === 'requests' ? 'all' : 'requests')">Requests</button>
+        </div>
+
+        <!-- Folders — populated by TG so counts stay live -->
+        <div class="tg-folders" id="tg-folders"></div>
+
+        <div id="chat-list" class="msgr-convos"></div>
+      </aside>
+
+      <!-- Chat window -->
+      <div class="msgr-chat">
+        <div class="msgr-chat-head">
+          <button class="icon-btn msgr-back" onclick="msgrBack()" title="Back">
+            <span class="material-symbols-rounded ms-20">arrow_back</span>
+          </button>
+          <div class="msgr-av" id="chat-header-av">S</div>
+          <div class="msgr-head-info">
+            <div class="msgr-name fs14" id="chat-header-name">Sarah Chen</div>
+            <div class="msgr-status" id="chat-header-status">Online</div>
           </div>
-
-          <!-- Chat Window -->
-          <div class="chat-window">
-            <div class="chat-window-header" id="chat-header">
-              <div class="avatar av-sm" id="chat-header-av">S</div>
-              <div>
-                <div style="font-size:13.5px;font-weight:700" id="chat-header-name">Sarah Chen</div>
-                <div style="font-size:11px;color:var(--green)" id="chat-header-status">● Online</div>
-              </div>
-              <button class="icon-btn" style="margin-left:auto; display:inline-flex; align-items:center; justify-content:center" onclick="mockCall('voice')">
-                <span class="material-symbols-rounded" style="font-size:18px">phone</span>
-              </button>
-              <button class="icon-btn" style="display:inline-flex; align-items:center; justify-content:center" onclick="mockCall('video')">
-                <span class="material-symbols-rounded" style="font-size:18px">videocam</span>
-              </button>
-              <button class="icon-btn" style="display:inline-flex; align-items:center; justify-content:center" onclick="toggleDisappearingMessages()" title="Disappearing Messages">
-                <span class="material-symbols-rounded" style="font-size:18px">timer</span>
-              </button>
-            </div>
-
-            <div class="chat-messages" id="chat-messages"></div>
-
-            <!-- AI Quick Replies -->
-            <div class="chat-quick-replies flex gap8" id="chat-quick-replies" style="padding:8px 24px; background:var(--bg2)"></div>
-
-            <div class="chat-input-row">
-              <button class="icon-btn" onclick="toggleVirtualKeyboard()" style="display:inline-flex; align-items:center; justify-content:center" title="Virtual Keyboard">
-                <span class="material-symbols-rounded" style="font-size:24px">keyboard</span>
-              </button>
-              
-              <div class="wa-input-pill">
-                <button class="icon-btn" style="display:inline-flex; align-items:center; justify-content:center">
-                  <span class="material-symbols-rounded" style="font-size:24px">sentiment_satisfied</span>
-                </button>
-                <input class="chat-input" type="text" id="chat-input" placeholder="Type a message">
-                <div style="position:relative">
-                  <button class="icon-btn" id="chat-attach-btn" onclick="toggleAttachmentMenu()" style="display:inline-flex; align-items:center; justify-content:center">
-                    <span class="material-symbols-rounded" style="font-size:24px; transform: rotate(-45deg)">attach_file</span>
-                  </button>
-                  <div class="attach-menu card hidden" id="chat-attach-menu">
-                    <button class="attach-item" onclick="sendMockAttachment('image')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:6px">image</span>Image / Video</button>
-                    <button class="attach-item" onclick="sendMockAttachment('document')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:6px">description</span>Document / PDF</button>
-                    <button class="attach-item" onclick="sendMockAttachment('location')"><span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle; margin-right:6px">location_on</span>Location</button>
-                  </div>
-                </div>
-              </div>
-
-              <button class="wa-send-btn" id="send-msg-btn-wa" onclick="sendMessage()">
-                <span class="material-symbols-rounded" style="font-size:20px; transform: translateX(2px)">send</span>
-              </button>
-            </div>
-            
-            <!-- Virtual Keyboard Panel -->
-            <div id="virtual-keyboard-panel" class="hidden" style="background:var(--bg2); border-top:1px solid var(--border); padding:12px; gap:8px; flex-direction:column; animation:slide-up 0.2s ease">
-              <!-- Number Row -->
-              <div style="display:flex; gap:4px; justify-content:center">
-                <button class="vk-btn" onclick="vkType('1')">1</button>
-                <button class="vk-btn" onclick="vkType('2')">2</button>
-                <button class="vk-btn" onclick="vkType('3')">3</button>
-                <button class="vk-btn" onclick="vkType('4')">4</button>
-                <button class="vk-btn" onclick="vkType('5')">5</button>
-                <button class="vk-btn" onclick="vkType('6')">6</button>
-                <button class="vk-btn" onclick="vkType('7')">7</button>
-                <button class="vk-btn" onclick="vkType('8')">8</button>
-                <button class="vk-btn" onclick="vkType('9')">9</button>
-                <button class="vk-btn" onclick="vkType('0')">0</button>
-              </div>
-              <!-- QWERTY Row 1 -->
-              <div style="display:flex; gap:4px; justify-content:center">
-                <button class="vk-btn" onclick="vkType('Q')">Q</button>
-                <button class="vk-btn" onclick="vkType('W')">W</button>
-                <button class="vk-btn" onclick="vkType('E')">E</button>
-                <button class="vk-btn" onclick="vkType('R')">R</button>
-                <button class="vk-btn" onclick="vkType('T')">T</button>
-                <button class="vk-btn" onclick="vkType('Y')">Y</button>
-                <button class="vk-btn" onclick="vkType('U')">U</button>
-                <button class="vk-btn" onclick="vkType('I')">I</button>
-                <button class="vk-btn" onclick="vkType('O')">O</button>
-                <button class="vk-btn" onclick="vkType('P')">P</button>
-              </div>
-              <!-- Row 2 -->
-              <div style="display:flex; gap:4px; justify-content:center">
-                <button class="vk-btn" onclick="vkType('A')">A</button>
-                <button class="vk-btn" onclick="vkType('S')">S</button>
-                <button class="vk-btn" onclick="vkType('D')">D</button>
-                <button class="vk-btn" onclick="vkType('F')">F</button>
-                <button class="vk-btn" onclick="vkType('G')">G</button>
-                <button class="vk-btn" onclick="vkType('H')">H</button>
-                <button class="vk-btn" onclick="vkType('J')">J</button>
-                <button class="vk-btn" onclick="vkType('K')">K</button>
-                <button class="vk-btn" onclick="vkType('L')">L</button>
-              </div>
-              <!-- Row 3 -->
-              <div style="display:flex; gap:4px; justify-content:center">
-                <button class="vk-btn vk-wide" onclick="vkType('BACKSPACE')"><span class="material-symbols-rounded" style="font-size:16px">backspace</span></button>
-                <button class="vk-btn" onclick="vkType('Z')">Z</button>
-                <button class="vk-btn" onclick="vkType('X')">X</button>
-                <button class="vk-btn" onclick="vkType('C')">C</button>
-                <button class="vk-btn" onclick="vkType('V')">V</button>
-                <button class="vk-btn" onclick="vkType('B')">B</button>
-                <button class="vk-btn" onclick="vkType('N')">N</button>
-                <button class="vk-btn" onclick="vkType('M')">M</button>
-                <button class="vk-btn vk-wide" onclick="vkType('ENTER')"><span class="material-symbols-rounded" style="font-size:16px">keyboard_return</span></button>
-              </div>
-              <!-- Row 4 -->
-              <div style="display:flex; gap:4px; justify-content:center">
-                <button class="vk-btn vk-space" onclick="vkType('SPACE')">SPACE</button>
-              </div>
-            </div>
+          <div class="msgr-actions">
+            <button class="icon-btn tg-secondary" onclick="TG.toggleMute()" title="Mute / unmute">
+              <span class="material-symbols-rounded ms-20">notifications_off</span>
+            </button>
+            <button class="icon-btn tg-secondary" onclick="TG.toggleArchive()" title="Archive">
+              <span class="material-symbols-rounded ms-20">archive</span>
+            </button>
+            <button class="icon-btn tg-secondary" onclick="TG.inviteLink()" title="Copy invite link">
+              <span class="material-symbols-rounded ms-20">link</span>
+            </button>
+            <button class="icon-btn cfi-head-btn" onclick="openChatCrypto('send')" title="Crypto in chat">
+              <span class="material-symbols-rounded ms-20">currency_bitcoin</span>
+            </button>
+            <button class="icon-btn" onclick="mockCall('voice')" title="Voice call">
+              <span class="material-symbols-rounded ms-20">call</span>
+            </button>
+            <button class="icon-btn" onclick="mockCall('video')" title="Video call">
+              <span class="material-symbols-rounded ms-20">videocam</span>
+            </button>
+            <button class="icon-btn" onclick="toggleDisappearingMessages()" title="Disappearing messages">
+              <span class="material-symbols-rounded ms-20">timer</span>
+            </button>
           </div>
         </div>
-      </section>`;
+
+        <div class="msgr-msgs" id="chat-messages"></div>
+
+        <!-- Reply / edit context, filled by TG -->
+        <div id="tg-context"></div>
+
+        <div class="msgr-quick" id="chat-quick-replies"></div>
+
+        <div class="msgr-composer">
+          <div class="msgr-input-wrap">
+            <button class="icon-btn msgr-ghost-btn" onclick="toggleEmojiMenu()" title="Emoji">
+              <span class="material-symbols-rounded ms-20">sentiment_satisfied</span>
+            </button>
+            <div class="msgr-pop hidden" id="chat-emoji-menu">
+              ${['😊','😂','🥺','🔥','🚀','💯','✨','❤️','🙏','👀'].map(e =>
+                `<button class="msgr-emoji-btn" onclick="insertEmoji('${e}')">${e}</button>`).join('')}
+            </div>
+
+            <input class="chat-input" type="text" id="chat-input" placeholder="Message...">
+
+            <button class="icon-btn msgr-ghost-btn" onclick="toggleAttachmentMenu()" title="Attach">
+              <span class="material-symbols-rounded ms-20" style="transform:rotate(-45deg)">attach_file</span>
+            </button>
+            <div class="msgr-pop msgr-pop-right hidden" id="chat-attach-menu">
+              <button class="msgr-attach-item" onclick="sendMockAttachment('image')"><span class="material-symbols-rounded ms-18 tc-blue">image</span> Media</button>
+              <button class="msgr-attach-item" onclick="sendMockAttachment('document')"><span class="material-symbols-rounded ms-18 tc-purple">description</span> Document</button>
+              <button class="msgr-attach-item" onclick="sendMockAttachment('location')"><span class="material-symbols-rounded ms-18 tc-green">location_on</span> Location</button>
+              <div class="msgr-attach-sep">Crypto</div>
+              <button class="msgr-attach-item" onclick="openChatCrypto('send')"><span class="material-symbols-rounded ms-18 tc-green">north_east</span> Send crypto</button>
+              <button class="msgr-attach-item" onclick="openChatCrypto('request')"><span class="material-symbols-rounded ms-18 tc-blue">request_quote</span> Request payment</button>
+              <button class="msgr-attach-item" onclick="WAD.open()"><span class="material-symbols-rounded ms-18 tc-purple">account_balance_wallet</span> Wallet address <span class="msgr-attach-tag">on-chain</span></button>
+              <button class="msgr-attach-item" onclick="closeChatAttach(); PAY.openScan({ from: 'chat' })"><span class="material-symbols-rounded ms-18 tc-pink">qr_code_scanner</span> Scan a QR code</button>
+              <button class="msgr-attach-item" onclick="closeChatAttach(); PAY.openMyQR({ from: 'chat' })"><span class="material-symbols-rounded ms-18 tc-purple">qr_code_2</span> My payment code</button>
+              <button class="msgr-attach-item" onclick="openChatCrypto('gift')"><span class="material-symbols-rounded ms-18 tc-red">featured_seasonal_and_gifts</span> Gift packet</button>
+              <button class="msgr-attach-item" onclick="openChatCrypto('split')"><span class="material-symbols-rounded ms-18 tc-purple">call_split</span> Split bill</button>
+              <button class="msgr-attach-item" onclick="openChatCrypto('price')"><span class="material-symbols-rounded ms-18 tc-blue">monitoring</span> Share price</button>
+              <button class="msgr-attach-item" onclick="openChatCrypto('alert')"><span class="material-symbols-rounded ms-18 tc-orange">notifications_active</span> Price alert</button>
+            </div>
+          </div>
+
+          <button class="msgr-send" id="send-msg-btn" title="Send">
+            <span class="material-symbols-rounded ms-20">send</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>`;
 }
+
+// ── CREATE GROUP MODAL LOGIC ──────────────────────────────────────────
+window.openCreateGroupModal = function() {
+  let modal = document.getElementById('create-group-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'create-group-modal';
+    modal.className = 'category-modal-overlay';
+    document.body.appendChild(modal);
+  }
+  
+  modal.innerHTML = `
+    <div class="card p24" style="width: 90%; max-width: 400px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--sh3); border-radius: 16px;">
+      <div class="flex-between mb16">
+        <h3 class="fw8 tc-1" style="display:flex; align-items:center; gap:8px;">
+          <span class="material-symbols-rounded" style="color:var(--blue)">group_add</span>
+          Create New Group
+        </h3>
+        <button class="icon-btn" onclick="closeCreateGroupModal()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <div class="form-group mb16">
+        <label class="form-label fs13 tc-2">Group Name</label>
+        <input type="text" id="create-group-name" class="input" placeholder="e.g. Weekend Hikers" style="background: var(--bg2); border: none; padding: 12px; border-radius: 8px; width: 100%; color: var(--t1); font-size: 15px; outline: none;">
+      </div>
+      
+      <div class="form-group mb24">
+        <label class="form-label fs13 tc-2 mb8">Select Participants</label>
+        <div class="flex-col gap8" style="max-height: 150px; overflow-y: auto;">
+          <label style="display: flex; align-items: center; gap: 12px; padding: 8px; background: var(--bg2); border-radius: 8px; cursor: pointer;">
+            <input type="checkbox" checked style="accent-color: var(--blue);">
+            <div class="avatar av-xs" style="background: var(--purple);">S</div>
+            <span class="tc-1 fs14 fw6">Sarah Chen</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 12px; padding: 8px; background: var(--bg2); border-radius: 8px; cursor: pointer;">
+            <input type="checkbox" checked style="accent-color: var(--blue);">
+            <div class="avatar av-xs" style="background: var(--green);">D</div>
+            <span class="tc-1 fs14 fw6">Dev Kumar</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 12px; padding: 8px; background: var(--bg2); border-radius: 8px; cursor: pointer;">
+            <input type="checkbox" style="accent-color: var(--blue);">
+            <div class="avatar av-xs" style="background: var(--orange);">M</div>
+            <span class="tc-1 fs14 fw6">Marcus Webb</span>
+          </label>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary w100" style="padding: 12px; font-size: 15px; border-radius: 8px;" onclick="submitCreateGroup()">Create Group Chat</button>
+    </div>
+  `;
+  
+  modal.classList.remove('hidden');
+};
+
+window.closeCreateGroupModal = function() {
+  const modal = document.getElementById('create-group-modal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.submitCreateGroup = function() {
+  const nameEl = document.getElementById('create-group-name');
+  const groupName = nameEl && nameEl.value.trim() !== '' ? nameEl.value.trim() : 'New Group';
+  
+  // Create a mock group chat entry
+  const newGroup = {
+    id: Date.now(),
+    name: groupName,
+    emoji: '👥',
+    type: 'groups',
+    preview: 'Group created successfully.',
+    unread: 0,
+    online: true
+  };
+  
+  DATA.conversations.unshift(newGroup);
+  
+  showToast(`Group "${groupName}" created! 👥`);
+  closeCreateGroupModal();
+  
+  // Re-render chat list and open the new chat
+  if (typeof renderConversations === 'function') {
+    renderConversations();
+    loadChat(newGroup.id);
+  }
+};
+
+window.toggleEmojiMenu = function() {
+  const m = document.getElementById('chat-emoji-menu');
+  if (m) m.classList.toggle('hidden');
+};
+
+window.insertEmoji = function(emoji) {
+  const inp = document.getElementById('chat-input');
+  if (inp) {
+    inp.value += emoji;
+    inp.focus();
+  }
+  toggleEmojiMenu();
+};
 
 
 

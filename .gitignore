@@ -1,5 +1,15 @@
 node_modules/
 .env
+.env.*
 dist/
 .DS_Store
 *.log
+
+# A snapshot of files another tool replaced. It is a backup, not source,
+# and its copies of index.html and api.js still carry the old API keys —
+# which is exactly what should not be added to history.
+_removed/
+
+# Anything holding a key for local development.
+*.local.js
+*.local.json
