@@ -70,15 +70,22 @@ function clickCategory(cat) {
   // Crypto Markets is reached from the main nav, not from Explore, so the
   // back button has to know where it is actually going back to.
   S.catFrom = (S.pane === 'explore') ? 'explore' : '';
-  navigateTo('category');
+  /* navigateTo is async - a page module may still need fetching - so
+     it only inserts getCategoryTemplate's markup after its first
+     await. Everything below writes into that markup, and running it
+     straight after the call found nothing there: the portal opened
+     with the generic title and an empty #cat-dynamic-content, every
+     single time. */
+  return navigateTo('category').then(() => {
 
-  const backEl = $id('cat-back');
-  if (backEl) backEl.hidden = S.catFrom !== 'explore';
+    const backEl = $id('cat-back');
+    if (backEl) backEl.hidden = S.catFrom !== 'explore';
 
-  const titleEl = $id('cat-title'); if (titleEl) titleEl.innerHTML = titles[cat] || '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--blue); vertical-align:middle; margin-right:6px">explore</span><span>Category</span> Portal';
-  const descEl = $id('cat-description'); if (descEl) descEl.textContent = descs[cat] || 'Explore advanced multimedia feeds.';
+    const titleEl = $id('cat-title'); if (titleEl) titleEl.innerHTML = titles[cat] || '<span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--blue); vertical-align:middle; margin-right:6px">explore</span><span>Category</span> Portal';
+    const descEl = $id('cat-description'); if (descEl) descEl.textContent = descs[cat] || 'Explore advanced multimedia feeds.';
   
-  renderCategoryPortal(cat);
+    renderCategoryPortal(cat);
+  });
 }
 
 function renderCategoryPortal(cat) {
@@ -2359,12 +2366,14 @@ function setupUniversalSearch() {
       return;
     }
     
-    // Ensure we are on the explore pane so the DOM exists
-    navigateTo('explore');
-    if (es && es.value !== val) es.value = val;
-    if (gs && gs.value !== val) gs.value = val;
-    
-    setTimeout(async () => {
+    // Ensure we are on the explore pane so the DOM exists. Awaited, not
+    // guessed at with a timeout: navigateTo builds the pane after its
+    // own await, and 10ms was only ever enough because explore is
+    // eager. A deferred page would have lost the race.
+    navigateTo('explore').then(async () => {
+      if (es && es.value !== val) es.value = val;
+      if (gs && gs.value !== val) gs.value = val;
+
       const panel = $id('search-results-panel');
       const exploreDefault = $id('explore-default-content');
       
@@ -2372,7 +2381,7 @@ function setupUniversalSearch() {
       exploreDefault?.classList.add('hidden');
       
       await renderSearchResults(q);
-    }, 10);
+    });
   };
   
   // Bind input event to filter in-place in Explore default view

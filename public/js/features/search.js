@@ -600,19 +600,20 @@ const SR = (() => {
 
   function openPost(id) {
     close();
-    navigateTo('feeds');
-    setTimeout(() => {
+    /* Chained, not timed: navigateTo resolves once the pane is there. */
+    navigateTo('feeds').then(() => setTimeout(() => {
       const el = document.querySelector(`[data-post-id="${id}"]`) || document.getElementById('post-' + id);
       if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('sr-flash'); setTimeout(() => el.classList.remove('sr-flash'), 1600); }
-    }, 200);
+    }, 200));
   }
 
   function seeFeed(tag) {
     close();
-    navigateTo('feeds');
-    const gs = document.getElementById('global-search');
-    if (gs) gs.value = '#' + tag;
-    if (typeof renderFeed === 'function') renderFeed('#' + tag);
+    navigateTo('feeds').then(() => {
+      const gs = document.getElementById('global-search');
+      if (gs) gs.value = '#' + tag;
+      if (typeof renderFeed === 'function') renderFeed('#' + tag);
+    });
     toast(`Showing posts tagged #${tag}`);
   }
 

@@ -6,18 +6,29 @@
 
 import { ensurePane } from './lazy.js?v=1789910000';
 
+/* Through window, not the module-local binding a few lines down.
+   components/mobile.js and features/discover.js both decorate
+   window.navigateTo - closing Discover on the way out of it is one of
+   those decorations - and a call to the local function walks straight
+   past every one of them. Before the ES-module conversion every file
+   shared one scope and the two were the same function, so this was
+   free; afterwards the sidebar and the bottom bar were the only ways
+   of navigating that stopped closing Discover, which left it sitting
+   over whichever pane you had just asked for. */
+const go = pane => (window.navigateTo || navigateTo)(pane);
+
 function setupNav() {
   document.querySelectorAll('.nav-item[data-pane]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault(); // Prevent default raw browser hash URL shifts
-      navigateTo(el.dataset.pane);
+      go(el.dataset.pane);
       closeSidebar();
     });
   });
   document.querySelectorAll('.m-nav-btn[data-pane]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault(); // Prevent default raw browser hash URL shifts
-      navigateTo(el.dataset.pane);
+      go(el.dataset.pane);
     });
   });
   const ham = $id('hamburger');

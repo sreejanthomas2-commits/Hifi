@@ -16,7 +16,7 @@
    ║  name, so the pane quietly drew a different file's grid           ║
    ║  instead, with nothing reported anywhere.                         ║
    ║                                                                   ║
-   ║  Three checks:                                                    ║
+   ║  Four checks:                                                     ║
    ║                                                                   ║
    ║   1. DUPLICATES  two modules both PROVIDING one name. Harmless    ║
    ║      with fixed script order - one always won. With modules       ║
@@ -47,6 +47,14 @@
    ║      A call the router makes after awaiting the page, or one      ║
    ║      chained on navigateTo('pane').then(…), is waiting for the    ║
    ║      module rather than reaching into it.                         ║
+   ║                                                                   ║
+   ║   4. UNAWAITED  navigateTo() is async, because a page module may  ║
+   ║      still need fetching, and it only builds the pane after its   ║
+   ║      first await. Code that calls it and then writes into the     ║
+   ║      new pane on the next line finds nothing there and does       ║
+   ║      nothing, with no error — which is how the Category Portal    ║
+   ║      came to open blank on every single visit. Chain it:          ║
+   ║      navigateTo('category').then(() => …).                        ║
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 'use strict';
@@ -232,6 +240,26 @@ for (const [n, where] of [...called].sort()) {
   warnings++; reach++;
 }
 if (!reach) console.log('   ok   nothing loaded at boot calls into a deferred module unguarded');
+
+console.log('\n4. navigateTo() used without waiting for the pane');
+const TOUCH = /\$id\(|getElementById\(|querySelector|innerHTML|\.classList|\.textContent|\.hidden\s*=|\.scrollIntoView/;
+const CHAINED = /\.then\(|await\s|function navigateTo|typeof navigateTo|window\.navigateTo\s*=/;
+let unawaited = 0;
+for (const s of all) {
+  const lines = body(s).split('\n');
+  lines.forEach((l, i) => {
+    if (!/navigateTo\(\s*['"`]/.test(l) || CHAINED.test(l)) return;
+    for (let k = i + 1; k < Math.min(i + 8, lines.length); k++) {
+      if (/^\s*\}/.test(lines[k])) break;          // the block ended first
+      if (!TOUCH.test(lines[k])) continue;
+      console.log(`   warn ${rel(s)}:${i + 1} navigates, then writes into the new pane at line ${k + 1}`);
+      console.log(`        ${lines[k].trim().slice(0, 76)}`);
+      warnings++; unawaited++;
+      break;
+    }
+  });
+}
+if (!unawaited) console.log('   ok   every navigateTo() that then touches a pane waits for it');
 
 console.log(`\n${errors} error(s), ${warnings} warning(s)\n`);
 process.exitCode = errors ? 1 : 0;
