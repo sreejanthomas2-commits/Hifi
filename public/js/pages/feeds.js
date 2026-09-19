@@ -1,4 +1,9 @@
 // ── HOME FEED ────────────────────────────────────────────────────
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function renderStories() {
   const el = $id('stories-row'); if (!el) return;
   const mine = (window.CR && CR.myStories) ? CR.myStories() : [];

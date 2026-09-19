@@ -1,4 +1,9 @@
 // ── USER UI ──────────────────────────────────────────────────────
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function updateUserUI() {
   const u = S.user || { fname: 'Guest' };
   const isGuest = u.fname === 'Guest';

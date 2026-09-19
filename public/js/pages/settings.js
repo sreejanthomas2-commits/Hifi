@@ -2,6 +2,11 @@
 // SETTINGS
 // ─────────────────────────────────────────────────────────
 
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function renderSettings() {
   // Both pickers are rebuilt on every visit so they show what is actually set.
   const host = document.getElementById('settings-language');

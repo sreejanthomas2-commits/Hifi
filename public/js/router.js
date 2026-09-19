@@ -1,4 +1,9 @@
 // ── NAVIGATION ───────────────────────────────────────────────────
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function setupNav() {
   document.querySelectorAll('.nav-item[data-pane]').forEach(el => {
     el.addEventListener('click', (e) => {

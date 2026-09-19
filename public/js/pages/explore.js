@@ -1,4 +1,9 @@
 // ── ADAPTIVE CATEGORY PORTAL ─────────────────────────────────────
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function populateCategorySidebar() {
   const grid = $id('full-category-grid'); if (!grid) return;
   grid.innerHTML = DATA.allCategories.map(c => {

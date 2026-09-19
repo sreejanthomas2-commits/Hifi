@@ -1,4 +1,9 @@
 // ── DATA ─────────────────────────────────────────────────────────
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 const DATA = {
   agriFeeds: [
     { id:1, author:'Rajesh Singh', role:'Progressive Farmer', handle:'@rajesh_farms', body:'Just completed harvesting my new hybrid wheat variety. The yield is looking 20% higher than last year despite the erratic rains!', likes:120, comments:14, category:'Wheat' },

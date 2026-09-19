@@ -2,6 +2,11 @@
 
 // Global state for live prices (fallback to static mock data if API fails).
 // The placeholders are marked stale so nothing can be traded at them.
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 window.liveCryptoPrices = {
   'BTC': { usd: 68450, usd_24h_change: 3.7, stale: true, src: 'seed' },
   'ETH': { usd: 3870, usd_24h_change: -1.2, stale: true, src: 'seed' },

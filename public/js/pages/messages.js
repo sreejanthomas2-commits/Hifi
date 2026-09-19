@@ -1,4 +1,9 @@
 // ── Buddy — Virtual Pet Companion
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function setupAI() {
   const inp = $id('buddy-input');
   if (inp) inp.addEventListener('keydown', e => { if (e.key==='Enter') sendAI(); });

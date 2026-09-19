@@ -1,4 +1,9 @@
 // ── SAFE HELPER ──────────────────────────────────────────────────
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 function $id(id) { return document.getElementById(id); }
 function escapeHTML(str) {
   if (typeof str !== 'string') return str;

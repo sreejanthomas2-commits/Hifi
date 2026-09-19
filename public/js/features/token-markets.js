@@ -3,6 +3,11 @@
    Each token is shown with the real exchange ticker it tracks. That ticker
    comes only from LISTED below — a table of listings checked by hand — so a
    token this file can't match shows no underlying rather than a guess. */
+/* Strict mode, ahead of this file becoming an ES module - modules are
+   always strict, and doing it here first means any breakage shows up
+   on its own rather than mixed into the module conversion. */
+'use strict';
+
 window.TokenMarkets = (() => {
   const catalog = {AAPLX:'Apple xStock',NVDAX:'NVIDIA xStock',TSLAX:'Tesla xStock',GOOGLX:'Alphabet xStock',AMZNX:'Amazon xStock',COINX:'Coinbase xStock'};
 
