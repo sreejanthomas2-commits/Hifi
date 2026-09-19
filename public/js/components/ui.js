@@ -4,19 +4,35 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
+/* Ghost Mode (Settings, through toggleAnonymousMode) has to reach the
+   sidebar, or the toast claims the identity is hidden while the name
+   and handle sit there in plain sight. That branch used to live in a
+   second updateUserUI in utils/engine.js, which this one silently
+   overwrote - ui.js loads two lines after engine.js in boot.js - so
+   the switch had stopped changing anything on screen. Only the
+   sidebar identity is masked here, which is all the original masked;
+   posts are anonymised separately in pages/feeds.js and
+   features/create.js. */
 function updateUserUI() {
   const u = S.user || { fname: 'Guest' };
   const isGuest = u.fname === 'Guest';
+  const isAnon = !!(typeof S !== 'undefined' && S.anonymousMode);
   
   const sn = $id('sidebar-name');
   const sh = $id('sidebar-handle');
   const sav = $id('sidebar-av');
   
-  if (isGuest) {
+  if (isAnon) {
+    if (sn) sn.textContent = 'Anonymous User';
+    if (sh) sh.textContent = '@ghost_user';
+    if (sav) { sav.textContent = '👻'; sav.style.background = '#333'; }
+  } else if (isGuest) {
+    if (sav) sav.style.background = '';
     if (sn) sn.textContent = 'Sign In to Trending';
     if (sh) sh.textContent = 'Unlock your digital universe';
     if (sav) sav.innerHTML = '<span class="material-symbols-rounded" style="font-size:16px">login</span>';
   } else {
+    if (sav) sav.style.background = '';
     const initials = `${(u.fname||'A')[0]}${(u.lname||'V')[0]}`.toUpperCase();
     ['sidebar-av','header-av','composer-av','profile-av'].forEach(id => {
       const el = $id(id); if (el) el.textContent = initials;

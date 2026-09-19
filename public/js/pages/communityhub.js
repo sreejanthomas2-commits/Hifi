@@ -695,23 +695,12 @@ const CH = (() => {
 
 window.CH = CH;
 
-/* ── Pane template & router hook ───────────────────────────────────── */
-function getCommunityTemplate() {
-  return `<section id="pane-community" class="pane">
-    <h1 class="pane-title" style="display:flex; align-items:center; gap:10px">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:32px; color:#42A5F5">groups</span>
-      <span>Community</span> Ecosystem
-    </h1>
-    <div class="tr-banner">
-      <span class="material-symbols-rounded ms-16">info</span>
-      Simulated communities. Tips and project backing debit your paper USDT; community tokens and
-      pre-listing allocations are held in-app and never leave this browser.
-    </div>
-    <div id="ch-root"></div>
-  </section>`;
-}
-
-function renderCommunity() { CH.paint(); }
+/* The pane's template and its router hook are in pages/communehub.js,
+   which loads after this file and renders CH inside itself: its
+   Launchpad, Governance and Asset Lab tabs are a #ch-root that
+   CH.setView paints. A getCommunityTemplate and a renderCommunity
+   were declared here too and overwritten on every load. CH itself
+   is live and stays. */
 
 /* ── Global bridge ───────────────────────────────────────────────────
    This file is an ES module now, so its top-level names are private
@@ -725,6 +714,5 @@ function renderCommunity() { CH.paint(); }
    dead module graph. */
 import { publish } from '../globals.js?v=3';
 publish('pages/communityhub.js', {
-  CH: () => CH, getCommunityTemplate: () => getCommunityTemplate,
-  renderCommunity: () => renderCommunity
+  CH: () => CH
 });

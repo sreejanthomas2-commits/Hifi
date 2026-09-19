@@ -5,30 +5,10 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-window.updateUserUI = function() {
-  if (typeof S === 'undefined' || !S.user) return;
-  const av = document.getElementById('sidebar-av');
-  const isAnon = S.anonymousMode;
-  
-  if (av) {
-    if (isAnon) {
-      av.textContent = '👻';
-      av.style.background = '#333';
-    } else {
-      av.textContent = (S.user.fname.charAt(0) || '') + (S.user.lname.charAt(0) || '');
-      av.style.background = 'var(--g-brand)';
-    }
-  }
-  
-  const nameEl = document.getElementById('sidebar-name');
-  if (nameEl) nameEl.textContent = isAnon ? 'Anonymous User' : `${S.user.fname} ${S.user.lname}`;
-  
-  const handleEl = document.getElementById('sidebar-handle');
-  if (handleEl) handleEl.textContent = isAnon ? '@ghost_user' : S.user.handle;
-  
-  const xpEl = document.getElementById('sidebar-xp');
-  if (xpEl) xpEl.textContent = `XP: ${S.user.xp}`;
-};
+/* updateUserUI lives in components/ui.js. A second one used to sit
+   here; ui.js loads after this file, so once both had loaded this
+   one never ran again, and the Ghost Mode branch it carried went
+   quiet with it. That branch is in ui.js's version now. */
 
 window.toggleAnonymousMode = function(checked) {
   if (typeof S !== 'undefined') {

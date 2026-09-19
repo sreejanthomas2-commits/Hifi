@@ -174,82 +174,11 @@
     }
   };
 
-  // ── EMAIL/PASSWORD SIGN-IN (REAL) ──
-  window.signInWithGmail = async function(event) {
-    if (event) event.preventDefault();
-    localStorage.removeItem('ts_guest');
-
-    const emailInput = document.getElementById('auth-email');
-    const passInput = document.getElementById('auth-password');
-    if (!emailInput || !passInput) return;
-
-    const email = emailInput.value.trim();
-    const password = passInput.value.trim();
-
-    if (!email || !password) {
-      showToast('Please enter your email and password.');
-      return;
-    }
-
-    if (password.length < 6) {
-      showToast('Password must be at least 6 characters.');
-      return;
-    }
-
-    const mainView = document.getElementById('auth-main-view');
-    const loadingView = document.getElementById('auth-loading-view');
-    const statusLbl = document.getElementById('auth-loading-status');
-
-    if (mainView && loadingView && statusLbl) {
-      mainView.style.display = 'none';
-      loadingView.style.display = 'flex';
-      loadingView.classList.remove('hidden');
-      statusLbl.textContent = 'Authenticating...';
-    }
-
-    try {
-      // Try to sign in first
-      await window.firebaseSignInWithEmailAndPassword(auth, email, password);
-      console.log('✅ Email sign-in successful');
-    } catch (signInError) {
-      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-        // User doesn't exist — create a new account
-        if (statusLbl) statusLbl.textContent = 'Creating your account...';
-        try {
-          await window.firebaseCreateUserWithEmailAndPassword(auth, email, password);
-          console.log('✅ New account created successfully');
-          showToast('Account created! Welcome to Trending 🎉');
-        } catch (createError) {
-          console.error('❌ Account creation error:', createError);
-          showToast('Error: ' + (createError.message || 'Could not create account'));
-          resetAuthModal();
-        }
-      } else if (signInError.code === 'auth/wrong-password') {
-        showToast('Incorrect password. Please try again.');
-        resetAuthModal();
-      } else if (signInError.code === 'auth/too-many-requests') {
-        showToast('Too many attempts. Please try again later.');
-        resetAuthModal();
-      } else {
-        console.error('❌ Email sign-in error:', signInError);
-        showToast('Error: ' + (signInError.message || 'Sign-in failed'));
-        resetAuthModal();
-      }
-    }
-
-    emailInput.value = '';
-    passInput.value = '';
-  };
-
-  function resetAuthModal() {
-    const mainView = document.getElementById('auth-main-view');
-    const loadingView = document.getElementById('auth-loading-view');
-    if (mainView) mainView.style.display = 'block';
-    if (loadingView) {
-      loadingView.style.display = 'none';
-      loadingView.classList.add('hidden');
-    }
-  }
+  /* Email sign-in is js/signin.js, which owns this modal's markup
+     (#gmail-login-form, #ts-submit, #ts-reset) and loads last. A
+     second window.signInWithGmail used to sit here, overwritten
+     before it could ever run, together with the resetAuthModal
+     only it called. The auth-state spinner above is still ours. */
 
   // ── SIGN OUT (REAL) ──
   window.signOut = async function() {
