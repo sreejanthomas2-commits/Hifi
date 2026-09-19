@@ -301,7 +301,7 @@ const WV = (() => {
 
   function go(account) {
     if (account === 'earn') return navigateTo('earn');
-    if (typeof AS !== 'undefined' && AS.go) { navigateTo('portfolio'); setTimeout(() => AS.go(account), 60); return; }
+    if (typeof AS !== 'undefined' && AS.go) { navigateTo('portfolio').then(() => AS.go(account)); return; }
     navigateTo('portfolio');
   }
 

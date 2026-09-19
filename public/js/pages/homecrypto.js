@@ -60,8 +60,10 @@ const HC = (() => {
      wallet is attached the useful action is seeing it. */
   function openWallet() {
     if (typeof WL !== 'undefined' && !WL.isConnected()) { WL.openChooser(); return; }
-    navigateTo('profile');
-    if (typeof switchProfileTab === 'function') switchProfileTab('wallet');
+    /* Profile loads on demand, so the tab switch waits for it. */
+    navigateTo('profile').then(() => {
+      if (typeof switchProfileTab === 'function') switchProfileTab('wallet');
+    });
   }
 
   function act(i) {

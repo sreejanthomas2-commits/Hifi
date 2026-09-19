@@ -320,8 +320,10 @@ const HX = (() => {
     if (typeof WL !== 'undefined') WL.openChooser();
   }
   function openWallet() {
-    navigateTo('profile');
-    if (typeof switchProfileTab === 'function') switchProfileTab('wallet');
+    /* Profile loads on demand, so the tab switch waits for it. */
+    navigateTo('profile').then(() => {
+      if (typeof switchProfileTab === 'function') switchProfileTab('wallet');
+    });
   }
 
   /* ── 3. Promo ────────────────────────────────────────────────────── */

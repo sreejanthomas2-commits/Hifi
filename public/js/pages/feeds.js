@@ -1183,7 +1183,7 @@ function getFeedsTemplate() {
                 </div>
               </div>
               <div class="flex gap8 mt12">
-                <button class="btn btn-primary btn-sm flex-center gap4" onclick="navigateTo('profile'); switchProfileTab('wallet');" style="flex:1"><span class="material-symbols-rounded" style="font-size:12px">account_balance_wallet</span> Open Wallet</button>
+                <button class="btn btn-primary btn-sm flex-center gap4" onclick="navigateTo('profile').then(() =&gt; switchProfileTab('wallet'));" style="flex:1"><span class="material-symbols-rounded" style="font-size:12px">account_balance_wallet</span> Open Wallet</button>
                 <button class="btn btn-ghost btn-sm" onclick="simulateCreatorTip()" title="Tip active creator">🎁 Tip Creator</button>
               </div>
             </div>

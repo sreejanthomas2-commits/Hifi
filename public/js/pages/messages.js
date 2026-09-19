@@ -143,8 +143,10 @@ function sendAI() {
       switchProfileTab('wallet');
     } else if (lowerText.includes('reels') || lowerText.includes('shorts') || lowerText.includes('video')) {
       resp = "🎬 Opening the **Reels & Shorts** fullscreen player for you instantly! Sit back and enjoy the show! 🚀";
-      navigateTo('reels');
-      openReelsPopup(0);
+      /* Reels loads on demand; open the player once it is there. */
+      navigateTo('reels').then(() => {
+        if (typeof openReelsPopup === 'function') openReelsPopup(0);
+      });
     } else if (lowerText.includes('ghost') || lowerText.includes('incognito') || lowerText.includes('private') || lowerText.includes('hidden')) {
       const cb = document.querySelector('input[onchange*="toggleGhostMode"]');
       if (cb) {
@@ -1226,7 +1228,7 @@ function mockCall(type) {
         <h2 id="vc-name">${name}</h2>
         <p id="vc-status">Ringing...</p>
       </div>
-      <button class="icon-btn" style="background:rgba(0,0,0,0.5); color:#fff; backdrop-filter:blur(10px)" onclick="endMockCall()">
+      <button class="icon-btn" style="background:rgba(0,0,0,0.5); color:#fff; backdrop-filter:blur(10px)" onclick="endVideoCall()">
         <span class="material-symbols-rounded">close</span>
       </button>
     </div>
@@ -1237,7 +1239,7 @@ function mockCall(type) {
       <button class="call-btn btn-effect" onclick="showToast('Effects menu opened')"><span class="material-symbols-rounded">auto_awesome</span></button>
       <button class="call-btn btn-mute" id="vc-mute" onclick="toggleVCMute()"><span class="material-symbols-rounded">mic</span></button>
       <button class="call-btn btn-video" id="vc-cam" onclick="toggleVCCam()"><span class="material-symbols-rounded">videocam</span></button>
-      <button class="call-btn btn-end" onclick="endMockCall()"><span class="material-symbols-rounded">call_end</span></button>
+      <button class="call-btn btn-end" onclick="endVideoCall()"><span class="material-symbols-rounded">call_end</span></button>
     </div>`;
 
   makePipDraggable();
@@ -1266,7 +1268,13 @@ function startCallTimer() {
   }, 1000);
 }
 
-function endMockCall() {
+/* Tears down the #video-call-overlay that mockCall() builds above — a
+   different thing entirely from the #call-modal in index.html, which
+   pages/modals.js owns along with its End button. This was called
+   endMockCall too, and modals.js loads later, so the overlay's own End
+   button was hiding a modal that was never open and leaving the overlay
+   stuck on screen. */
+function endVideoCall() {
   clearInterval(callTimer);
   const overlay = document.getElementById('video-call-overlay');
   if (overlay) {
@@ -1387,6 +1395,6 @@ publish('pages/messages.js', {
   getMessagesTemplate: () => getMessagesTemplate,
   callTimer: () => callTimer, callSeconds: () => callSeconds,
   mockCall: () => mockCall, startCallTimer: () => startCallTimer,
-  endMockCall: () => endMockCall, toggleVCMute: () => toggleVCMute,
+  endVideoCall: () => endVideoCall, toggleVCMute: () => toggleVCMute,
   toggleVCCam: () => toggleVCCam, makePipDraggable: () => makePipDraggable
 });

@@ -4,6 +4,8 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
+import { ensurePane } from './lazy.js?v=1';
+
 function setupNav() {
   document.querySelectorAll('.nav-item[data-pane]').forEach(el => {
     el.addEventListener('click', (e) => {
@@ -31,7 +33,11 @@ function setupNav() {
   });
 }
 
-function navigateTo(pane) {
+/* Async because a page module may still need fetching — see lazy.js.
+   Callers that only navigate can ignore the promise, which is what every
+   inline onclick= handler does. Callers that navigate and then touch the
+   new page must chain: navigateTo('profile').then(() => ...). */
+async function navigateTo(pane) {
   // Clear the sidebar drawer overlays and drawer states
   closeSidebar();
   
@@ -49,9 +55,16 @@ function navigateTo(pane) {
   
   // Stop continuous simulations if leaving their respective category
   if (S.pane === 'category') {
-    stopCryptoLiveChart();
-    stopWildlifeCanvasSim();
+    /* These live in explore.js, which loads on demand. Being on the
+       category pane means it already loaded, but the guard costs
+       nothing and stops a rename turning into a dead navigation. */
+    if (typeof stopCryptoLiveChart === 'function') stopCryptoLiveChart();
+    if (typeof stopWildlifeCanvasSim === 'function') stopWildlifeCanvasSim();
   }
+  /* Fetch the page module if this is the first time here. Resolves
+     immediately for everything boot.js already loaded. */
+  await ensurePane(pane);
+
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
   let target = $id(`pane-${pane}`);
   if (!target) {

@@ -67,7 +67,13 @@ function updateCart() {
 
 
 
-function renderFashionVerse(brandFilter) {
+/* The shop-styled FashionVerse grid — this file's own take, built from
+   the renderShop markup above it. It was named renderFashionVerse and so
+   overwrote the one in pages/explore.js, which is the version the app
+   actually wants: index.html carries a full AR Try-On modal, and only
+   explore.js's grid has the button that opens it. Renamed rather than
+   deleted; nothing calls it now but its own brand chips. */
+function renderFashionVerseShop(brandFilter) {
   const brand = brandFilter || 'All';
   const grid = $id('fv-product-grid');
   if (grid) {
@@ -104,7 +110,7 @@ function renderFashionVerse(brandFilter) {
   const brandsContainer = $id('fv-brands-container');
   if (brandsContainer) {
     brandsContainer.innerHTML = DATA.fvBrands.map(b => `
-      <span class="chip${b===brand?' active':''}" onclick="renderFashionVerse('${b}')">${b}</span>`).join('');
+      <span class="chip${b===brand?' active':''}" onclick="renderFashionVerseShop('${b}')">${b}</span>`).join('');
   }
 }
 
@@ -148,6 +154,6 @@ import { publish } from '../globals.js?v=2';
 publish('pages/fashionverse.js', {
   renderShop: () => renderShop, addToCart: () => addToCart,
   updateCart: () => updateCart,
-  renderFashionVerse: () => renderFashionVerse,
+  renderFashionVerseShop: () => renderFashionVerseShop,
   getFashionverseTemplate: () => getFashionverseTemplate
 });
