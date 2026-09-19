@@ -46,13 +46,6 @@ function setupHeader() {
               <div class="notif-item-time">15m ago</div>
             </div>
           </div>
-          <div class="notif-item unread" onclick="handleNotificationClick('fashionhub', event)">
-            <div class="notif-item-avatar" style="background:var(--purple)">🎬</div>
-            <div class="notif-item-content">
-              <div class="notif-item-text"><strong>Global Fashion Hub</strong>: Live stream event "Summer Paris 2026 Runways" is broadcasting!</div>
-              <div class="notif-item-time">1h ago</div>
-            </div>
-          </div>
           <div class="notif-item" onclick="handleNotificationClick('creator', event)">
             <div class="notif-item-avatar" style="background:var(--orange)">🎨</div>
             <div class="notif-item-content">

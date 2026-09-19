@@ -1,6 +1,6 @@
 // ── SHOP ─────────────────────────────────────────────────────────
-/* This is the Shop grid and cart. It used to share a file with
-   FashionVerse, which has been removed; nothing here is FashionVerse.
+/* This is the Shop grid and cart. It used to share a file with the
+   virtual-try-on page that was removed; nothing here belongs to it.
 
    Note that none of it can run yet: renderShop and updateCart write
    into #product-grid, #shop-cats, #cart-count, #cart-items and

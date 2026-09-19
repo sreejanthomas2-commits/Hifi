@@ -16,7 +16,12 @@
    ║  name, so the pane quietly drew a different file's grid           ║
    ║  instead, with nothing reported anywhere.                         ║
    ║                                                                   ║
-   ║  Four checks:                                                     ║
+   ║  Five checks:                                                     ║
+   ║                                                                   ║
+   ║   0. PARSES  one unparseable file takes the whole module graph    ║
+   ║      with it. The browser reports a bare SyntaxError with no      ║
+   ║      filename, every global disappears at once, and the app       ║
+   ║      looks like it broke for some entirely different reason.      ║
    ║                                                                   ║
    ║   1. DUPLICATES  two modules both PROVIDING one name. Harmless    ║
    ║      with fixed script order - one always won. With modules       ║
@@ -199,7 +204,22 @@ for (const s of all) scan(body(s), rel(s));
 let errors = 0, warnings = 0;
 console.log(`\n${eager.length} eager + ${lazy.length} deferred modules, ${owners.size} globals\n`);
 
-console.log('1. duplicate globals');
+/* One unparseable file takes the whole module graph with it: the browser
+   reports a bare SyntaxError with no filename and every global vanishes,
+   so the app looks like it failed for some other reason entirely. */
+console.log('0. every module parses');
+let broken = 0;
+for (const s of all) {
+  const f = abs(s);
+  const r = require('child_process').spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+  if (r.status === 0) continue;
+  const why = (r.stderr || '').split('\n').find(l => /SyntaxError|Error/.test(l)) || 'did not parse';
+  console.log(`   FAIL ${rel(s)} — ${why.trim().slice(0, 80)}`);
+  broken++; errors++;
+}
+if (!broken) console.log(`   ok   all ${all.length} modules parse`);
+
+console.log('\n1. duplicate globals');
 for (const [name, set] of [...givers].sort()) {
   if (set.size < 2) continue;
   const files = [...set];

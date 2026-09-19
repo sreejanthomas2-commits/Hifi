@@ -5,31 +5,6 @@
 'use strict';
 
 const DATA = {
-  agriFeeds: [
-    { id:1, author:'Rajesh Singh', role:'Progressive Farmer', handle:'@rajesh_farms', body:'Just completed harvesting my new hybrid wheat variety. The yield is looking 20% higher than last year despite the erratic rains!', likes:120, comments:14, category:'Wheat' },
-    { id:2, author:'Dr. Sharma', role:'KVK Scientist', handle:'@kvk_sharma', body:'Alert for paddy farmers: High humidity expected next week. Preventive spray for sheath blight is highly recommended.', likes:89, comments:22, category:'Paddy' }
-  ],
-  agriVideos: [
-    { id:1, title:'Advanced Drip Irrigation Setup', channel:'AgriTech India', views:'14K', duration:'12:40', thumb_color:'#FFC107', icon:'💧', category:'Irrigation', type:'Video' },
-    { id:2, title:'Organic Pest Control for Tomatoes', channel:'Green Folds', views:'8K', duration:'08:15', thumb_color:'#4CAF50', icon:'🐛', category:'Pests', type:'Video' }
-  ],
-  agriProducts: [
-    { id:1, name:'Premium Neem Oil (Cold Pressed)', seller:'BioSafe Solutions', desc:'100% organic pest repellent for all vegetable crops.', rating:4.8, reviews:120, price:'$12.99', badge:'Top Rated', icon:'🌿', category:'Organic' },
-    { id:2, name:'Smart Moisture Sensor IoT', seller:'FarmTech', desc:'Real-time soil moisture monitoring connected to your phone.', rating:4.5, reviews:45, price:'$49.99', badge:'Bestseller', icon:'📱', category:'Tech' }
-  ],
-  designIndustries: [
-    { id: 'canvas', name: 'Free Canvas', icon: 'brush', desc: 'Freeform drawing studio with neon brushes, layers, and export.' },
-    { id: 'agriculture', name: 'Agriculture', icon: '\uD83D\uDD25' },
-    { id: 'realestate', name: 'Real Estate & Arch', icon: '\uD83D\uDD25' },
-    { id: 'fashion', name: 'Fashion Design', icon: '\uD83D\uDD25' },
-    { id: 'templates', name: 'Global Templates', icon: '\uD83D\uDD25' },
-    { id: 'graphic', name: 'Graphic Media', icon: '\uD83D\uDD25' },
-    { id: 'video', name: 'Video & Motion', icon: '\uD83D\uDD25' },
-    { id: 'uiux', name: 'UI/UX Design', icon: '\uD83D\uDD25' },
-    { id: 'engineering', name: 'Engineering', icon: '\uD83D\uDD25' },
-    { id: 'gaming', name: 'Game Creator', icon: '\uD83D\uDD25' },
-    { id: 'space', name: 'Space & Science', icon: '\uD83D\uDD25' }
-  ],
   users: [
     { name:'Sarah Chen',    handle:'@sarahc',    emoji:'\u2728', online:true,  address:'0x1F2B...A9C4' },
     { name:'Marcus Webb',   handle:'@marcusw',   emoji:'\u2728', online:false, address:'0x9E8D...F321' },
@@ -130,16 +105,6 @@ const DATA = {
     { name:'#NightOwls', count:'43K posts',     icon:'\uD83D\uDD25' },
   ],
 
-  reels: [
-    { emoji:'\u2728', creator:'@beatmaker_96', desc:'This beat dropped different 🔥', likes:'24.5K', views:'890K', bg:'hsl(260,50%,20%)' },
-    { emoji:'\u2728', creator:'@fitguru',      desc:'5-min morning routine that changed my life', likes:'18.2K', views:'540K', bg:'hsl(155,45%,16%)' },
-    { emoji:'\u2728', creator:'@cheflife',     desc:'Secret ingredient that makes everything better', likes:'31.7K', views:'1.2M', bg:'hsl(38,60%,18%)' },
-    { emoji:'\u2728', creator:'@codevibes',    desc:'This one CSS trick blew my mind 🤯', likes:'15.9K', views:'420K', bg:'hsl(213,55%,18%)' },
-    { emoji:'\u2728', creator:'@wanderlust',   desc:'Hidden gem in Bali nobody talks about', likes:'44.1K', views:'2.1M', bg:'hsl(28,55%,18%)' },
-    { emoji:'\u2728', creator:'@artbymia',     desc:'Speed painting a galaxy in 60 seconds', likes:'29.3K', views:'780K', bg:'hsl(330,45%,18%)' },
-    { emoji:'\u2728', creator:'@petparent',    desc:'Teaching my dog to do this took 2 weeks', likes:'87.4K', views:'4.5M', bg:'hsl(38,50%,16%)' },
-    { emoji:'\u2728', creator:'@zenmind',      desc:'10-second breathing reset for anxiety', likes:'52.6K', views:'3.2M', bg:'hsl(155,40%,14%)' },
-  ],
   products: [
     { emoji:'\u2728', name:'ProSound X1 Wireless Headphones', seller:'AudioTech', price:89.99, oldPrice:149.99, rating:'★★★★★', badge:'SALE', bg:'hsl(213,55%,18%)' },
     { emoji:'\u2728', name:'SmartFit Pro 5 Watch',            seller:'FitGear',   price:199.99, oldPrice:null,   rating:'★★★★☆', badge:'NEW', bg:'hsl(155,45%,16%)' },
@@ -151,26 +116,6 @@ const DATA = {
     { emoji:'\u2728', name:'SmartDesk LED Ring Pro',         seller:'DeskSetup', price:45.99,  oldPrice:69.99,  rating:'★★★★☆', badge:'SALE', bg:'hsl(38,60%,18%)' },
   ],
   shopCategories: ['All','Electronics','Fashion','Gaming','Fitness','Beauty','Home','Books'],
-  workouts: {
-    chest:    [{ n:'Bench Press',         s:'4 sets × 10 reps' }, { n:'Incline DB Press',    s:'3 sets × 12 reps' }, { n:'Cable Fly',           s:'3 sets × 15 reps' }, { n:'Chest Dips',         s:'3 sets × failure' }],
-    back:     [{ n:'Pull-Ups',            s:'4 sets × 8 reps'  }, { n:'Barbell Row',         s:'4 sets × 10 reps' }, { n:'Lat Pulldown',        s:'3 sets × 12 reps' }, { n:'Face Pull',          s:'3 sets × 15 reps' }],
-    shoulders:[{ n:'Overhead Press',      s:'4 sets × 8 reps'  }, { n:'Lateral Raises',      s:'4 sets × 15 reps' }, { n:'Front Raises',        s:'3 sets × 12 reps' }, { n:'Rear Delt Fly',      s:'3 sets × 15 reps' }],
-    arms:     [{ n:'Barbell Curl',        s:'4 sets × 10 reps' }, { n:'Tricep Pushdown',     s:'4 sets × 12 reps' }, { n:'Hammer Curl',         s:'3 sets × 12 reps' }, { n:'Skull Crushers',     s:'3 sets × 10 reps' }],
-    legs:     [{ n:'Back Squat',          s:'4 sets × 8 reps'  }, { n:'Romanian Deadlift',   s:'4 sets × 10 reps' }, { n:'Leg Press',           s:'3 sets × 15 reps' }, { n:'Walking Lunges',     s:'3 sets × 12 reps' }],
-    core:     [{ n:'Plank',              s:'4 sets × 60 sec'  }, { n:'Cable Crunch',        s:'4 sets × 15 reps' }, { n:'Leg Raises',          s:'3 sets × 15 reps' }, { n:'Russian Twists',     s:'3 sets × 20 reps' }],
-    glutes:   [{ n:'Hip Thrust',          s:'4 sets × 12 reps' }, { n:'Sumo Deadlift',       s:'4 sets × 10 reps' }, { n:'Glute Kickback',      s:'3 sets × 15 reps' }, { n:'Step-Ups',           s:'3 sets × 12 reps' }],
-    full:     [{ n:'Deadlift',            s:'4 sets × 5 reps'  }, { n:'Push-Ups',            s:'4 sets × 20 reps' }, { n:'Pull-Ups',            s:'3 sets × failure' }, { n:'Goblet Squat',       s:'3 sets × 15 reps' }],
-  },
-  muscles: [
-    { id:'chest',    emoji:'\u2728', label:'Chest'    },
-    { id:'back',     emoji:'\u2728', label:'Back'     },
-    { id:'shoulders',emoji:'\u2728', label:'Shoulders'},
-    { id:'arms',     emoji:'\u2728', label:'Arms'     },
-    { id:'legs',     emoji:'\u2728', label:'Legs'     },
-    { id:'core',     emoji:'\u2728', label:'Core'     },
-    { id:'glutes',   emoji:'\u2728', label:'Glutes'   },
-    { id:'full',     emoji:'\u2728', label:'Full Body' },
-  ],
   courses: [
     { id:1, emoji:'\u2728', title:'UI/UX Design Masterclass',     meta:'48 lessons · 12h',  progress:72, cat:'Design',   instructor:'Luna Park',     concepts:'Glassmorphism, HSL Design Tokens, Interactive Micro-interactions', syllabus:['Introduction to Glassmorphism','Designing with HSL Colors','Micro-interaction Principles','Figma High-Fidelity Prototypes'] },
     { id:2, emoji:'\u2728', title:'React & Next.js Complete',     meta:'64 lessons · 18h',  progress:35, cat:'Code',     instructor:'Dev Kumar',     concepts:'React 19 Hooks, Next.js Server Components, Suspense, streaming HTML', syllabus:['Next.js 15 routing structures','React Server Components vs Client Components','Advanced state management with useOptimistic','Deploying edge nodes'] },
@@ -181,27 +126,6 @@ const DATA = {
     { id:7, emoji:'\u2728', title:'Bio-informatics & DNA Coding',  meta:'42 lessons · 14h',  progress:25, cat:'Science',  instructor:'Marcus Webb',   concepts:'FASTA sequences processing, Evolutionary conservation scoring, bio-DB APIs', syllabus:['Introduction to genomic computing','Parsing FASTA sequence files','Calculating phyloP evolutionary weights','Querying UniProt biological registers'] },
     { id:8, emoji:'\u2728', title:'Aerodynamics & Flight Physics', meta:'30 lessons · 10h',  progress:12, cat:'Science',  instructor:'Tyler Ross',    concepts:'Aero Lift coefficients, drag profiles, fluid velocity boundary layers', syllabus:['Fluid dynamics & Bernoulli principles','Lift vs Drag physics calculations','Wing shape angle optimization','Supersonic wind tunnel simulations'] },
     { id:9, emoji:'\u2728', title:'Behavior Design & Psychology',  meta:'24 lessons · 6h',   progress:85, cat:'Business', instructor:'Sarah Chen',    concepts:'B.J. Fogg behavior model, triggers, user motivation architecture', syllabus:['Principles of behavioral modification','Designing effective Prompt mechanisms','Structuring ability friction reductions','Gamification reward schedules'] }
-  ],
-  skillTree: [
-    [{ e:'⭐', l:'Beginner', s:'unlocked'  }, { e:'📖', l:'Learner', s:'unlocked'  }],
-    [{ e:'💡', l:'Thinker',  s:'unlocked'  }, { e:'🔧', l:'Builder', s:'unlocked'  }, { e:'🎨', l:'Creator', s:'active'    }],
-    [{ e:'🚀', l:'Launcher', s:'locked'    }, { e:'💎', l:'Expert',  s:'locked'    }],
-    [{ e:'👑', l:'Master',   s:'locked'    }],
-  ],
-  groups: [
-    { icon:'\uD83D\uDD25', iconColor:'var(--blue)', name:'TechBuilders Hub',    desc:'Developers sharing what they\'re building',  members:'12.4K', joined:true  },
-    { icon:'\uD83D\uDD25', iconColor:'var(--pink)', name:'Design Collective',   desc:'UI/UX designers critiquing & inspiring',    members:'8.7K',  joined:false },
-    { icon:'\uD83D\uDD25', iconColor:'var(--green)', name:'Fitness Warriors',    desc:'Daily workout challenges & nutrition tips',  members:'23.1K', joined:true  },
-    { icon:'\uD83D\uDD25', iconColor:'var(--purple)', name:'Startup Founders',    desc:'Early-stage founders sharing lessons',       members:'5.2K',  joined:false },
-    { icon:'\uD83D\uDD25', iconColor:'var(--orange)', name:'Gamers United',       desc:'Gaming, esports, and streaming community',  members:'31.7K', joined:false },
-    { icon:'\uD83D\uDD25', iconColor:'var(--green)', name:'Crypto & DeFi',       desc:'Blockchain, Web3 and financial freedom',    members:'18.9K', joined:false },
-  ],
-  leaderboard: [
-    { name:'Zara Ahmed',  score:'98,420 XP', emoji:'\u2728' },
-    { name:'Marcus Webb', score:'87,135 XP', emoji:'\u2728'   },
-    { name:'Dev Kumar',   score:'76,890 XP', emoji:'\u2728' },
-    { name:'Alex Vance',  score:'68,420 XP', emoji:'\u2728'   },
-    { name:'Luna Park',   score:'61,205 XP', emoji:'\u2728'   },
   ],
   badges: [
     { e:'🏆', n:'Champion'   }, { e:'🚀', n:'Launcher'  }, { e:'💎', n:'Diamond'   },
@@ -255,13 +179,6 @@ const DATA = {
       { me:false, text:'Hi! I\'m ALINA 🤖 — ask me anything: writing, code, ideas, translations…', time:'Now' },
     ],
   },
-  streams: [
-    { emoji:'\u2728', name:'ProGamer_X — Ranked Matches',  viewers:'12.4K', live:true  },
-    { emoji:'\u2728', name:'BeatLab — Live Production',    viewers:'3.8K',  live:true  },
-    { emoji:'\u2728', name:'CodeWithMe — Building SaaS',   viewers:'2.1K',  live:true  },
-    { emoji:'\u2728', name:'PixelArtistry — Asset Design', viewers:'1.5K',  live:true  },
-    { emoji:'\u2728', name:'FinScope — Market Analysis',    viewers:'5.6K',  live:true  }
-  ],
   aiResponses: [
     'Great question! Based on current trends, I\'d recommend focusing on short-form video content — it drives 3x more engagement right now.',
     'I\'ve analyzed your profile data. Your peak posting time is 7-9 PM on weekdays. That\'s when your audience is most active.',
@@ -350,55 +267,6 @@ const DATA = {
       TREND: 10000.00
     }
   },
-  cryptoMarkets: [
-    { pair: 'BTC/USDT', name: 'Bitcoin', price: 68450.20, change: '+2.4%', up: true, vol: '1.2B' },
-    { pair: 'ETH/USDT', name: 'Ethereum', price: 3840.15, change: '+4.1%', up: true, vol: '850M' },
-    { pair: 'SOL/USDT', name: 'Solana', price: 145.80, change: '-1.2%', up: false, vol: '320M' },
-    { pair: 'NEON/USDT', name: 'Neon Protocol', price: 2.45, change: '+12.5%', up: true, vol: '45M' },
-    { pair: 'XRP/USDT', name: 'Ripple', price: 0.58, change: '+0.4%', up: true, vol: '120M' },
-    { pair: 'ADA/USDT', name: 'Cardano', price: 0.45, change: '-0.8%', up: false, vol: '95M' },
-    { pair: 'DOGE/USDT', name: 'Dogecoin', price: 0.14, change: '+5.2%', up: true, vol: '210M' }
-  ],
-  rwaAssets: [
-    { id: 'rwa1', name: 'Manhattan Penthouse Fraction', location: 'New York, USA', apy: '8.5%', price: 500, emoji: '🏢', bg: 'linear-gradient(135deg, #1f1c2c, #928dab)' },
-    { id: 'rwa2', name: 'Vintage Rolex Daytona', location: 'Vault A, Geneva', apy: '4.2%', price: 1200, emoji: '⌚', bg: 'linear-gradient(135deg, #0f0c29, #302b63)' },
-    { id: 'rwa3', name: 'Solar Farm Yield Share', location: 'Nevada, USA', apy: '12.4%', price: 250, emoji: '☀️', bg: 'linear-gradient(135deg, #1a1a2e, #16213e)' },
-    { id: 'rwa4', name: 'Blue-Chip Fine Art', location: 'Louvre Vault', apy: '6.1%', price: 800, emoji: '🎨', bg: 'linear-gradient(135deg, #2d1b69, #1a1a2e)' }
-  ],
-  communityFeed: [
-    { type: 'transfer', from: '0x5F8E...D24B', to: '0x1F2B...A9C4', amount: 250, coin: 'NEON', timestamp: '2 mins ago' },
-    { type: 'post', user: 'Marcus Webb', handle: '@marcusw', content: 'Just fractionalized my first piece of digital real estate. Web3 is the future! 🚀', timestamp: '15 mins ago' },
-    { type: 'transfer', from: '0x7A9B...C35E', to: '0x2D5A...B16F', amount: 1000, coin: 'USDT', timestamp: '1 hour ago' },
-    { type: 'post', user: 'Zara Ahmed', handle: '@zaraa', content: 'Who is buying the dip on BTC right now?', timestamp: '3 hours ago' }
-  ],
-
-  // ── Global Fashion Hub Data ──
-  fashionEvents: [
-    { id: 'ev1', title: 'Milan Digital Fashion Week', status: 'LIVE', viewers: '14.2K', bg: 'linear-gradient(135deg, #FF0055, #20002c)' },
-    { id: 'ev2', title: 'RTFKT Sneaker Drop VR', status: 'UPCOMING', time: 'Tomorrow, 8PM', bg: 'linear-gradient(135deg, #00C9FF, #92FE9D)' },
-    { id: 'ev3', title: 'Gucci Meta-Gala 2026', status: 'UPCOMING', time: 'Friday, 10PM', bg: 'linear-gradient(135deg, #fceabb, #f8b500)' }
-  ],
-  fashionFeed: [
-    { user: 'Luna Park', handle: '@lunap', type: 'image', content: 'Obsessed with this holographic trench coat I just generated in the AI Lab! 🧥✨', image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&q=80', timestamp: '5 mins ago', likes: 124 },
-    { user: 'Tyler Ross', handle: '@tylerr', type: 'text', content: 'Anyone else attending the digital Milan runway tonight? The AR integrations are supposed to be insane.', timestamp: '12 mins ago', likes: 45 },
-    { user: 'Sarah Chen', handle: '@sarahc', type: 'image', content: 'Cyberpunk streetwear concept sketch. Dropping this collection next month!', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80', timestamp: '1 hour ago', likes: 890 }
-  ],
-  
-  // ── Fitness Hub Data ──
-  fitnessPosts: [
-    { id: 'fp1', author: 'Marcus Webb', handle: '@marcus_lifts', avatar: '💪', role: 'Powerlifter', time: '1h ago', content: 'Just hit a new PR on the deadlift! 500lbs moving smooth. Consistency and sleep are the real cheat codes.', category: 'PR', likes: 4210, comments: 342, tags: ['Deadlift', 'Powerlifting', 'PR'] },
-    { id: 'fp2', author: 'Sarah Chen', handle: '@sarah_runs', avatar: '🏃‍♀️', role: 'Marathoner', time: '3h ago', content: 'Completed my 18-mile long run today. The humidity was brutal but pacing was solid. Fueling strategy: 1 gel every 45 mins worked perfectly!', category: 'Running', likes: 2150, comments: 180, tags: ['Running', 'MarathonTraining', 'Endurance'] },
-    { id: 'fp3', author: 'Alex Fitness', handle: '@alex_fit', avatar: '🧘', role: 'Yoga Coach', time: '5h ago', content: 'Mobility is just as important as strength. If you cannot touch your toes, you are missing out on vital functional health. Try this 5-min flow tonight.', category: 'Mobility', likes: 8920, comments: 840, tags: ['Yoga', 'Mobility', 'Recovery'] },
-    { id: 'fp4', author: 'Nutrition Lab', handle: '@nutrilab', avatar: '🥑', role: 'Dietitian', time: '8h ago', content: 'Stop overcomplicating protein. 1.6g to 2.2g per kg of bodyweight. Space it out in 3-4 meals. That is 90% of the game.', category: 'Nutrition', likes: 12400, comments: 1200, tags: ['Nutrition', 'Protein', 'Science'] }
-  ],
-  fitnessVideos: [
-    { id: 'fv1', title: '10-Min Core Crusher (No Equipment)', channel: 'Fit Flow', views: '1.2M', duration: '10:05', thumb_color: '#E91E63', icon: '🔥', category: 'Workout', type: 'Video' },
-    { id: 'fv2', title: '🔴 LIVE: Morning HIIT Session', channel: 'HIIT Squad', views: '2.4K watching', duration: 'LIVE', thumb_color: '#F44336', icon: '⚡', category: 'Live', type: 'Live' },
-    { id: 'fv3', title: 'Fix Your Squat Form in 60s', channel: 'Squat U', views: '3.4M', duration: '0:58', thumb_color: '#3F51B5', icon: '🦵', category: 'Tutorial', type: 'Short' },
-    { id: 'fv4', title: 'High Protein Meal Prep (Under $20)', channel: 'Kitchen Gains', views: '890K', duration: '14:20', thumb_color: '#4CAF50', icon: '🥗', category: 'Nutrition', type: 'Video' }
-  ],
-  
-  // ── Crypto Hub Data ──
   cryptoPosts: [
     { id: 'cp1', author: 'Crypto Whale', handle: '@whaletrades', avatar: '🐳', time: '10m ago', content: 'Just moved 1500 ETH to cold storage. Not trusting these centralized exchanges after the latest news. Not your keys, not your coins.', likes: 3200, comments: 450, tags: ['ETH', 'ColdStorage', 'Security'] },
     { id: 'cp2', author: 'DeFi Degen', handle: '@yieldfarmer', avatar: '🚜', time: '1h ago', content: 'The APY on the new SOL liquidity pools is insane right now. I just farmed 45% APY over the weekend. Don\'t sleep on this!', likes: 1850, comments: 210, tags: ['SOL', 'DeFi', 'YieldFarming'] },
