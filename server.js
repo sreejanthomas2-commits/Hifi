@@ -1,17 +1,28 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
 // Middleware
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend files from 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static frontend files from 'public' directory.
+// Assets are cache-busted via ?v= query strings, so long cache is safe;
+// index.html itself must always revalidate.
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '7d',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
 
 // Database Connection (Fallback to in-memory/mock if no URI)
 if (process.env.MONGO_URI) {
@@ -32,8 +43,45 @@ app.get('/api/posts', (req, res) => {
   res.json([{ id: 1, text: 'Hello from the Node.js backend!', author: '@system' }]);
 });
 
+// Link previews for Trending Notes (server-side fetch with SSRF protections)
+app.use('/api/link-preview', require('./routes/linkPreview'));
+
+// The signer's queue. Mounted BEFORE the /api/crypto routers: a router
+// mounted on a prefix runs its middleware over every path beneath it, so
+// the user-session check on /api/crypto would otherwise answer these
+// calls first — and the signer is not a user. It PULLS from here on its
+// own machine; nothing in this process can reach it, make it sign, or
+// raise its limits. Closed with 503 until SIGNER_TOKEN is set.
+app.use('/api/crypto/signer', require('./routes/signer'));
+
+// Deposit configuration: which assets and chains the deposit screen may
+// offer, and the state each chain is in. Read-only, no user data.
+app.use('/api/crypto', require('./routes/crypto'));
+
+// Custodial deposits: issuing addresses, reading deposits and balances.
+// Every route behind a signed session; the router itself answers 503
+// until custody is configured, so mounting it changes nothing on a
+// deployment that has not opted in.
+app.use('/api/crypto', require('./routes/deposit'));
+
+// Withdrawals: quoting, validating and requesting. This process can
+// authorise a withdrawal and hold the funds; it cannot sign or broadcast
+// one, and there is nowhere in it to put a key that could.
+app.use('/api/crypto', require('./routes/withdraw'));
+
+
+// The chain watcher is the only thing allowed to credit a balance. It
+// starts only when custody is switched on AND this process is meant to
+// run it — a serverless deployment scales to many instances, and many
+// watchers on one chain is a way to find out whether your idempotency
+// really works. Run it as one worker.
+if (process.env.CUSTODY_ENABLED === 'true' && process.env.WATCHER_ROLE === 'primary') {
+  const watcher = require('./services/watcher');
+  if (watcher.start()) console.log('Chain watcher started');
+}
+
 // Catch-all to serve index.html for Single Page App routing
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
