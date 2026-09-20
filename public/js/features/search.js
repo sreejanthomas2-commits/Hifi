@@ -511,6 +511,7 @@ const SR = (() => {
           <div><b>${compact(a.kind === 'community' ? (a.members || 0) : followers)}</b><span>${a.kind === 'community' ? 'members' : 'followers'}</span></div>
           <div><b>${compact(seeded(a.handle + 'f', 80, 2400))}</b><span>following</span></div>
         </div>
+        ${a.kind === 'community' ? '' : `<button class="btn btn-ghost btn-sm sr-full" onclick="SR.close(); PG.openUser(${A(a.handle)}, ${A(a.name)})">View full profile</button>`}
         <div class="sr-p-acts">
           ${a.kind === 'community'
             ? `<button class="btn btn-primary btn-sm" onclick="SR.openCommunity(${A(a.com)})">Open community</button>`
@@ -686,7 +687,7 @@ const SR = (() => {
     open, close, back, type, submit, setTab, pick, forget, clearRecent,
     openAccount, openTrack, openTag, openCoin, openCommunity, openPost,
     playShort, message, payTo, follow, seeFeed, setup, show, remember, coins,
-    results, accounts, get state() { return D; }, openProfile
+    results, accounts, get state() { return D; }, openProfile, seeded
   };
 })();
 

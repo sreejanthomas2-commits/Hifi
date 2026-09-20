@@ -953,6 +953,10 @@ const escAttr = s => String(s == null ? '' : s)
    otherwise sit on top of the profile. */
 function openStoryProfile(handle, name) {
   closeStoryViewer();
+  /* The real profile pane, with their posts and shorts under the same
+     tabs your own page has. SR's card is the fallback for somebody the
+     profile page cannot resolve. */
+  if (window.PG && PG.openUser && PG.openUser(handle, name)) return;
   if (window.SR && SR.openProfile && SR.openProfile(handle, name)) return;
   if (typeof showToast === 'function') showToast(`No profile for ${name} yet.`);
 }

@@ -8625,3 +8625,18 @@ button.cmp-stat:hover { background: var(--bh); }
   letter-spacing: -.01em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* ── A profile that is not yours ─────────────────────────────────────
+   Same page, same tabs, minus the parts that only make sense about
+   yourself: your balances, your story highlights, your reputation
+   chips. Hidden rather than removed, so your own page is the same DOM
+   it has always been and nothing has to be rebuilt to get back to it. */
+.pg--other .pg-cx,
+.pg--other #pg-hl,
+.pg--other .pg-chips,
+.pg--other #edit-form { display: none !important; }
+.pg--other .pg-top { gap: 6px; }
+.pg-back { margin-left: -6px; }
+.pg-btn-go { background: var(--brand-fill) !important; color: var(--on-brand) !important; border-color: transparent !important; font-weight: 700; }
+.pg-btn-go:hover { filter: brightness(1.05); }
+.sr-full { width: 100%; margin: 10px 0 2px; }

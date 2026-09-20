@@ -6,6 +6,12 @@
 
 function renderProfile(tab) {
   PG.init();
+  /* Whose page is this? PG.openUser sets a subject and then navigates
+     here, so it arms this. Every other way into the pane - the nav bar,
+     the sidebar, a deep link - arrives unarmed and gets you. That is the
+     single place the question is answered, so there is one place to look
+     when the wrong person shows up. */
+  PG.claim();
   // The profile template is injected lazily, so the initial updateUserUI()
   // ran before these nodes existed — re-sync name/handle/bio with the
   // signed-in (or guest) user every time the pane opens.
@@ -23,23 +29,67 @@ function renderProfile(tab) {
 // Fill the profile fields that updateUserUI() doesn't own, so a guest never
 // sees another person's hardcoded identity.
 function syncProfileIdentity() {
-  const u = (typeof S !== 'undefined' && S.user) ? S.user : null;
+  /* PG.user() is you unless a subject is set. updateUserUI() runs just
+     before this and writes YOUR name into these same fields - correct
+     for the sidebar, wrong for the pane - so this runs after it and
+     paints whoever the page is actually about. */
+  const u = (typeof PG !== 'undefined' && PG.user) ? PG.user()
+          : ((typeof S !== 'undefined' && S.user) ? S.user : null);
   if (!u) return;
-  const isGuest = u.fname === 'Guest';
-  const fullName = isGuest ? 'Guest Explorer' : `${u.fname} ${u.lname || ''}`.trim();
-  const handle = isGuest ? '@guest' : (u.handle || '@user');
+
+  /* You are stored as fname/lname; everybody else arrives as one name.
+     Reading the wrong pair is how the page came out saying "undefined". */
+  const other = !!(typeof PG !== 'undefined' && PG.subject && PG.subject());
+  const isGuest = !other && u.fname === 'Guest';
+  const fullName = other ? (u.name || u.handle || 'Account')
+    : (isGuest ? 'Guest Explorer' : `${u.fname} ${u.lname || ''}`.trim());
+  const handle = other ? (u.handle || '@account') : (isGuest ? '@guest' : (u.handle || '@user'));
 
   const set = (id, val) => { const el = $id(id); if (el) el.textContent = val; };
   set('profile-name', fullName);
-  const editName = $id('edit-name'); if (editName) editName.value = fullName;
-  const editHandle = $id('edit-handle'); if (editHandle) editHandle.value = handle;
+
+  /* updateUserUI() owns these for your own page and appends your level to
+     the handle; on someone else's it has just written your identity into
+     them, so they are set here from the subject instead. The avatar is
+     their initials, and the camera that edits your photo goes with it. */
+  if (other) {
+    set('profile-handle', handle);
+    const av = $id('profile-av');
+    if (av) {
+      av.textContent = String(fullName).split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      av.style.backgroundImage = '';
+      av.classList.remove('pme-photo');
+    }
+    document.querySelectorAll('#pane-profile .pme-pav-cam, #pane-profile .pme-avcam, #pane-profile .pg-avcam')
+      .forEach(c => { c.style.display = 'none'; });
+  } else {
+    /* Put your own initials back. updateUserUI only writes this slot for
+       a signed-in user, so a guest returning from somebody else's page
+       kept their letters sitting in it. Left alone when a real photo is
+       in there - that is profileme's, and it owns the background. */
+    const av = $id('profile-av');
+    if (av && !av.classList.contains('pme-photo')) {
+      av.textContent = isGuest ? 'AV'
+        : `${(u.fname || 'A')[0]}${(u.lname || 'V')[0]}`.toUpperCase();
+    }
+    document.querySelectorAll('#pane-profile .pme-pav-cam, #pane-profile .pme-avcam, #pane-profile .pg-avcam')
+      .forEach(c => { c.style.display = ''; });
+  }
+
+  const editName = $id('edit-name'); if (editName && !other) editName.value = fullName;
+  const editHandle = $id('edit-handle'); if (editHandle && !other) editHandle.value = handle;
 
   // A guest is nobody's verified creator — hide the badge and zero the
   // stats rather than showing a demo account's numbers as if they're theirs.
+  // Nor is a fixture account: nothing here has verified anybody.
   const verified = $id('profile-verified');
-  if (verified) verified.style.display = isGuest ? 'none' : '';
+  if (verified) verified.style.display = (isGuest || other) ? 'none' : '';
 
-  if (isGuest) {
+  if (other) {
+    /* Followers, following and the post count are PG.dress()'s — it has
+       the subject and the seeded numbers search already shows. */
+    set('profile-location', '');
+  } else if (isGuest) {
     set('profile-stat-followers', '0');
     set('profile-stat-following', '0');
     set('profile-stat-posts', String((DATA.posts || []).filter(p => p.mine).length));
@@ -54,6 +104,10 @@ function syncProfileIdentity() {
 
 
 function toggleEditForm() {
+  /* Reachable only from your own page - the button is not rendered on
+     anyone else's - but guarded anyway, because a stale handler or a
+     console call should not write your name over somebody else's. */
+  if (typeof PG !== 'undefined' && PG.subject && PG.subject()) { PG.openMe(); return; }
   // The full Edit profile page (photo, cover, birthday) replaces the inline form.
   if (window.PME) { PME.open(); return; }
   const f = $id('edit-form');
@@ -83,6 +137,7 @@ window.submitTokenSwap = function() {
 };
 
 function saveProfileChanges() {
+  if (typeof PG !== 'undefined' && PG.subject && PG.subject()) return;
   const fn = $id('edit-fname').value.trim();
   const ln = $id('edit-lname').value.trim();
   const hn = $id('edit-handle').value.trim();
@@ -1067,8 +1122,132 @@ const PG = (() => {
   const money = v => { v = Number(v) || 0; const big = Math.abs(v) >= 1e4; return '$' + v.toLocaleString('en-US', { minimumFractionDigits: big ? 0 : 2, maximumFractionDigits: big ? 0 : 2 }); };
   const compact = n => { n = Number(n) || 0; return n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(n); };
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
-  const user = () => (typeof S !== 'undefined' && S.user) || {};
-  const guest = () => user().fname === 'Guest';
+  /* ── Whose profile ────────────────────────────────────────────────
+     null is you. Anything else is a person from DATA.users, and every
+     read below goes through user(), which is why one variable is enough
+     to point the whole page at somebody else. */
+  let SUBJECT = null;
+  let ARMED = false;          // openUser navigated here on purpose
+  let BACK_TO = '';           // the pane to return to
+
+  const user = () => SUBJECT || (typeof S !== 'undefined' && S.user) || {};
+  const subject = () => SUBJECT;
+  const mine = () => !SUBJECT;
+  const guest = () => mine() && user().fname === 'Guest';
+
+  /* Follower counts come from SR, which already shows this person in
+     search. Calling its function rather than copying it is the only way
+     the two pages agree on the number - and a person whose profile says
+     52K in one place and 41K in another is worse than no number. */
+  const followerCount = (h, salt) =>
+    (window.SR && SR.seeded) ? SR.seeded(String(h || '') + (salt || ''), salt ? 80 : 900, salt ? 2400 : 480000) : null;
+
+  function accountFor(handle, name) {
+    const h = String(handle || '').toLowerCase();
+    const from = (window.UID && UID.contacts) ? UID.contacts() : ((typeof DATA !== 'undefined' && DATA.users) || []);
+    const hit = from.find(u => String(u.handle || '').toLowerCase() === h);
+    if (hit) return { name: hit.name, handle: hit.handle, online: !!hit.online };
+    return name ? { name: String(name), handle: String(handle || '') } : null;
+  }
+
+  /* Open somebody else's page. Chained on navigateTo because the pane is
+     built after its first await - the same thing that had Edit profile
+     opening blank. */
+  function openUser(handle, name) {
+    const a = accountFor(handle, name);
+    if (!a) return false;
+    if (!mine() && String(a.handle).toLowerCase() === String(user().handle || '').toLowerCase()) return true;
+    const me = (typeof S !== 'undefined' && S.user) ? String(S.user.handle || '').toLowerCase() : '';
+    if (me && me === String(a.handle).toLowerCase()) return openMe();
+    SUBJECT = a;
+    ARMED = true;
+    BACK_TO = (typeof S !== 'undefined' && S.pane && S.pane !== 'profile') ? S.pane : 'feeds';
+    V.tab = 'posts';
+    V.section = '';
+    if (typeof navigateTo === 'function') {
+      Promise.resolve(navigateTo('profile')).then(() => { dress(); show('posts'); paint(); });
+    }
+    return true;
+  }
+
+  function openMe() {
+    SUBJECT = null; ARMED = false;
+    V.tab = 'posts'; V.section = '';
+    dress();
+    if (typeof syncProfileIdentity === 'function') syncProfileIdentity();
+    show('posts'); paint();
+    return true;
+  }
+
+  function back() {
+    const to = BACK_TO || 'feeds';
+    SUBJECT = null; ARMED = false; BACK_TO = '';
+    if (typeof navigateTo === 'function') navigateTo(to);
+  }
+
+  /* Called by renderProfile on every arrival: keep a subject that
+     openUser just set, drop one left over from last time. */
+  function claim() {
+    if (ARMED) { ARMED = false; return; }
+    if (SUBJECT) { SUBJECT = null; BACK_TO = ''; }
+    dress();
+  }
+
+  /* The parts of the page that are yours and nobody else's: the crypto
+     strip, your story highlights, Edit and Share, the Crypto and Library
+     tabs, and the reputation chips. Hidden rather than rebuilt, so your
+     own page is the same DOM it always was. */
+  function dress() {
+    const pg = document.querySelector('#pane-profile .pg');
+    if (!pg) return;
+    const other = !mine();
+    pg.classList.toggle('pg--other', other);
+
+    const btns = $('pg-btns') || pg.querySelector('.pg-btns');
+    if (btns) {
+      btns.innerHTML = other
+        ? `<button type="button" class="pg-btn pg-btn-go" data-pg="follow">Follow</button>
+           <button type="button" class="pg-btn" data-pg="message">Message</button>
+           <button type="button" class="pg-btn" data-pg="payto">Pay</button>`
+        : `<button type="button" class="pg-btn" onclick="toggleEditForm()">Edit profile</button>
+           <button type="button" class="pg-btn" data-pg="share">Share profile</button>
+           <button type="button" class="pg-btn pg-btn-ic" data-pg="people" aria-label="Discover people" title="Discover people">${ico('person_add')}</button>`;
+    }
+
+    const acts = pg.querySelector('.pg-top-a');
+    if (acts) acts.style.display = other ? 'none' : '';
+    let b = $('pg-back');
+    if (other && !b) {
+      b = document.createElement('button');
+      b.type = 'button'; b.id = 'pg-back'; b.className = 'pg-ib pg-back';
+      /* Not 'back' — act() already uses that for stepping out of a
+         section into its tab. Two meanings on one key is how a button
+         silently does the wrong thing. */
+      b.setAttribute('aria-label', 'Back'); b.dataset.pg = 'leave';
+      b.innerHTML = ico('arrow_back');
+      pg.querySelector('.pg-top').prepend(b);
+    } else if (!other && b) b.remove();
+
+    /* Their numbers, or nothing. The seeded counts are the ones search
+       already shows for this person; a bio, a location and a link are
+       things a fixture account does not have, and inventing them would
+       be putting words in somebody's mouth. */
+    const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    if (other) {
+      const u = user();
+      const f = followerCount(u.handle), g2 = followerCount(u.handle, 'f');
+      set('profile-stat-followers', f == null ? '—' : compact(f));
+      set('profile-stat-following', g2 == null ? '—' : compact(g2));
+      const bio = $('profile-bio'); if (bio) { bio.textContent = ''; bio.style.display = 'none'; }
+      const lw = $('profile-location-wrap'); if (lw) lw.style.display = 'none';
+      const lr = pg.querySelector('.pg-linkrow'); if (lr) lr.style.display = 'none';
+    } else {
+      const bio = $('profile-bio'); if (bio) bio.style.display = '';
+      const lr = pg.querySelector('.pg-linkrow'); if (lr) lr.style.display = '';
+    }
+    paintTabs();
+  }
+
 
   const TABS = [['posts', 'Posts', 'grid_on'], ['shorty', 'Shorty', 'slow_motion_video'], ['crypto', 'Crypto', 'token'], ['library', 'Library', 'widgets']];
   const LIBRARY = [
@@ -1099,6 +1278,12 @@ const PG = (() => {
   function myPosts() {
     const u = user();
     const posts = (typeof DATA !== 'undefined' && DATA.posts) || [];
+    /* p.mine marks the ones you wrote in this session; it means nothing
+       on anybody else's page, where the handle is the only test. */
+    if (!mine()) {
+      const h = String(u.handle || '').toLowerCase();
+      return posts.filter(p => String(p.handle || '').toLowerCase() === h);
+    }
     return posts.filter(p => p.mine || (u.handle && p.handle === u.handle));
   }
 
@@ -1253,8 +1438,14 @@ const PG = (() => {
   function paintTabs() {
     const bar = $('pg-tabs');
     if (!bar) return;
-    if (!bar.childElementCount) {
-      bar.innerHTML = TABS.map(([k, l, i]) =>
+    /* Crypto is your holdings and Library is your saved things; neither
+       is anyone else's to show. Rebuilt rather than hidden, so the row
+       does not keep a gap where they were. */
+    const want = mine() ? TABS : TABS.filter(([k]) => k === 'posts' || k === 'shorty');
+    const forWho = mine() ? 'me' : 'other';
+    if (bar.dataset.for !== forWho || bar.childElementCount !== want.length) {
+      bar.dataset.for = forWho;
+      bar.innerHTML = want.map(([k, l, i]) =>
         `<button type="button" class="pg-tab" role="tab" data-pg="tab:${k}" data-tab="${k}" aria-label="${l}" title="${l}">${ico(i)}<span>${l}</span></button>`).join('');
     }
     const on = V.section ? (OWNER[V.section] || '') : V.tab;
@@ -1370,6 +1561,13 @@ const PG = (() => {
     }
     switch (k) {
       case 'back': show(V.tab); reveal($('pg-tabs')); return;
+      /* Someone else's page. Message, Pay and Follow hand off to the
+         same functions search uses, so one person behaves one way
+         wherever you reached them from. */
+      case 'leave': back(); return;
+      case 'follow': if (window.SR && SR.follow) SR.follow(user().name); else toast('Following ' + user().name); return;
+      case 'message': if (window.SR && SR.message) SR.message(user().name); else toast('Messages are still loading…'); return;
+      case 'payto': if (window.SR && SR.payTo) SR.payTo(user().handle); else toast('Payments are still loading…'); return;
       case 'post': show('list', +el.dataset.i); return;
       case 'reel': if (window.SH && SH.openAt) SH.openAt(+el.dataset.i, shorts); return;
       case 'compose': show('compose'); return;
@@ -1426,6 +1624,7 @@ const PG = (() => {
 
   return {
     init, show, paint, paintCrypto, myPosts, composerHTML, listHTML, closeSheet,
+    user, subject, openUser, openMe, claim, back,
     get state() { return { tab: V.tab, section: V.section }; }
   };
 })();
