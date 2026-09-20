@@ -509,6 +509,30 @@ const SR = (() => {
         ? '<div class="sr-empty"><span class="material-symbols-rounded">grid_off</span><div>No posts yet</div></div>' : ''}`;
   }
 
+  /* The way in from anywhere outside this overlay.
+
+     openAccount above is written for a row inside an overlay that is
+     already painted: it assigns straight to V and would throw if nothing
+     had opened yet. This opens first - raw, so it does not hand off to
+     Discover the way the header search does - and lands on the person.
+
+     A name given alongside the handle is a fallback for somebody the
+     index has not seen: the page then shows them with no posts, which is
+     true, rather than refusing to open at all. */
+  function openProfile(handle, name) {
+    const h = String(handle || '').toLowerCase();
+    if (!h) return false;
+    let a = accounts().find(x => String(x.handle).toLowerCase() === h);
+    if (!a && name) a = { name: String(name), handle: String(handle), kind: 'person' };
+    if (!a) return false;
+    open('', true);
+    V.view = 'account';
+    V.account = a;
+    remember(a.name);
+    paint();
+    return true;
+  }
+
   function openTrack(name) {
     V.view = 'track';
     V.track = name;
@@ -641,7 +665,7 @@ const SR = (() => {
     open, close, back, type, submit, setTab, pick, forget, clearRecent,
     openAccount, openTrack, openTag, openCoin, openCommunity, openPost,
     playShort, message, payTo, follow, seeFeed, setup, show, remember, coins,
-    results, accounts, get state() { return D; }
+    results, accounts, get state() { return D; }, openProfile
   };
 })();
 

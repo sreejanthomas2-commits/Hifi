@@ -8565,3 +8565,21 @@ button.cmp-stat:hover { background: var(--bh); }
 .pay-qr-tag:hover { border-color: var(--blue); }
 .pay-qr-tag .material-symbols-rounded { font-size: 16px; color: var(--t3); letter-spacing: 0; }
 .pay-qr-note { margin-top: 8px; font-size: 10.5px; line-height: 1.55; color: var(--t3); max-width: 300px; }
+
+/* ── Story header · who posted it ────────────────────────────────────
+   The avatar and the name open that person's profile, so they are a
+   real button — but it has to read as the header it replaced, not as a
+   control. Chrome off, hit area kept. */
+.story-popup-who {
+  display: flex; align-items: center; gap: 10px;
+  flex: 1; min-width: 0;
+  background: none; border: 0; padding: 4px 6px 4px 0; margin: -4px 0;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+  border-radius: 12px;
+  transition: background .15s;
+}
+.story-popup-who:hover { background: rgba(255,255,255,0.1); }
+.story-popup-who:active { background: rgba(255,255,255,0.16); }
+.story-popup-who:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.story-popup-who-text { min-width: 0; }
+.story-popup-who .story-popup-username { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

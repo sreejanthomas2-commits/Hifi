@@ -926,6 +926,37 @@ const STORY_CONTENTS = {
   'Kai': { text: "Crushed my running speed record today! ⚡🔥 Training pays off. Never stop pushing.", handle: "@kaib", time: "18h ago", bg: "linear-gradient(135deg, #2b250c, #4e3f11)" }
 };
 
+/* A value going into a quoted inline handler has to survive two readers.
+   The HTML parser sees the attribute first, so a double quote would end
+   it; then JS sees the argument, so an apostrophe would end that. Both
+   are handled, backslashes first or the escaping escapes itself.
+
+   Written without an example: a comment containing handler markup is
+   indistinguishable from the real thing to anything reading this file
+   for handlers, and scripts/audit-frontend.js duly reported the example
+   as a call to a function nothing defines. */
+const escAttr = s => String(s == null ? '' : s)
+  .replace(/\\/g, '\\\\')
+  .replace(/'/g, "\\'")
+  .replace(/"/g, '&quot;');
+
+/* Tapping who posted a story opens their profile: the account page the
+   search overlay already shows, with their posts, shorts, follower
+   counts and Message / Pay / Follow. Reused rather than written again,
+   so a person looks the same wherever you reach them from.
+
+   Note the feed does something else - a post's author opens
+   SF.openCreatorPage, which is the subscribe-and-tip card, not a
+   profile. Two surfaces for one person; worth settling one day.
+
+   The story closes first. It is a full-screen overlay and would
+   otherwise sit on top of the profile. */
+function openStoryProfile(handle, name) {
+  closeStoryViewer();
+  if (window.SR && SR.openProfile && SR.openProfile(handle, name)) return;
+  if (typeof showToast === 'function') showToast(`No profile for ${name} yet.`);
+}
+
 function openStoryViewer(startIndex) {
   // Clear any existing timers
   if (storyTimerInterval) clearInterval(storyTimerInterval);
@@ -966,11 +997,14 @@ function openStoryViewer(startIndex) {
       
       <!-- Story Header -->
       <div class="story-popup-header">
-        <div class="story-popup-avatar">${story.name.slice(0, 2).toUpperCase()}</div>
-        <div>
-          <div class="story-popup-username">${story.name}</div>
-          <div class="story-popup-time">${content.time}</div>
-        </div>
+        <button type="button" class="story-popup-who" onclick="openStoryProfile('${escAttr(content.handle)}','${escAttr(story.name)}')"
+                title="Open ${escapeHTML(story.name)}'s profile" aria-label="Open ${escapeHTML(story.name)}'s profile">
+          <div class="story-popup-avatar">${story.name.slice(0, 2).toUpperCase()}</div>
+          <div class="story-popup-who-text">
+            <div class="story-popup-username">${story.name}</div>
+            <div class="story-popup-time">${content.time}</div>
+          </div>
+        </button>
         <button class="story-popup-close" onclick="closeStoryViewer(event)" title="Close Story">
           <span class="material-symbols-rounded">close</span>
         </button>
@@ -1491,6 +1525,7 @@ publish('pages/feeds.js', {
   postInitials: () => postInitials, renderPostCard: () => renderPostCard,
   sharePost: () => sharePost, likePost: () => likePost,
   renderTrending: () => renderTrending, openTrend: () => openTrend,
+  openStoryProfile: () => openStoryProfile, escAttr: () => escAttr,
   renderWhoToFollow: () => renderWhoToFollow,
   sendFriendRequest: () => sendFriendRequest,
   publishPost: () => publishPost, _feedRetries: () => _feedRetries,
