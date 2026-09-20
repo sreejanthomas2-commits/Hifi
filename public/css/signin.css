@@ -1,1 +1,421 @@
-#auth-modal{position:fixed;inset:0;z-index:9999;background:#f7f8fa;padding:20px;overflow:auto;display:block;color:#1c1d27;font-family:Inter,Arial,sans-serif}#auth-modal.hidden{display:none!important}#auth-modal *{box-sizing:border-box}#auth-modal button,#auth-modal input{font:inherit}#auth-modal button{cursor:pointer}#auth-modal button:focus-visible{outline:3px solid #9275ff;outline-offset:4px}.ts-signin{min-height:calc(100dvh - 40px);display:grid;grid-template-columns:1fr 1fr;max-width:1600px;margin:auto}.ts-story{background:#141322;border-radius:18px;color:#fff;padding:38px 48px 26px;display:flex;flex-direction:column;overflow:hidden;position:relative}.ts-brand{font-size:27px;font-weight:750;letter-spacing:-1px;display:flex;align-items:center;gap:10px}.ts-mark{font-size:40px;color:#b9a1ff;line-height:1}.ts-brand-dot{color:#b9a1ff;margin-left:-10px}.ts-story-main{margin:auto 0;padding-top:50px}.ts-eyebrow{font-size:11px;font-weight:650;letter-spacing:2px;color:#a49abf}.ts-story h1{font-size:clamp(38px,4.5vw,68px);letter-spacing:-3px;line-height:1.06;font-weight:600;margin:22px 0}.ts-story h1 em{font-style:normal;color:#b7a0ff}.ts-story p{font-size:15px;line-height:1.8;color:#b9b5cb;margin:0}.ts-orbit{height:250px;width:330px;position:relative;margin:20px auto 0;border:1px solid #ffffff10;border-radius:50%;transform:rotate(-12deg);background:radial-gradient(ellipse,#7151b832,transparent 68%)}.ts-orbit-inner{position:absolute;inset:30px;border:1px solid #ffffff14;border-radius:50%}.ts-orbit-word{position:absolute;inset:35px;display:grid;place-content:center;font-size:120px;font-weight:750;letter-spacing:-13px;transform:rotate(12deg);color:#a68ae8;text-shadow:0 14px 45px #8260e14d}.ts-orbit-word span{display:contents;color:#fff}.ts-chip{position:absolute;display:flex;align-items:center;gap:9px;font-size:12px;padding:12px 16px;border:1px solid #ffffff20;background:#252237;border-radius:12px;box-shadow:0 10px 28px #0003;transform:rotate(12deg);white-space:nowrap}.ts-chip .material-symbols-rounded{font-size:18px;color:#c1abff}.ts-chip-one{left:-30px;top:25px}.ts-chip-two{right:-38px;top:120px}.ts-chip-three{left:-15px;bottom:3px}.ts-story-foot{display:flex;justify-content:space-between;align-items:center;color:#9c95af;font-size:10px;letter-spacing:1.6px;margin-top:25px}.ts-story-foot>span:last-child{font-size:25px;color:#b9a1ff}.ts-entry{padding:20px 48px 12px;display:flex;flex-direction:column;align-items:center}.ts-top-guest{align-self:flex-end;border:0;background:none;font-size:12px!important;color:#73717d}.ts-top-guest b{color:#494250;margin-left:6px;font-weight:550}.ts-form-wrap{width:100%;max-width:380px;margin:auto;padding:48px 0 30px}.ts-form-wrap>.ts-eyebrow{color:#7e6ba6;font-size:10px}.ts-form-wrap h2{font-size:40px;line-height:1.2;letter-spacing:-1.8px;font-weight:650;margin:13px 0 10px;color:#20202a}.ts-form-wrap h2>span{color:#7954ce}.ts-subtitle{font-size:14px;color:#7d7a89;margin:0 0 30px}.ts-google{height:48px;width:100%;background:#fff;border:1px solid #dddae5;border-radius:8px;color:#35303f;font-size:14px!important;font-weight:550!important;display:flex;align-items:center;justify-content:center;gap:12px}.ts-google-g{font-size:21px;font-weight:750;color:#4285f4}.ts-divider{display:flex;align-items:center;gap:14px;font-size:11px;color:#9893a1;margin:24px 0}.ts-divider span{height:1px;flex:1;background:#e4e1e9}#gmail-login-form label{font-size:12px;font-weight:600;color:#4c4659;display:block;margin-bottom:9px}#gmail-login-form input{display:block;width:100%;height:48px;border:1px solid #dfdce7;border-radius:8px;background:#fff;padding:0 14px;font-size:14px;color:#25202e;outline:none}#gmail-login-form input:focus{border-color:#8a68dc;box-shadow:0 0 0 3px #8255d415}#gmail-login-form input::placeholder{color:#a5a0ad}.ts-password-label{display:flex;justify-content:space-between;align-items:center;margin-top:20px}.ts-text-btn{border:0;background:none;color:#7854c4;font-size:12px!important;font-weight:600!important;padding:0}.ts-password-label button{margin-bottom:9px}.ts-password{position:relative}.ts-password input{padding-right:50px!important}.ts-password>button{position:absolute;right:12px;top:13px;border:0;background:none;color:#918a9c;display:flex;padding:0}.ts-password .material-symbols-rounded{font-size:21px}.ts-submit{height:48px;width:100%;border:0;border-radius:8px;background:#7951c9;color:white;display:flex;align-items:center;justify-content:center;gap:15px;font-weight:600!important;font-size:14px!important;box-shadow:0 5px 12px #7951c920}.ts-submit:hover{background:#6841b6}.ts-submit:disabled{opacity:.6;cursor:wait!important}.ts-submit span{font-size:20px}.ts-signup{text-align:center;font-size:12px;color:#85808e;margin:23px 0 28px}.ts-signup button{margin-left:3px}.ts-wallet{display:flex;align-items:center;gap:10px;border-top:1px solid #e4e1e9;padding-top:22px}.ts-wallet>.material-symbols-rounded{font-size:23px;color:#8c829e}.ts-wallet div{flex:1}.ts-wallet b{display:block;font-size:11px;font-weight:550;color:#524a60}.ts-wallet div span{display:block;font-size:10px;color:#938b9e;margin-top:5px}.ts-wallet button{background:none;border:1px solid #ded9e6;border-radius:6px;padding:8px 10px;color:#6a537f;font-size:11px!important}.ts-create-wallet{border:0;background:none;color:#867391;font-size:10px!important;display:block;margin:12px auto 0}.ts-entry-foot{width:100%;display:flex;align-items:center;justify-content:space-between;color:#a09aa9;font-size:10px}.ts-entry-foot>span:last-child{display:flex;gap:5px;align-items:center}.ts-entry-foot .material-symbols-rounded{font-size:13px}#ts-auth-feedback{font-size:12px;color:#a24057;line-height:1.5;margin:12px 0;min-height:0}#ts-auth-feedback:empty{margin:20px 0 0}#auth-loading-view{min-height:330px;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;font-size:14px;color:#7a708b}.ts-mobile-brand{display:none}body:has(#auth-modal:not(.hidden)){overflow:hidden}body:has(#auth-modal:not(.hidden)) .app-wrapper{pointer-events:none}.ts-google:hover,.ts-wallet button:hover{background:#f2edf9}@media(min-width:1500px){.ts-story{padding:48px 70px}.ts-story-main{padding-top:40px}.ts-orbit{height:290px}}@media(max-width:1050px){.ts-story{padding:30px}.ts-entry{padding:20px 30px}.ts-orbit{width:250px}.ts-chip{font-size:10px;padding:10px}.ts-chip-two{right:-10px}.ts-chip-one{left:-10px}.ts-story h1{letter-spacing:-2px}}@media(max-width:760px){#auth-modal{padding:0}.ts-signin{display:block;min-height:100dvh}.ts-story{display:none}.ts-entry{min-height:100dvh;padding:24px}.ts-mobile-brand{display:block;color:#7854c4;font-size:24px;font-weight:750;margin-bottom:38px}.ts-form-wrap{padding:35px 0;max-width:400px}.ts-form-wrap h2{font-size:36px}.ts-top-guest{font-size:11px!important}.ts-entry-foot{max-width:400px;padding-top:25px}.ts-form-wrap>.ts-eyebrow{font-size:10px}}@media(prefers-reduced-motion:reduce){#auth-modal *{animation:none!important;transition:none!important}}
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  SIGN IN — css/signin.css                                         ║
+   ║                                                                   ║
+   ║  Its own stylesheet, loaded after index.css. The sign-in page is  ║
+   ║  the one screen that is not the app: it owns the whole viewport,  ║
+   ║  it has its own palette, and nothing else should have to know     ║
+   ║  about it. Everything here is scoped under #auth-modal.           ║
+   ║                                                                   ║
+   ║  Two halves. The left is the picture: four animals, four posts,   ║
+   ║  and USDT, BTC and ETH moving along the arcs between them. The    ║
+   ║  right is the form. Under 900px the picture steps aside and the   ║
+   ║  form takes the screen, because that is the half you came for.    ║
+   ║                                                                   ║
+   ║  The motion is four coins and three hearts on CSS offset-path,    ║
+   ║  which is compositor work, not layout. prefers-reduced-motion     ║
+   ║  stops all of it at the bottom of this file - the picture still   ║
+   ║  reads perfectly still.                                           ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+#auth-modal {
+  --ts-bg:        #f6f6fb;
+  --ts-panel:     #ffffff;
+  --ts-line:      #e5e2ee;
+  --ts-t1:        #1b1a24;
+  --ts-t2:        #6f6b7d;
+  --ts-t3:        #9d98a9;
+  --ts-brand:     #7951c9;
+  --ts-brand-dk:  #6841b6;
+  --ts-brand-sf:  #f3eefc;
+
+  /* the picture */
+  --ts-night-a:   #17142a;
+  --ts-night-b:   #241a3d;
+  --ts-glow:      #8f6cff;
+  --ts-star:      #ffffff;
+  --ts-wire:      #ffffff38;
+  --ts-card-a:    #ffffff14;
+  --ts-card-b:    #ffffff07;
+  --ts-edge:      #ffffff24;
+  --ts-ink:       #16142a;
+  --ts-handle:    #cfc4ff;
+  --ts-cat:       #ffb47a;
+  --ts-cat-in:    #ff8fa8;
+  --ts-nose:      #ff8fa8;
+  --ts-duck:      #ffd868;
+  --ts-duck-w:    #f3bf3e;
+  --ts-beak:      #ff9b3d;
+  --ts-fox:       #ff8a5c;
+  --ts-fox-w:     #fff0e6;
+  --ts-owl:       #9db4ff;
+  --ts-owl-w:     #f2f4ff;
+  --ts-heart:     #ff7fa6;
+  --ts-btc:       #f7931a;
+  --ts-eth:       #8a92ff;
+  --ts-usdt:      #26a17b;
+
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--ts-bg);
+  padding: 20px; overflow: auto; display: block;
+  color: var(--ts-t1);
+  font-family: Inter, system-ui, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#auth-modal.hidden { display: none !important; }
+#auth-modal * { box-sizing: border-box; }
+#auth-modal button, #auth-modal input { font: inherit; }
+#auth-modal button { cursor: pointer; }
+#auth-modal button:focus-visible,
+#auth-modal input:focus-visible { outline: 3px solid var(--ts-brand); outline-offset: 3px; }
+#auth-modal .hidden { display: none !important; }
+
+/* The app behind it must not scroll or be reachable while this is up. */
+body:has(#auth-modal:not(.hidden)) { overflow: hidden; }
+body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
+
+.ts-signin {
+  min-height: calc(100dvh - 40px);
+  display: grid; grid-template-columns: 1.05fr 1fr;
+  max-width: 1500px; margin: auto; gap: 20px;
+}
+
+/* ── The picture ──────────────────────────────────────────────────── */
+.ts-story {
+  position: relative; overflow: hidden;
+  border-radius: 26px;
+  padding: 40px 46px 26px;
+  display: flex; flex-direction: column;
+  color: #fff;
+  background:
+    radial-gradient(120% 80% at 15% 0%, #3b2a66 0%, transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, #2c1f52 0%, transparent 60%),
+    linear-gradient(160deg, var(--ts-night-a), var(--ts-night-b));
+}
+.ts-wm { width: 150px; height: auto; flex-shrink: 0; }
+
+.ts-story-main { margin: 26px 0 2px; flex-shrink: 0; }
+.ts-eyebrow {
+  display: block; font-size: 10.5px; font-weight: 700;
+  letter-spacing: 1.9px; color: #b3a6d8;
+}
+.ts-story h1 {
+  font-size: clamp(34px, 3.6vw, 56px); line-height: 1.04;
+  letter-spacing: -2.4px; font-weight: 640; margin: 18px 0 16px;
+}
+.ts-story h1 em { font-style: normal; color: #bda4ff; }
+.ts-story p { font-size: 14px; line-height: 1.75; color: #b8b1cf; margin: 0; }
+
+.ts-story-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  color: #9a92b4; font-size: 9.5px; letter-spacing: 1.5px; margin-top: auto; padding-top: 18px;
+}
+.ts-foot-coins { font-size: 17px; letter-spacing: 5px; color: #bda4ff; }
+
+/* ── The scene ──────────────────────────────────────────────────────
+   It takes whatever height is left after the words and the footer have
+   had theirs, and never more: on a 800px laptop the panel has to fit
+   without the footer sliding under the fold. */
+.ts-scene {
+  position: relative; width: 100%;
+  /* The svg keeps its 560:470 ratio, so capping the WIDTH is how its
+     height is capped. 55vh leaves room for the words and the footer on
+     a 800px laptop without the panel growing a scrollbar. */
+  max-width: min(560px, 55vh);
+  margin: 10px auto 2px;
+  flex: 0 1 auto; min-height: 0;
+}
+.ts-scene svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+.ts-handle {
+  font-size: 12px; font-weight: 600; fill: var(--ts-handle);
+  text-anchor: middle; letter-spacing: .2px;
+}
+.ts-post rect { filter: drop-shadow(0 12px 26px #0000003d); }
+
+/* Each card breathes on its own clock, so the group never pulses in
+   lockstep and it stops looking like a loading spinner. */
+.ts-post { animation: ts-float 7s ease-in-out infinite; transform-origin: center; }
+.ts-post-b { animation-duration: 8.4s; animation-delay: -1.8s; }
+.ts-post-c { animation-duration: 7.8s; animation-delay: -3.4s; }
+.ts-post-d { animation-duration: 9.1s; animation-delay: -5.1s; }
+@keyframes ts-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
+}
+
+.ts-eyes { animation: ts-blink 5.5s infinite; transform-origin: center; }
+.ts-post-b .ts-eyes { animation-delay: -1.4s; }
+.ts-post-c .ts-eyes { animation-delay: -2.9s; }
+.ts-post-d .ts-eyes { animation-delay: -4.2s; }
+@keyframes ts-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(.08); }
+}
+
+.ts-tail { animation: ts-tail 3.6s ease-in-out infinite; transform-origin: 144px 150px; }
+@keyframes ts-tail { 0%,100% { transform: rotate(-9deg); } 50% { transform: rotate(12deg); } }
+
+.ts-wing { animation: ts-wing 2.4s ease-in-out infinite; transform-origin: 440px 118px; }
+@keyframes ts-wing { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-16deg); } }
+
+.ts-stars circle { animation: ts-twinkle 4s ease-in-out infinite; }
+.ts-stars circle:nth-child(2n) { animation-delay: -1.3s; }
+.ts-stars circle:nth-child(3n) { animation-delay: -2.6s; }
+@keyframes ts-twinkle { 0%,100% { opacity: .25; } 50% { opacity: .9; } }
+
+.ts-wires path { animation: ts-flow 2.4s linear infinite; }
+@keyframes ts-flow { to { stroke-dashoffset: -28; } }
+
+/* ── The money ─────────────────────────────────────────────────────
+   offset-path follows the same four arcs the wires draw, in the SVG's
+   own user units, so the coin rides the line exactly. offset-rotate:0
+   keeps the glyph upright all the way round. */
+.ts-coin text {
+  text-anchor: middle; font-size: 18px; font-weight: 800; fill: #fff;
+  font-family: Inter, system-ui, sans-serif;
+}
+.ts-coin circle { filter: drop-shadow(0 4px 12px #0006); }
+.ts-coin {
+  offset-rotate: 0deg;
+  animation: ts-send 5.2s cubic-bezier(.55,.05,.35,1) infinite;
+}
+.ts-coin-btc  { offset-path: path("M186,116 Q280,50 372,104");  animation-delay: 0s; }
+.ts-coin-usdt { offset-path: path("M474,164 Q524,235 474,318"); animation-delay: 1.3s; }
+.ts-coin-eth  { offset-path: path("M372,378 Q280,438 186,368"); animation-delay: 2.6s; }
+.ts-coin-usdt2{ offset-path: path("M84,318 Q36,235 84,164");    animation-delay: 3.9s; }
+@keyframes ts-send {
+  0%        { offset-distance: 0%;   opacity: 0; transform: scale(.4); }
+  12%       { opacity: 1; transform: scale(1); }
+  72%       { opacity: 1; transform: scale(1); }
+  84%, 100% { offset-distance: 100%; opacity: 0; transform: scale(.4); }
+}
+
+/* the social half: likes drifting up out of the posts */
+.ts-heart { animation: ts-rise 6s ease-out infinite; opacity: 0; }
+.ts-heart-1 { offset-path: path("M120,190 q-16,-52 6,-96"); animation-delay: .6s; }
+.ts-heart-2 { offset-path: path("M452,162 q18,-48 -4,-88");  animation-delay: 2.9s; }
+.ts-heart-3 { offset-path: path("M108,292 q-20,-46 4,-84");  animation-delay: 4.7s; }
+@keyframes ts-rise {
+  0%       { offset-distance: 0%;   opacity: 0; transform: scale(.5); }
+  15%      { opacity: .95; transform: scale(1); }
+  70%      { opacity: .5; }
+  100%     { offset-distance: 100%; opacity: 0; transform: scale(.8); }
+}
+
+/* little receipts, drifting in over the picture */
+.ts-bubble {
+  position: absolute; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 550; letter-spacing: .1px;
+  padding: 9px 13px; border-radius: 13px; white-space: nowrap;
+  background: #2a2148ee; border: 1px solid #ffffff1f; color: #efe9ff;
+  box-shadow: 0 12px 30px #0000004d;
+  backdrop-filter: blur(6px);
+  animation: ts-bubble 9s ease-in-out infinite; opacity: 0;
+}
+.ts-bubble b { color: #ffd868; font-weight: 700; }
+.ts-bubble-1 { left: 2%;  top: 33%; animation-delay: 1.1s; }
+.ts-bubble-2 { right: 1%; top: 13%; animation-delay: 4.2s; }
+.ts-bubble-3 { left: 27%; bottom: 4%; animation-delay: 6.6s; }
+@keyframes ts-bubble {
+  0%, 100%   { opacity: 0; transform: translateY(8px) scale(.94); }
+  8%, 26%    { opacity: 1; transform: translateY(0) scale(1); }
+  34%        { opacity: 0; transform: translateY(-6px) scale(.97); }
+}
+
+/* ── The form ─────────────────────────────────────────────────────── */
+.ts-entry { padding: 18px 40px 12px; display: flex; flex-direction: column; align-items: center; }
+.ts-top-guest { align-self: flex-end; border: 0; background: none; font-size: 12px; color: var(--ts-t3); }
+.ts-top-guest b { color: var(--ts-t2); margin-left: 5px; font-weight: 600; }
+.ts-top-guest:hover b { color: var(--ts-brand); }
+
+.ts-form-wrap { width: 100%; max-width: 396px; margin: auto; padding: 34px 0 26px; }
+.ts-form-wrap > .ts-eyebrow { color: #8b77b8; font-size: 10px; }
+.ts-form-wrap h2 {
+  font-size: 38px; line-height: 1.16; letter-spacing: -1.6px;
+  font-weight: 660; margin: 12px 0 9px; color: var(--ts-t1);
+}
+.ts-form-wrap h2 > span { color: var(--ts-brand); }
+.ts-subtitle { font-size: 13.5px; line-height: 1.6; color: var(--ts-t2); margin: 0 0 26px; }
+
+.ts-providers { display: flex; flex-direction: column; gap: 9px; }
+.ts-prov {
+  height: 48px; width: 100%; background: var(--ts-panel);
+  border: 1px solid var(--ts-line); border-radius: 11px;
+  color: #35303f; font-size: 14px; font-weight: 550;
+  display: flex; align-items: center; justify-content: center; gap: 11px;
+  transition: background .15s, border-color .15s, transform .12s;
+}
+.ts-prov:hover { background: var(--ts-brand-sf); border-color: #d9cdf3; }
+.ts-prov:active { transform: translateY(1px); }
+.ts-prov-ico { font-size: 19px; line-height: 1; display: grid; place-items: center; width: 20px; }
+.ts-prov-ico.ts-g { font-size: 20px; font-weight: 800; color: #4285f4; }
+
+.ts-divider { display: flex; align-items: center; gap: 13px; font-size: 11px; color: var(--ts-t3); margin: 22px 0; }
+.ts-divider span { height: 1px; flex: 1; background: var(--ts-line); }
+
+#auth-modal label { font-size: 12px; font-weight: 600; color: #4c4659; display: block; margin-bottom: 8px; }
+#auth-modal input[type=email], #auth-modal input[type=password],
+#auth-modal input[type=tel], #auth-modal input[type=text] {
+  display: block; width: 100%; height: 48px;
+  border: 1px solid #dfdce7; border-radius: 11px; background: var(--ts-panel);
+  padding: 0 14px; font-size: 14px; color: var(--ts-t1); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+#auth-modal input:focus { border-color: #8a68dc; box-shadow: 0 0 0 3px #8255d41f; }
+#auth-modal input::placeholder { color: #a9a4b3; }
+
+.ts-password-label { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.ts-password-label button { margin-bottom: 8px; }
+.ts-text-btn { border: 0; background: none; color: var(--ts-brand); font-size: 12px; font-weight: 600; padding: 0; }
+.ts-text-btn:hover { text-decoration: underline; }
+.ts-password { position: relative; }
+.ts-password input { padding-right: 48px !important; }
+.ts-password > button { position: absolute; right: 12px; top: 13px; border: 0; background: none; color: #918a9c; display: flex; padding: 0; }
+.ts-password .material-symbols-rounded { font-size: 21px; }
+
+.ts-submit {
+  height: 48px; width: 100%; border: 0; border-radius: 11px;
+  background: var(--ts-brand); color: #fff;
+  display: flex; align-items: center; justify-content: center; gap: 13px;
+  font-weight: 620; font-size: 14px;
+  box-shadow: 0 8px 20px #7951c933;
+  transition: background .15s, transform .12s, box-shadow .15s;
+}
+.ts-submit:hover { background: var(--ts-brand-dk); box-shadow: 0 10px 26px #7951c94d; }
+.ts-submit:active { transform: translateY(1px); }
+.ts-submit:disabled { opacity: .6; cursor: wait; box-shadow: none; }
+.ts-submit span { font-size: 19px; }
+
+.ts-signup { text-align: center; font-size: 12.5px; color: var(--ts-t2); margin: 20px 0 24px; }
+.ts-signup button { margin-left: 3px; }
+
+.ts-wallet { display: flex; align-items: center; gap: 11px; border-top: 1px solid var(--ts-line); padding-top: 20px; }
+.ts-wallet > .material-symbols-rounded { font-size: 23px; color: #8c829e; }
+.ts-wallet div { flex: 1; }
+.ts-wallet b { display: block; font-size: 11.5px; font-weight: 600; color: #524a60; }
+.ts-wallet div span { display: block; font-size: 10px; line-height: 1.5; color: var(--ts-t3); margin-top: 4px; }
+.ts-wallet button { background: none; border: 1px solid var(--ts-line); border-radius: 8px; padding: 8px 10px; color: #6a537f; font-size: 11px; }
+.ts-wallet button:hover { background: var(--ts-brand-sf); }
+.ts-create-wallet { border: 0; background: none; color: #8a7f95; font-size: 10.5px; display: block; margin: 11px auto 0; }
+.ts-create-wallet:hover { color: var(--ts-brand); }
+
+/* ── phone and code ───────────────────────────────────────────────── */
+.ts-back {
+  border: 0; background: none; color: var(--ts-t2); font-size: 12.5px; font-weight: 550;
+  display: inline-flex; align-items: center; gap: 5px; padding: 0; margin-bottom: 20px;
+}
+.ts-back:hover { color: var(--ts-brand); }
+.ts-back .material-symbols-rounded { font-size: 17px; }
+.ts-hint { font-size: 11.5px; line-height: 1.6; color: var(--ts-t3); margin: 9px 0 0; }
+.ts-sent-to { margin: 0 0 10px; }
+.ts-sent-to b { color: var(--ts-t1); }
+.ts-otp-input {
+  text-align: center; letter-spacing: 11px; font-size: 21px !important;
+  font-weight: 700; padding-left: 11px !important;
+}
+.ts-resend { display: block; margin: 15px auto 0; }
+#ts-phone-form .ts-submit, #ts-otp-form .ts-submit { margin-top: 18px; }
+#ts-recaptcha { display: flex; justify-content: center; margin-top: 14px; }
+
+#ts-auth-feedback, #ts-phone-feedback, #ts-otp-feedback {
+  font-size: 12px; color: #b03b55; line-height: 1.55; margin: 11px 0; min-height: 0;
+}
+#ts-auth-feedback:empty, #ts-phone-feedback:empty, #ts-otp-feedback:empty { margin: 18px 0 0; }
+
+#auth-loading-view {
+  min-height: 320px; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 18px; text-align: center; font-size: 14px; color: var(--ts-t2);
+}
+#auth-loading-view.hidden { display: none !important; }
+
+.ts-entry-foot {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  color: var(--ts-t3); font-size: 10px; gap: 12px;
+}
+.ts-entry-foot > span:last-child { display: flex; gap: 5px; align-items: center; }
+.ts-entry-foot .material-symbols-rounded { font-size: 13px; }
+
+.ts-mobile-brand { display: none; }
+
+/* ── Dark ─────────────────────────────────────────────────────────── */
+[data-theme="dark"] #auth-modal {
+  --ts-bg: #0c0c12; --ts-panel: #16161f; --ts-line: #272634;
+  --ts-t1: #f0eef6; --ts-t2: #a9a3b8; --ts-t3: #7c768b;
+  --ts-brand: #9a7ae8; --ts-brand-dk: #8865dd; --ts-brand-sf: #1f1a2e;
+}
+[data-theme="dark"] #auth-modal label { color: #bdb6cc; }
+[data-theme="dark"] #auth-modal input[type=email],
+[data-theme="dark"] #auth-modal input[type=password],
+[data-theme="dark"] #auth-modal input[type=tel],
+[data-theme="dark"] #auth-modal input[type=text] { border-color: #2e2c3d; }
+[data-theme="dark"] .ts-prov { color: #ece8f6; border-color: #2c2a3a; }
+[data-theme="dark"] .ts-wallet b { color: #cfc8dc; }
+[data-theme="dark"] .ts-wallet button { color: #b4a3d0; }
+[data-theme="dark"] .ts-top-guest b { color: #b8b1c8; }
+[data-theme="dark"] #ts-auth-feedback,
+[data-theme="dark"] #ts-phone-feedback,
+[data-theme="dark"] #ts-otp-feedback { color: #ff8fa8; }
+
+/* Short laptop screens. The words give way before the picture does, and
+   the form tightens its rhythm rather than growing a scrollbar. */
+@media (max-height: 880px) {
+  .ts-story { padding: 30px 40px 20px; }
+  .ts-story h1 { font-size: clamp(30px, 3vw, 42px); margin: 14px 0 12px; }
+  .ts-story-main { margin: 18px 0 0; }
+  .ts-story p { font-size: 13px; line-height: 1.65; }
+
+  .ts-form-wrap { padding: 18px 0 14px; }
+  .ts-form-wrap h2 { font-size: 33px; margin: 10px 0 7px; }
+  .ts-subtitle { margin-bottom: 18px; }
+  .ts-providers { gap: 8px; }
+  .ts-prov, .ts-submit,
+  #auth-modal input[type=email], #auth-modal input[type=password],
+  #auth-modal input[type=tel], #auth-modal input[type=text] { height: 44px; }
+  .ts-password > button { top: 11px; }
+  .ts-divider { margin: 16px 0; }
+  .ts-password-label { margin-top: 14px; }
+  .ts-signup { margin: 15px 0 17px; }
+  .ts-wallet { padding-top: 15px; }
+}
+
+/* ── Narrower ─────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .ts-story { padding: 30px 30px 22px; }
+  .ts-entry { padding: 18px 26px 12px; }
+  .ts-story h1 { letter-spacing: -1.6px; }
+  .ts-bubble { font-size: 10.5px; padding: 7px 10px; }
+}
+
+/* Under 900 the picture has nowhere to be, and the form is the half you
+   came for, so it takes the screen. The wordmark comes with it. */
+@media (max-width: 900px) {
+  #auth-modal { padding: 0; }
+  .ts-signin { display: block; min-height: 100dvh; gap: 0; }
+  .ts-story { display: none; }
+  .ts-entry { min-height: 100dvh; padding: 22px 24px; }
+  .ts-mobile-brand { display: block; margin-bottom: 30px; width: 132px; height: auto; }
+  .ts-wm-lite { display: none; }
+  [data-theme="dark"] .ts-wm-ink { display: none; }
+  [data-theme="dark"] .ts-wm-lite { display: block; }
+  .ts-form-wrap { padding: 26px 0; max-width: 420px; }
+  .ts-form-wrap h2 { font-size: 34px; }
+  .ts-entry-foot { max-width: 420px; padding-top: 22px; }
+  .ts-entry-foot > span:last-child { text-align: right; }
+}
+@media (max-width: 400px) {
+  .ts-form-wrap h2 { font-size: 30px; }
+  .ts-entry-foot { font-size: 9px; }
+}
+
+/* ── Stillness on request ─────────────────────────────────────────────
+   Every moving part above is decoration. Turned off, the scene still
+   says the same thing: four animals, four posts, coins on the wires. */
+@media (prefers-reduced-motion: reduce) {
+  #auth-modal *, #auth-modal *::before, #auth-modal *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .ts-coin { offset-distance: 50%; }
+  .ts-coin, .ts-bubble, .ts-heart { opacity: 1; }
+  .ts-heart { offset-distance: 45%; opacity: .8; }
+}

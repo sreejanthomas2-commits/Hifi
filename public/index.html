@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
   <link rel="stylesheet" href="css/index.css?v=168">
-<link rel="stylesheet" href="css/signin.css?v=1">
+<link rel="stylesheet" href="css/signin.css?v=5">
 </head>
 <body>
 
@@ -92,25 +92,232 @@
   </div>
 </div>
 
-<!-- SECURE AUTH MODAL (Hidden by Default) -->
+<!-- SIGN IN  (styles: css/signin.css · behaviour: js/signin.js) -->
 <div id="auth-modal" class="auth-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="signin-title">
  <div class="ts-signin">
+
+  <!-- ══ The art side ══════════════════════════════════════════════════
+       A feed where the posts pay each other. Four animals, four cards,
+       and USDT, BTC and ETH travelling the arcs between them - the whole
+       pitch of the app in one picture. Decorative, so aria-hidden; every
+       word that matters is repeated on the form side. -->
   <aside class="ts-story">
-   <div class="ts-brand"><span class="ts-mark">◇</span> Trending<span class="ts-brand-dot">.</span></div>
-   <div class="ts-story-main"><span class="ts-eyebrow">YOUR PEOPLE. YOUR POSSIBILITIES.</span><h1>A whole world.<br>Your kind of<br><em>connection.</em></h1><p>Find your community. Share what moves you.<br>Make your next big thing happen.</p>
-   <div class="ts-orbit" aria-hidden="true"><div class="ts-orbit-inner"></div><span class="ts-orbit-word">t<span>.</span></span><span class="ts-chip ts-chip-one"><span class="material-symbols-rounded">groups</span> Find your people</span><span class="ts-chip ts-chip-two"><span class="material-symbols-rounded">auto_awesome</span> Create something new</span><span class="ts-chip ts-chip-three"><span class="material-symbols-rounded">public</span> Explore your universe</span></div></div>
-   <div class="ts-story-foot"><span>ONE ACCOUNT. ALL OF TRENDING.</span><span>✦</span></div>
+   <img class="ts-wm" src="img/brand/trending-logo-light.svg?v=2" alt="Trending" width="150" height="53" decoding="async">
+
+   <div class="ts-story-main">
+    <span class="ts-eyebrow">YOUR FEED AND YOUR WALLET, FINALLY IN ONE PLACE</span>
+    <h1>Post it.<br>Back it.<br><em>Send it.</em></h1>
+    <p>Follow the people worth following, then tip them in a tap.<br>USDT, BTC and ETH move as easily as a message does.</p>
+   </div>
+
+   <div class="ts-scene" aria-hidden="true">
+    <svg viewBox="0 0 560 470" role="presentation" focusable="false">
+     <defs>
+      <radialGradient id="tsGlow" cx="50%" cy="50%">
+       <stop offset="0%" stop-color="var(--ts-glow)" stop-opacity=".55"/>
+       <stop offset="100%" stop-color="var(--ts-glow)" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="tsCard" x1="0" y1="0" x2="0" y2="1">
+       <stop offset="0%" stop-color="var(--ts-card-a)"/>
+       <stop offset="100%" stop-color="var(--ts-card-b)"/>
+      </linearGradient>
+     </defs>
+
+     <!-- sky -->
+     <ellipse cx="280" cy="235" rx="250" ry="215" fill="url(#tsGlow)"/>
+     <g class="ts-stars" fill="var(--ts-star)">
+      <circle cx="64" cy="48" r="1.8"/><circle cx="498" cy="70" r="2.4"/><circle cx="288" cy="28" r="1.5"/>
+      <circle cx="42" cy="250" r="2.1"/><circle cx="520" cy="255" r="1.6"/><circle cx="300" cy="446" r="2"/>
+      <circle cx="140" cy="440" r="1.5"/><circle cx="430" cy="430" r="1.9"/><circle cx="196" cy="60" r="1.3"/>
+     </g>
+
+     <!-- the arcs the money travels -->
+     <g class="ts-wires" fill="none" stroke="var(--ts-wire)" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 9">
+      <path d="M186,116 Q280,50 372,104"/>
+      <path d="M474,164 Q524,235 474,318"/>
+      <path d="M372,378 Q280,438 186,368"/>
+      <path d="M84,318 Q36,235 84,164"/>
+     </g>
+
+     <!-- ── CAT · sends BTC ── -->
+     <g class="ts-post ts-post-a">
+      <rect x="34" y="60" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
+      <g class="ts-animal">
+       <ellipse cx="110" cy="128" rx="34" ry="30" fill="var(--ts-cat)"/>
+       <path d="M82,108 L78,84 L100,98 Z" fill="var(--ts-cat)"/>
+       <path d="M138,108 L142,84 L120,98 Z" fill="var(--ts-cat)"/>
+       <path d="M84,106 L82,92 L94,101 Z" fill="var(--ts-cat-in)"/>
+       <path d="M136,106 L138,92 L126,101 Z" fill="var(--ts-cat-in)"/>
+       <g class="ts-eyes"><ellipse cx="99" cy="125" rx="4.2" ry="5" fill="var(--ts-ink)"/><ellipse cx="121" cy="125" rx="4.2" ry="5" fill="var(--ts-ink)"/></g>
+       <path d="M110,135 l-4,3 h8 z" fill="var(--ts-nose)"/>
+       <g stroke="var(--ts-ink)" stroke-width="1.6" stroke-linecap="round" opacity=".5">
+        <path d="M76,130 h-14"/><path d="M76,137 h-13"/><path d="M144,130 h14"/><path d="M144,137 h13"/>
+       </g>
+       <path class="ts-tail" d="M144,150 q22,6 18,-20" fill="none" stroke="var(--ts-cat)" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <text x="110" y="172" class="ts-handle">@miso</text>
+     </g>
+
+     <!-- ── DUCK · sends USDT ── -->
+     <g class="ts-post ts-post-b">
+      <rect x="374" y="42" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
+      <g class="ts-animal">
+       <ellipse cx="444" cy="120" rx="36" ry="27" fill="var(--ts-duck)"/>
+       <circle cx="470" cy="94" r="21" fill="var(--ts-duck)"/>
+       <path d="M488,90 q18,4 0,13 z" fill="var(--ts-beak)"/>
+       <circle cx="475" cy="89" r="3.6" fill="var(--ts-ink)" class="ts-eyes"/>
+       <path d="M414,116 q14,-12 26,2 q-14,10 -26,-2" fill="var(--ts-duck-w)" class="ts-wing"/>
+      </g>
+      <text x="450" y="154" class="ts-handle">@quack</text>
+     </g>
+
+     <!-- ── FOX · sends ETH ── -->
+     <g class="ts-post ts-post-c">
+      <rect x="374" y="314" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
+      <g class="ts-animal">
+       <path d="M418,352 L432,392 L406,388 Z" fill="var(--ts-fox)"/>
+       <path d="M482,352 L468,392 L494,388 Z" fill="var(--ts-fox)"/>
+       <ellipse cx="450" cy="392" rx="36" ry="30" fill="var(--ts-fox)"/>
+       <path d="M450,382 q-20,4 -16,20 q16,12 32,0 q4,-16 -16,-20" fill="var(--ts-fox-w)"/>
+       <g class="ts-eyes"><ellipse cx="437" cy="386" rx="4" ry="4.8" fill="var(--ts-ink)"/><ellipse cx="463" cy="386" rx="4" ry="4.8" fill="var(--ts-ink)"/></g>
+       <path d="M450,398 l-4,3 h8 z" fill="var(--ts-ink)"/>
+      </g>
+      <text x="450" y="428" class="ts-handle">@vulpes</text>
+     </g>
+
+     <!-- ── OWL · the one collecting tips ── -->
+     <g class="ts-post ts-post-d">
+      <rect x="34" y="286" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
+      <g class="ts-animal">
+       <path d="M86,332 L84,310 L102,324 Z" fill="var(--ts-owl)"/>
+       <path d="M134,332 L136,310 L118,324 Z" fill="var(--ts-owl)"/>
+       <ellipse cx="110" cy="356" rx="36" ry="34" fill="var(--ts-owl)"/>
+       <circle cx="98" cy="350" r="13" fill="var(--ts-owl-w)"/>
+       <circle cx="122" cy="350" r="13" fill="var(--ts-owl-w)"/>
+       <g class="ts-eyes"><circle cx="98" cy="350" r="5.4" fill="var(--ts-ink)"/><circle cx="122" cy="350" r="5.4" fill="var(--ts-ink)"/></g>
+       <path d="M110,360 l-5,6 h10 z" fill="var(--ts-beak)"/>
+       <path d="M84,372 q26,16 52,0" fill="none" stroke="var(--ts-owl-w)" stroke-width="3" opacity=".7"/>
+      </g>
+      <text x="110" y="398" class="ts-handle">@hoot</text>
+     </g>
+
+     <!-- ── the money in flight ───────────────────────────────────── -->
+     <g class="ts-coins">
+      <g class="ts-coin ts-coin-btc"><circle r="17" fill="var(--ts-btc)"/><text y="6">₿</text></g>
+      <g class="ts-coin ts-coin-usdt"><circle r="17" fill="var(--ts-usdt)"/><text y="6">₮</text></g>
+      <g class="ts-coin ts-coin-eth"><circle r="17" fill="var(--ts-eth)"/><text y="6">Ξ</text></g>
+      <g class="ts-coin ts-coin-usdt2"><circle r="15" fill="var(--ts-usdt)"/><text y="5" font-size="16">₮</text></g>
+     </g>
+
+     <!-- the social half: likes drifting up out of the posts -->
+     <g class="ts-hearts" fill="var(--ts-heart)">
+      <path class="ts-heart ts-heart-1" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
+      <path class="ts-heart ts-heart-2" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
+      <path class="ts-heart ts-heart-3" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
+     </g>
+    </svg>
+
+    <span class="ts-bubble ts-bubble-1">sent 25 <b>USDT</b> ✦</span>
+    <span class="ts-bubble ts-bubble-2">nice post 🤍</span>
+    <span class="ts-bubble ts-bubble-3">tipped 0.002 <b>BTC</b></span>
+   </div>
+
+   <div class="ts-story-foot">
+    <span>ONE ACCOUNT. ALL OF TRENDING.</span>
+    <span class="ts-foot-coins">₮ ₿ Ξ</span>
+   </div>
   </aside>
-  <main class="ts-entry"><button type="button" class="ts-top-guest" onclick="continueAsGuest()">Just exploring? <b>Browse as guest ↗</b></button>
-   <div class="ts-form-wrap"><div class="ts-mobile-brand">◇ Trending.</div><span class="ts-eyebrow">GOOD TO SEE YOU AGAIN</span><h2 id="signin-title">Welcome back<span>.</span></h2><p class="ts-subtitle">Your universe is right where you left it.</p>
+
+  <!-- ══ The form side ═════════════════════════════════════════════ -->
+  <main class="ts-entry">
+   <button type="button" class="ts-top-guest" onclick="continueAsGuest()">Just looking? <b>Browse as guest ↗</b></button>
+
+   <div class="ts-form-wrap">
+    <img class="ts-mobile-brand ts-wm-ink" src="img/brand/trending-logo.svg?v=2" alt="Trending" width="132" height="46" decoding="async">
+    <img class="ts-mobile-brand ts-wm-lite" src="img/brand/trending-logo-light.svg?v=2" alt="Trending" width="132" height="46" decoding="async">
+
+    <span class="ts-eyebrow" id="ts-eyebrow">GOOD TO SEE YOU AGAIN</span>
+    <h2 id="signin-title">Welcome back<span>.</span></h2>
+    <p class="ts-subtitle" id="ts-subtitle">Your feed, your people and your wallet are where you left them.</p>
+
+    <!-- ── the usual way in ── -->
     <div id="auth-main-view">
-     <button type="button" class="ts-google" onclick="signInWithGoogle()"><span class="ts-google-g" aria-hidden="true">G</span> Continue with Google</button>
-     <div class="ts-divider"><span></span>or continue with email<span></span></div>
-     <form id="gmail-login-form" onsubmit="signInWithGmail(event)"><label for="auth-email">Email address</label><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><div class="ts-password-label"><label for="auth-password">Password</label><button type="button" class="ts-text-btn" id="ts-reset">Forgot password?</button></div><div class="ts-password"><input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6"><button type="button" id="ts-show" aria-label="Show password" aria-pressed="false"><span class="material-symbols-rounded">visibility</span></button></div><p id="ts-auth-feedback" role="status"></p><button type="submit" class="ts-submit" id="ts-submit">Sign in <span>↗</span></button></form>
+     <div class="ts-providers">
+      <button type="button" class="ts-prov" onclick="signInWithGoogle()">
+       <span class="ts-prov-ico ts-g" aria-hidden="true">G</span> Continue with Google
+      </button>
+      <button type="button" class="ts-prov" onclick="TSAuth.apple()">
+       <span class="ts-prov-ico" aria-hidden="true"></span> Continue with Apple
+      </button>
+      <button type="button" class="ts-prov" onclick="TSAuth.phone()">
+       <span class="ts-prov-ico material-symbols-rounded" aria-hidden="true">smartphone</span> Continue with mobile number
+      </button>
+     </div>
+
+     <div class="ts-divider"><span></span>or use your email<span></span></div>
+
+     <form id="gmail-login-form" onsubmit="signInWithGmail(event)" novalidate>
+      <label for="auth-email">Email address</label>
+      <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <div class="ts-password-label">
+       <label for="auth-password">Password</label>
+       <button type="button" class="ts-text-btn" id="ts-reset">Forgot password?</button>
+      </div>
+      <div class="ts-password">
+       <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
+       <button type="button" id="ts-show" aria-label="Show password" aria-pressed="false"><span class="material-symbols-rounded">visibility</span></button>
+      </div>
+      <p id="ts-auth-feedback" role="status"></p>
+      <button type="submit" class="ts-submit" id="ts-submit">Sign in <span>↗</span></button>
+     </form>
+
      <p class="ts-signup">New to Trending? <button type="button" class="ts-text-btn" id="ts-mode">Create an account</button></p>
-     <div class="ts-wallet"><span class="material-symbols-rounded">account_balance_wallet</span><div><b>Your wallet works here, too.</b><span>Connect to explore Web3.</span></div><button type="button" onclick="WL.openChooser('connect')" aria-label="Connect wallet">Connect ↗</button></div><button type="button" class="ts-create-wallet" onclick="WL.openChooser('create')">Create a new wallet</button>
-    </div><div id="auth-loading-view" class="hidden" style="display:none" role="status"><div class="google-spinner"></div><h3 id="auth-loading-status">Signing you in…</h3><p>Just a moment. Your world is waiting.</p></div>
-   </div><footer class="ts-entry-foot"><span>© 2026 Trending</span><span><span class="material-symbols-rounded">lock</span> Your connection starts here</span></footer>
+
+     <div class="ts-wallet">
+      <span class="material-symbols-rounded">account_balance_wallet</span>
+      <div><b>Already have a wallet?</b><span>Connect it to see your balances here. Read-only — Trending never asks for a seed phrase.</span></div>
+      <button type="button" onclick="WL.openChooser('connect')" aria-label="Connect wallet">Connect ↗</button>
+     </div>
+     <button type="button" class="ts-create-wallet" onclick="WL.openChooser('create')">Or create a new one</button>
+    </div>
+
+    <!-- ── mobile number ── -->
+    <div id="auth-phone-view" class="hidden">
+     <button type="button" class="ts-back" onclick="TSAuth.back()"><span class="material-symbols-rounded">arrow_back</span> All sign-in options</button>
+     <form id="ts-phone-form" onsubmit="TSAuth.sendCode(event)" novalidate>
+      <label for="auth-phone">Mobile number</label>
+      <input id="auth-phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210" required>
+      <p class="ts-hint">Include your country code. We send a six-digit code, once.</p>
+      <p id="ts-phone-feedback" role="status"></p>
+      <button type="submit" class="ts-submit" id="ts-phone-submit">Send code <span>↗</span></button>
+     </form>
+     <div id="ts-recaptcha"></div>
+    </div>
+
+    <!-- ── the code ── -->
+    <div id="auth-otp-view" class="hidden">
+     <button type="button" class="ts-back" onclick="TSAuth.phone()"><span class="material-symbols-rounded">arrow_back</span> Change number</button>
+     <form id="ts-otp-form" onsubmit="TSAuth.verifyCode(event)" novalidate>
+      <label for="auth-otp">Six-digit code</label>
+      <p class="ts-hint ts-sent-to">Sent to <b id="ts-otp-target"></b></p>
+      <input id="auth-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" class="ts-otp-input" required>
+      <p id="ts-otp-feedback" role="status"></p>
+      <button type="submit" class="ts-submit" id="ts-otp-submit">Verify and sign in <span>↗</span></button>
+      <button type="button" class="ts-text-btn ts-resend" id="ts-resend" onclick="TSAuth.resend()">Send it again</button>
+     </form>
+    </div>
+
+    <div id="auth-loading-view" class="hidden" role="status">
+     <div class="google-spinner"></div>
+     <h3 id="auth-loading-status">Signing you in…</h3>
+     <p>One moment. Your universe is warming up.</p>
+    </div>
+   </div>
+
+   <footer class="ts-entry-foot">
+    <span>© 2026 Trending</span>
+    <span><span class="material-symbols-rounded">lock</span> Simulated balances · no seed phrase, ever</span>
+   </footer>
   </main>
  </div>
 </div>
@@ -643,14 +850,14 @@
     window.db = null;
     window.firebaseAuth = null;
   </script>
-  <script type="module" src="js/boot.js?v=1789930000"></script>
+  <script type="module" src="js/boot.js?v=1789992000"></script>
   <!-- Not async: this block calls into the app (renderFeed, handleAuth,
        $id), so it has to run after boot.js has published the globals.
        Module scripts without async run in document order. -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, OAuthProvider, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAOt5Ki8G7jj1v8r0k5snl30IdSr0xF_Hc",
@@ -681,6 +888,8 @@
       // Expose Auth to window
       window.firebaseAuth = auth;
       window.FirebaseGoogleAuthProvider = GoogleAuthProvider;
+      window.FirebaseOAuthProvider = OAuthProvider;          // Apple, via apple.com
+      window.firebaseSignInWithPhoneNumber = signInWithPhoneNumber;
       window.firebaseSignInWithPopup = signInWithPopup;
       window.firebaseSignInWithEmailAndPassword = signInWithEmailAndPassword;
       window.firebaseCreateUserWithEmailAndPassword = createUserWithEmailAndPassword;
