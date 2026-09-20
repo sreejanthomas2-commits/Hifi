@@ -320,11 +320,18 @@ const PME = (() => {
     P = { draft: draftFrom(), tried: false, guest: !signedIn() };
     P.base = JSON.stringify(P.draft);
     P.baseHandle = P.draft.handle;
-    if (typeof navigateTo === 'function') navigateTo('editprofile');
-    render();
-    const pane = $('pane-editprofile');
-    if (pane) pane.scrollTop = 0;
-    if (focus) { const f = $('pme-f-' + focus); if (f) f.scrollIntoView({ block: 'center' }); }
+    /* navigateTo is async - a page module may still need fetching - and
+       it only builds #pane-editprofile after its first await. Running
+       render() straight after the call found no #pme-page and returned
+       at its own null check, so Edit profile opened blank every time. */
+    const paint = () => {
+      render();
+      const pane = $('pane-editprofile');
+      if (pane) pane.scrollTop = 0;
+      if (focus) { const f = $('pme-f-' + focus); if (f) f.scrollIntoView({ block: 'center' }); }
+    };
+    if (typeof navigateTo === 'function') Promise.resolve(navigateTo('editprofile')).then(paint);
+    else paint();
   }
 
   const dirty = () => !!P && JSON.stringify(P.draft) !== P.base;

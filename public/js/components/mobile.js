@@ -127,7 +127,7 @@ const MOB = (() => {
       const item = e.target.closest('.mob-more-item');
       if (item) {
         closeMore();
-        if (item.dataset.action === 'crypto' && typeof clickCategory === 'function') clickCategory('crypto');
+        if (item.dataset.action === 'crypto' && typeof navigateTo === 'function') navigateTo('cryptomarket');
         else if (item.dataset.pane && typeof navigateTo === 'function') navigateTo(item.dataset.pane);
         return;
       }

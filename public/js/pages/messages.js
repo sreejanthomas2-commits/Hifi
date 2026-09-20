@@ -964,7 +964,6 @@ function changeThemeAccent(color) {
   html.style.setProperty('--blue-d', pal.dark);
   html.style.setProperty('--blue-s', pal.shadow);
   
-  _safe(drawRealityScoreCircle, 'drawRealityScoreCircle');
   _safe(drawProfileAnalyticsChart, 'drawProfileAnalyticsChart');
   
   showToast(`Ecosystem visual accent updated to: ${color.toUpperCase()} ✨`);

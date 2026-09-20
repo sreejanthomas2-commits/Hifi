@@ -262,7 +262,10 @@ for (const [n, where] of [...called].sort()) {
 if (!reach) console.log('   ok   nothing loaded at boot calls into a deferred module unguarded');
 
 console.log('\n4. navigateTo() used without waiting for the pane');
-const TOUCH = /\$id\(|getElementById\(|querySelector|innerHTML|\.classList|\.textContent|\.hidden\s*=|\.scrollIntoView/;
+/* $( as well as $id( — features/profileme.js uses the short one, and
+   leaving it out is how Edit profile kept opening blank after this
+   check was already passing. */
+const TOUCH = /\$id\(|\$\(|getElementById\(|querySelector|innerHTML|\.classList|\.textContent|\.hidden\s*=|\.scrollIntoView|\.scrollTop/;
 const CHAINED = /\.then\(|await\s|function navigateTo|typeof navigateTo|window\.navigateTo\s*=/;
 let unawaited = 0;
 for (const s of all) {

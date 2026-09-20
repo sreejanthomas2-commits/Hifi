@@ -17,10 +17,8 @@
    ║                 chat crypto read. Deferred, Spot reads as zero.   ║
    ║     earn.js     owns the staked value netWorth() adds up.         ║
    ║     messages.js declares showToast, which everything calls.       ║
-   ║     explore.js  main.js calls setupUniversalSearch() and          ║
-   ║                 populateCategorySidebar() at startup, and the     ║
-   ║                 feed's category chips call clickCategory().       ║
-   ║                 Deferred, search and the sidebar never start.     ║
+   ║     explore.js  main.js calls setupUniversalSearch() at startup.  ║
+   ║                 Deferred, the search bar never starts.            ║
    ║     feeds.js    is the page you land on.                          ║
    ║                                                                   ║
    ║  2. NO NAME IT DECLARES MAY ALSO BE DECLARED SOMEWHERE ELSE.      ║
@@ -48,7 +46,6 @@
 const PAGES = {
   reels:        './pages/reels.js?v=20260916em8',
   cryptomarket: './pages/cryptomarket.js?v=8m8',
-  dao:          './pages/web3communities.js?v=3m8',
   settings:     './pages/settings.js?v=20260917cm8'
 };
 

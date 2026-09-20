@@ -4,7 +4,7 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-import { ensurePane } from './lazy.js?v=1789910000';
+import { ensurePane } from './lazy.js?v=1790000000';
 
 /* Through window, not the module-local binding a few lines down.
    components/mobile.js and features/discover.js both decorate
@@ -62,16 +62,6 @@ async function navigateTo(pane) {
   const gigWorkspaceModal = $id('gig-workspace-modal'); if (gigWorkspaceModal) { gigWorkspaceModal.style.display = 'none'; gigWorkspaceModal.classList.add('hidden'); }
   const eduReelsModal = $id('edu-reels-modal'); if (eduReelsModal) { eduReelsModal.style.display = 'none'; eduReelsModal.classList.add('hidden'); }
   const callModal = $id('call-modal'); if (callModal) { callModal.style.display = 'none'; callModal.classList.add('hidden'); }
-  const categoryModal = $id('category-modal'); if (categoryModal) { categoryModal.style.display = 'none'; categoryModal.classList.add('hidden'); }
-  
-  // Stop continuous simulations if leaving their respective category
-  if (S.pane === 'category') {
-    /* These live in explore.js, which loads on demand. Being on the
-       category pane means it already loaded, but the guard costs
-       nothing and stops a rename turning into a dead navigation. */
-    if (typeof stopCryptoLiveChart === 'function') stopCryptoLiveChart();
-    if (typeof stopWildlifeCanvasSim === 'function') stopWildlifeCanvasSim();
-  }
   /* Fetch the page module if this is the first time here. Resolves
      immediately for everything boot.js already loaded. */
   await ensurePane(pane);

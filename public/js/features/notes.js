@@ -1729,7 +1729,7 @@ const NT = (() => {
         return;
       case 'tag': closeViewer(); if (window.SR && SR.show) SR.show('tag', v); else if (window.DX) DX.open('#' + v); return;
       case 'mention': return openProfile(v);
-      case 'coin': closeViewer(); if (window.HC && HC.openCoin) HC.openCoin(v); else if (typeof clickCategory === 'function') clickCategory('crypto'); return;
+      case 'coin': closeViewer(); if (window.HC && HC.openCoin) HC.openCoin(v); else if (typeof navigateTo === 'function') navigateTo('cryptomarket'); return;
 
       /* own note */
       case 'insights': closeMenus(); return insights();

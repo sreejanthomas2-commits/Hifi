@@ -566,10 +566,19 @@ async function likePost(e, id) {
   renderFeed();
 }
 
+/* Every row used to open the Politics category portal, whichever trend
+   you tapped. The portal is gone and the row now searches for the trend
+   it is actually showing. */
+function openTrend(name) {
+  if (window.DX && DX.open) { DX.open(name); return; }
+  if (window.SR && SR.open) { SR.open(name); return; }
+  if (typeof navigateTo === 'function') navigateTo('explore');
+}
+
 function renderTrending() {
   const el = $id('trending-list'); if (!el) return;
   el.innerHTML = DATA.trending.map((t,i) => `
-    <div class="trend-item" onclick="clickCategory('politics')">
+    <div class="trend-item" onclick="openTrend('${String(t.name || '').replace(/'/g, "\\'")}')">
       <div class="trend-rank">${i+1}</div>
       <div class="trend-info">
         <div class="trend-name">${t.name}</div>
@@ -1481,7 +1490,7 @@ publish('pages/feeds.js', {
   renderUniversalTicker: () => renderUniversalTicker,
   postInitials: () => postInitials, renderPostCard: () => renderPostCard,
   sharePost: () => sharePost, likePost: () => likePost,
-  renderTrending: () => renderTrending,
+  renderTrending: () => renderTrending, openTrend: () => openTrend,
   renderWhoToFollow: () => renderWhoToFollow,
   sendFriendRequest: () => sendFriendRequest,
   publishPost: () => publishPost, _feedRetries: () => _feedRetries,

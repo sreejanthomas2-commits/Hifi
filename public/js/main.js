@@ -27,13 +27,11 @@ function initApp() {
   }
 
   updateUserUI();
-  _safe('renderCategoryGrid', 'renderCategoryGrid');
   _safe('setupNav',       'setupNav');
   _safe('setupHeader',    'setupHeader');
   _safe('setupMessages',  'setupMessages');
   _safe('setupAI',        'setupAI');
   _safe('setupUniversalSearch', 'setupUniversalSearch');
-  _safe('populateCategorySidebar', 'populateCategorySidebar');
   
   // Language is chosen in Settings now; here we just restore the choice.
   const savedLang = localStorage.getItem('ts_lang') || 'en';
