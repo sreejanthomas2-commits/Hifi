@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
   <link rel="stylesheet" href="css/index.css?v=169">
-<link rel="stylesheet" href="css/signin.css?v=5">
+<link rel="stylesheet" href="css/signin.css?v=10">
 </head>
 <body>
 
@@ -94,148 +94,140 @@
 
 <!-- SIGN IN  (styles: css/signin.css · behaviour: js/signin.js) -->
 <div id="auth-modal" class="auth-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="signin-title">
- <div class="ts-signin">
 
-  <!-- ══ The art side ══════════════════════════════════════════════════
-       A feed where the posts pay each other. Four animals, four cards,
-       and USDT, BTC and ETH travelling the arcs between them - the whole
-       pitch of the app in one picture. Decorative, so aria-hidden; every
-       word that matters is repeated on the form side. -->
-  <aside class="ts-story">
-   <img class="ts-wm" src="img/brand/trending-logo-light.svg?v=2" alt="Trending" width="150" height="53" decoding="async">
+ <!-- ══ The scene, behind everything ═══════════════════════════════════
+      The page IS the picture now: four animals passing USDT, BTC and ETH
+      around, and the form sitting in the middle of them. The arcs run
+      behind the card on purpose - the money is moving past you while you
+      sign in.
 
-   <div class="ts-story-main">
-    <span class="ts-eyebrow">YOUR FEED AND YOUR WALLET, FINALLY IN ONE PLACE</span>
-    <h1>Post it.<br>Back it.<br><em>Send it.</em></h1>
-    <p>Follow the people worth following, then tip them in a tap.<br>USDT, BTC and ETH move as easily as a message does.</p>
-   </div>
+      Three svgs. The first is only a cupboard: each animal drawn once,
+      centred on its own origin, so the other two can place it anywhere
+      with <use>. The second lays them out around the card for a wide
+      screen. The third puts them in a row above it for a narrow one,
+      because on a phone the card is the screen and there are no corners
+      left to stand in. CSS shows one or the other. -->
+ <div class="ts-sky" aria-hidden="true">
 
-   <div class="ts-scene" aria-hidden="true">
-    <svg viewBox="0 0 560 470" role="presentation" focusable="false">
-     <defs>
-      <radialGradient id="tsGlow" cx="50%" cy="50%">
-       <stop offset="0%" stop-color="var(--ts-glow)" stop-opacity=".55"/>
-       <stop offset="100%" stop-color="var(--ts-glow)" stop-opacity="0"/>
-      </radialGradient>
-      <linearGradient id="tsCard" x1="0" y1="0" x2="0" y2="1">
-       <stop offset="0%" stop-color="var(--ts-card-a)"/>
-       <stop offset="100%" stop-color="var(--ts-card-b)"/>
-      </linearGradient>
-     </defs>
+  <svg class="ts-defs" width="0" height="0" focusable="false">
+   <defs>
+    <radialGradient id="tsGlow" cx="50%" cy="50%">
+     <stop offset="0%" stop-color="var(--ts-glow)" stop-opacity=".5"/>
+     <stop offset="100%" stop-color="var(--ts-glow)" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tsCardFill" x1="0" y1="0" x2="0" y2="1">
+     <stop offset="0%" stop-color="var(--ts-card-a)"/>
+     <stop offset="100%" stop-color="var(--ts-card-b)"/>
+    </linearGradient>
 
-     <!-- sky -->
-     <ellipse cx="280" cy="235" rx="250" ry="215" fill="url(#tsGlow)"/>
-     <g class="ts-stars" fill="var(--ts-star)">
-      <circle cx="64" cy="48" r="1.8"/><circle cx="498" cy="70" r="2.4"/><circle cx="288" cy="28" r="1.5"/>
-      <circle cx="42" cy="250" r="2.1"/><circle cx="520" cy="255" r="1.6"/><circle cx="300" cy="446" r="2"/>
-      <circle cx="140" cy="440" r="1.5"/><circle cx="430" cy="430" r="1.9"/><circle cx="196" cy="60" r="1.3"/>
+    <g id="tsPost"><rect x="-78" y="-72" width="156" height="130" rx="26" fill="url(#tsCardFill)" stroke="var(--ts-edge)"/></g>
+
+    <g id="tsCat">
+     <path class="ts-tail" d="M34,22 q24,6 20,-22" fill="none" stroke="var(--ts-cat)" stroke-width="7" stroke-linecap="round"/>
+     <path d="M-28,-20 L-32,-44 L-10,-30 Z" fill="var(--ts-cat)"/>
+     <path d="M28,-20 L32,-44 L10,-30 Z" fill="var(--ts-cat)"/>
+     <path d="M-26,-22 L-28,-36 L-16,-27 Z" fill="var(--ts-cat-in)"/>
+     <path d="M26,-22 L28,-36 L16,-27 Z" fill="var(--ts-cat-in)"/>
+     <ellipse cx="0" cy="0" rx="34" ry="30" fill="var(--ts-cat)"/>
+     <g class="ts-eyes"><ellipse cx="-11" cy="-3" rx="4.2" ry="5" fill="var(--ts-ink)"/><ellipse cx="11" cy="-3" rx="4.2" ry="5" fill="var(--ts-ink)"/></g>
+     <path d="M0,7 l-4,3 h8 z" fill="var(--ts-nose)"/>
+     <g stroke="var(--ts-ink)" stroke-width="1.6" stroke-linecap="round" opacity=".45">
+      <path d="M-34,2 h-14"/><path d="M-34,9 h-13"/><path d="M34,2 h14"/><path d="M34,9 h13"/>
      </g>
+    </g>
 
-     <!-- the arcs the money travels -->
-     <g class="ts-wires" fill="none" stroke="var(--ts-wire)" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 9">
-      <path d="M186,116 Q280,50 372,104"/>
-      <path d="M474,164 Q524,235 474,318"/>
-      <path d="M372,378 Q280,438 186,368"/>
-      <path d="M84,318 Q36,235 84,164"/>
-     </g>
+    <g id="tsDuck">
+     <ellipse cx="0" cy="0" rx="36" ry="27" fill="var(--ts-duck)"/>
+     <circle cx="26" cy="-26" r="21" fill="var(--ts-duck)"/>
+     <path d="M44,-30 q18,4 0,13 z" fill="var(--ts-beak)"/>
+     <circle class="ts-eyes" cx="31" cy="-31" r="3.6" fill="var(--ts-ink)"/>
+     <path class="ts-wing" d="M-30,-4 q14,-12 26,2 q-14,10 -26,-2" fill="var(--ts-duck-w)"/>
+    </g>
 
-     <!-- ── CAT · sends BTC ── -->
-     <g class="ts-post ts-post-a">
-      <rect x="34" y="60" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
-      <g class="ts-animal">
-       <ellipse cx="110" cy="128" rx="34" ry="30" fill="var(--ts-cat)"/>
-       <path d="M82,108 L78,84 L100,98 Z" fill="var(--ts-cat)"/>
-       <path d="M138,108 L142,84 L120,98 Z" fill="var(--ts-cat)"/>
-       <path d="M84,106 L82,92 L94,101 Z" fill="var(--ts-cat-in)"/>
-       <path d="M136,106 L138,92 L126,101 Z" fill="var(--ts-cat-in)"/>
-       <g class="ts-eyes"><ellipse cx="99" cy="125" rx="4.2" ry="5" fill="var(--ts-ink)"/><ellipse cx="121" cy="125" rx="4.2" ry="5" fill="var(--ts-ink)"/></g>
-       <path d="M110,135 l-4,3 h8 z" fill="var(--ts-nose)"/>
-       <g stroke="var(--ts-ink)" stroke-width="1.6" stroke-linecap="round" opacity=".5">
-        <path d="M76,130 h-14"/><path d="M76,137 h-13"/><path d="M144,130 h14"/><path d="M144,137 h13"/>
-       </g>
-       <path class="ts-tail" d="M144,150 q22,6 18,-20" fill="none" stroke="var(--ts-cat)" stroke-width="7" stroke-linecap="round"/>
-      </g>
-      <text x="110" y="172" class="ts-handle">@miso</text>
-     </g>
+    <g id="tsFox">
+     <path d="M-32,-40 L-18,0 L-44,-4 Z" fill="var(--ts-fox)"/>
+     <path d="M32,-40 L18,0 L44,-4 Z" fill="var(--ts-fox)"/>
+     <ellipse cx="0" cy="0" rx="36" ry="30" fill="var(--ts-fox)"/>
+     <path d="M0,-10 q-20,4 -16,20 q16,12 32,0 q4,-16 -16,-20" fill="var(--ts-fox-w)"/>
+     <g class="ts-eyes"><ellipse cx="-13" cy="-6" rx="4" ry="4.8" fill="var(--ts-ink)"/><ellipse cx="13" cy="-6" rx="4" ry="4.8" fill="var(--ts-ink)"/></g>
+     <path d="M0,6 l-4,3 h8 z" fill="var(--ts-ink)"/>
+    </g>
 
-     <!-- ── DUCK · sends USDT ── -->
-     <g class="ts-post ts-post-b">
-      <rect x="374" y="42" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
-      <g class="ts-animal">
-       <ellipse cx="444" cy="120" rx="36" ry="27" fill="var(--ts-duck)"/>
-       <circle cx="470" cy="94" r="21" fill="var(--ts-duck)"/>
-       <path d="M488,90 q18,4 0,13 z" fill="var(--ts-beak)"/>
-       <circle cx="475" cy="89" r="3.6" fill="var(--ts-ink)" class="ts-eyes"/>
-       <path d="M414,116 q14,-12 26,2 q-14,10 -26,-2" fill="var(--ts-duck-w)" class="ts-wing"/>
-      </g>
-      <text x="450" y="154" class="ts-handle">@quack</text>
-     </g>
+    <g id="tsOwl">
+     <path d="M-24,-24 L-26,-46 L-8,-32 Z" fill="var(--ts-owl)"/>
+     <path d="M24,-24 L26,-46 L8,-32 Z" fill="var(--ts-owl)"/>
+     <ellipse cx="0" cy="0" rx="36" ry="34" fill="var(--ts-owl)"/>
+     <circle cx="-12" cy="-6" r="13" fill="var(--ts-owl-w)"/>
+     <circle cx="12" cy="-6" r="13" fill="var(--ts-owl-w)"/>
+     <g class="ts-eyes"><circle cx="-12" cy="-6" r="5.4" fill="var(--ts-ink)"/><circle cx="12" cy="-6" r="5.4" fill="var(--ts-ink)"/></g>
+     <path d="M0,4 l-5,6 h10 z" fill="var(--ts-beak)"/>
+     <path d="M-26,16 q26,16 52,0" fill="none" stroke="var(--ts-owl-w)" stroke-width="3" opacity=".65"/>
+    </g>
+   </defs>
+  </svg>
 
-     <!-- ── FOX · sends ETH ── -->
-     <g class="ts-post ts-post-c">
-      <rect x="374" y="314" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
-      <g class="ts-animal">
-       <path d="M418,352 L432,392 L406,388 Z" fill="var(--ts-fox)"/>
-       <path d="M482,352 L468,392 L494,388 Z" fill="var(--ts-fox)"/>
-       <ellipse cx="450" cy="392" rx="36" ry="30" fill="var(--ts-fox)"/>
-       <path d="M450,382 q-20,4 -16,20 q16,12 32,0 q4,-16 -16,-20" fill="var(--ts-fox-w)"/>
-       <g class="ts-eyes"><ellipse cx="437" cy="386" rx="4" ry="4.8" fill="var(--ts-ink)"/><ellipse cx="463" cy="386" rx="4" ry="4.8" fill="var(--ts-ink)"/></g>
-       <path d="M450,398 l-4,3 h8 z" fill="var(--ts-ink)"/>
-      </g>
-      <text x="450" y="428" class="ts-handle">@vulpes</text>
-     </g>
+  <!-- around the card -->
+  <svg class="ts-stage ts-stage-wide" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice" focusable="false">
+   <ellipse cx="600" cy="380" rx="520" ry="380" fill="url(#tsGlow)"/>
+   <g class="ts-stars" fill="var(--ts-star)">
+    <circle cx="90" cy="70" r="2"/><circle cx="1120" cy="96" r="2.4"/><circle cx="600" cy="40" r="1.6"/>
+    <circle cx="60" cy="390" r="2.2"/><circle cx="1150" cy="400" r="1.7"/><circle cx="620" cy="726" r="2"/>
+    <circle cx="240" cy="700" r="1.6"/><circle cx="960" cy="712" r="2"/><circle cx="380" cy="86" r="1.4"/>
+    <circle cx="830" cy="60" r="1.8"/><circle cx="150" cy="560" r="1.5"/><circle cx="1060" cy="560" r="1.6"/>
+   </g>
+   <g class="ts-wires" fill="none" stroke="var(--ts-wire)" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="6 11">
+    <path d="M330,120 Q600,20 870,120"/>
+    <path d="M1032,224 Q1140,380 1032,536"/>
+    <path d="M870,640 Q600,740 330,640"/>
+    <path d="M168,536 Q60,380 168,224"/>
+   </g>
+   <g class="ts-post ts-post-a" transform="translate(250,150)"><use href="#tsPost"/><use href="#tsCat"/><text class="ts-handle" y="46">@miso</text></g>
+   <g class="ts-post ts-post-b" transform="translate(950,150)"><use href="#tsPost"/><use href="#tsDuck"/><text class="ts-handle" y="46">@quack</text></g>
+   <g class="ts-post ts-post-c" transform="translate(950,610)"><use href="#tsPost"/><use href="#tsFox"/><text class="ts-handle" y="46">@vulpes</text></g>
+   <g class="ts-post ts-post-d" transform="translate(250,610)"><use href="#tsPost"/><use href="#tsOwl"/><text class="ts-handle" y="46">@hoot</text></g>
+   <g class="ts-coins">
+    <g class="ts-coin ts-coin-btc"><circle r="19" fill="var(--ts-btc)"/><text y="7">₿</text></g>
+    <g class="ts-coin ts-coin-usdt"><circle r="19" fill="var(--ts-usdt)"/><text y="7">₮</text></g>
+    <g class="ts-coin ts-coin-eth"><circle r="19" fill="var(--ts-eth)"/><text y="7">Ξ</text></g>
+    <g class="ts-coin ts-coin-usdt2"><circle r="17" fill="var(--ts-usdt)"/><text y="6">₮</text></g>
+   </g>
+   <g class="ts-hearts" fill="var(--ts-heart)">
+    <path class="ts-heart ts-heart-1" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
+    <path class="ts-heart ts-heart-2" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
+    <path class="ts-heart ts-heart-3" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
+   </g>
+  </svg>
 
-     <!-- ── OWL · the one collecting tips ── -->
-     <g class="ts-post ts-post-d">
-      <rect x="34" y="286" width="152" height="126" rx="26" fill="url(#tsCard)" stroke="var(--ts-edge)"/>
-      <g class="ts-animal">
-       <path d="M86,332 L84,310 L102,324 Z" fill="var(--ts-owl)"/>
-       <path d="M134,332 L136,310 L118,324 Z" fill="var(--ts-owl)"/>
-       <ellipse cx="110" cy="356" rx="36" ry="34" fill="var(--ts-owl)"/>
-       <circle cx="98" cy="350" r="13" fill="var(--ts-owl-w)"/>
-       <circle cx="122" cy="350" r="13" fill="var(--ts-owl-w)"/>
-       <g class="ts-eyes"><circle cx="98" cy="350" r="5.4" fill="var(--ts-ink)"/><circle cx="122" cy="350" r="5.4" fill="var(--ts-ink)"/></g>
-       <path d="M110,360 l-5,6 h10 z" fill="var(--ts-beak)"/>
-       <path d="M84,372 q26,16 52,0" fill="none" stroke="var(--ts-owl-w)" stroke-width="3" opacity=".7"/>
-      </g>
-      <text x="110" y="398" class="ts-handle">@hoot</text>
-     </g>
 
-     <!-- ── the money in flight ───────────────────────────────────── -->
-     <g class="ts-coins">
-      <g class="ts-coin ts-coin-btc"><circle r="17" fill="var(--ts-btc)"/><text y="6">₿</text></g>
-      <g class="ts-coin ts-coin-usdt"><circle r="17" fill="var(--ts-usdt)"/><text y="6">₮</text></g>
-      <g class="ts-coin ts-coin-eth"><circle r="17" fill="var(--ts-eth)"/><text y="6">Ξ</text></g>
-      <g class="ts-coin ts-coin-usdt2"><circle r="15" fill="var(--ts-usdt)"/><text y="5" font-size="16">₮</text></g>
-     </g>
+  <span class="ts-bubble ts-bubble-1">sent 25 <b>USDT</b> ✦</span>
+  <span class="ts-bubble ts-bubble-2">nice post 🤍</span>
+  <span class="ts-bubble ts-bubble-3">tipped 0.002 <b>BTC</b></span>
+ </div>
 
-     <!-- the social half: likes drifting up out of the posts -->
-     <g class="ts-hearts" fill="var(--ts-heart)">
-      <path class="ts-heart ts-heart-1" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
-      <path class="ts-heart ts-heart-2" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
-      <path class="ts-heart ts-heart-3" d="M0,4 a5,5 0 0,1 9,-3 a5,5 0 0,1 9,3 q0,9 -9,14 q-9,-5 -9,-14 z"/>
-     </g>
-    </svg>
+ <!-- ══ The page ══════════════════════════════════════════════════════ -->
+ <div class="ts-page">
+  <button type="button" class="ts-top-guest" onclick="continueAsGuest()">Just looking? <b>Browse as guest ↗</b></button>
 
-    <span class="ts-bubble ts-bubble-1">sent 25 <b>USDT</b> ✦</span>
-    <span class="ts-bubble ts-bubble-2">nice post 🤍</span>
-    <span class="ts-bubble ts-bubble-3">tipped 0.002 <b>BTC</b></span>
-   </div>
+  <img class="ts-wm" src="img/brand/trending-logo-light.svg?v=2" alt="Trending" width="150" height="53" decoding="async">
+  <p class="ts-tagline">Post it. Back it. <em>Send it.</em></p>
+  <!-- in a row above it -->
+  <svg class="ts-stage ts-stage-row" viewBox="0 0 400 128" preserveAspectRatio="xMidYMid meet" focusable="false">
+   <g class="ts-wires" fill="none" stroke="var(--ts-wire)" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 9">
+    <path d="M40,102 H360"/>
+   </g>
+   <g class="ts-post ts-post-a" transform="translate(50,52) scale(.56)"><use href="#tsCat"/></g>
+   <g class="ts-post ts-post-b" transform="translate(150,52) scale(.56)"><use href="#tsDuck"/></g>
+   <g class="ts-post ts-post-c" transform="translate(250,52) scale(.56)"><use href="#tsFox"/></g>
+   <g class="ts-post ts-post-d" transform="translate(350,52) scale(.56)"><use href="#tsOwl"/></g>
+   <g class="ts-coins">
+    <g class="ts-coin ts-coin-btc"><circle r="13" fill="var(--ts-btc)"/><text y="5" font-size="14">₿</text></g>
+    <g class="ts-coin ts-coin-usdt"><circle r="13" fill="var(--ts-usdt)"/><text y="5" font-size="14">₮</text></g>
+    <g class="ts-coin ts-coin-eth"><circle r="13" fill="var(--ts-eth)"/><text y="5" font-size="14">Ξ</text></g>
+   </g>
+  </svg>
 
-   <div class="ts-story-foot">
-    <span>ONE ACCOUNT. ALL OF TRENDING.</span>
-    <span class="ts-foot-coins">₮ ₿ Ξ</span>
-   </div>
-  </aside>
-
-  <!-- ══ The form side ═════════════════════════════════════════════ -->
-  <main class="ts-entry">
-   <button type="button" class="ts-top-guest" onclick="continueAsGuest()">Just looking? <b>Browse as guest ↗</b></button>
-
+  <div class="ts-card">
    <div class="ts-form-wrap">
-    <img class="ts-mobile-brand ts-wm-ink" src="img/brand/trending-logo.svg?v=2" alt="Trending" width="132" height="46" decoding="async">
-    <img class="ts-mobile-brand ts-wm-lite" src="img/brand/trending-logo-light.svg?v=2" alt="Trending" width="132" height="46" decoding="async">
-
     <span class="ts-eyebrow" id="ts-eyebrow">GOOD TO SEE YOU AGAIN</span>
     <h2 id="signin-title">Welcome back<span>.</span></h2>
     <p class="ts-subtitle" id="ts-subtitle">Your feed, your people and your wallet are where you left them.</p>
@@ -313,12 +305,12 @@
      <p>One moment. Your universe is warming up.</p>
     </div>
    </div>
+  </div>
 
-   <footer class="ts-entry-foot">
-    <span>© 2026 Trending</span>
-    <span><span class="material-symbols-rounded">lock</span> Simulated balances · no seed phrase, ever</span>
-   </footer>
-  </main>
+  <footer class="ts-entry-foot">
+   <span>© 2026 Trending · one account, all of it</span>
+   <span><span class="material-symbols-rounded">lock</span> Simulated balances · no seed phrase, ever</span>
+  </footer>
  </div>
 </div>
 
@@ -832,7 +824,7 @@
     window.db = null;
     window.firebaseAuth = null;
   </script>
-  <script type="module" src="js/boot.js?v=1790000200"></script>
+  <script type="module" src="js/boot.js?v=1790010000"></script>
   <!-- Not async: this block calls into the app (renderFeed, handleAuth,
        $id), so it has to run after boot.js has published the globals.
        Module scripts without async run in document order. -->

@@ -254,7 +254,16 @@
   new MutationObserver(() => {
     const visible = !modal.classList.contains('hidden');
     document.querySelector('.app-wrapper')?.toggleAttribute('inert', visible);
-    if (visible) { show('auth-main-view'); get('auth-email').focus({ preventScroll: true }); }
+    if (!visible) return;
+    show('auth-main-view');
+    /* Only put the caret in the field on a screen with room for it. On a
+       phone the card is the page, so focusing it throws the keyboard up
+       and scrolls the wordmark and the animals off the top before anyone
+       has seen them. */
+    if (window.matchMedia && matchMedia('(min-width: 901px)').matches) {
+      get('auth-email').focus({ preventScroll: true });
+    }
+    document.getElementById('auth-modal').scrollTop = 0;
   }).observe(modal, { attributes: true, attributeFilter: ['class'] });
 
   modal.addEventListener('keydown', event => {
