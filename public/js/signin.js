@@ -247,13 +247,64 @@
 
   window.TSAuth = { apple, phone, back, sendCode, verifyCode, resend, show };
 
+  /* ── The ticker ──────────────────────────────────────────────────
+     BTC and ETH are whatever the Binance socket last sent, through the
+     same MNY.quote the rest of the app prices from. Nothing here is
+     ever invented: until a real number arrives the row shows a dash and
+     says it is connecting, because a made-up price on the front door is
+     how people end up trusting a made-up price everywhere else.
+
+     USDT is the exception and is marked as one. MNY holds stablecoins
+     at exactly 1.00 rather than quoting them, so it is labelled "peg"
+     instead of being passed off as a live market price. */
+  const TICKER = ['BTC', 'ETH', 'USDT'];
+  let tickTimer = null;
+
+  function paintTicker() {
+    const el = get('ts-ticker');
+    if (!el || typeof MNY === 'undefined') return;
+
+    let anyLive = false;
+    const rows = TICKER.map(sym => {
+      const q = MNY.quote(sym);
+      const peg = !!(MNY.STABLE && MNY.STABLE[sym]);
+      const has = q.known && q.usd > 0;
+      if (has && !peg) anyLive = true;
+
+      const price = has ? MNY.usd(q.usd, q.usd >= 1000 ? 0 : 2) : '—';
+      const chg = Number(q.change24h) || 0;
+      const move = peg ? '<span class="ts-tk-peg">peg</span>'
+        : has ? `<span class="ts-tk-m ${chg >= 0 ? 'up' : 'dn'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</span>`
+        : '';
+      return `<span class="ts-tk"><b>${sym}</b><span class="ts-tk-p">${price}</span>${move}</span>`;
+    }).join('');
+
+    const live = anyLive || (typeof MD !== 'undefined' && MD.isLive && MD.isLive());
+    el.innerHTML = rows +
+      `<span class="ts-tk-src ${live ? 'on' : ''}">${live ? 'Live · Binance' : 'connecting…'}</span>`;
+  }
+
+  /* Only while the page is actually up. A sign-in screen nobody is
+     looking at has no business holding a timer. */
+  function ticker(on) {
+    clearInterval(tickTimer);
+    tickTimer = null;
+    if (!on) return;
+    paintTicker();
+    tickTimer = setInterval(paintTicker, 4000);
+  }
+
   /* ── Modal plumbing ──────────────────────────────────────────────── */
   if (location.hash === '#signin') openAuthModal();
+  /* The modal is open at first paint for a signed-out visitor, which is
+     before the observer below has anything to observe. */
+  if (!document.getElementById('auth-modal').classList.contains('hidden')) ticker(true);
 
   const modal = get('auth-modal');
   new MutationObserver(() => {
     const visible = !modal.classList.contains('hidden');
     document.querySelector('.app-wrapper')?.toggleAttribute('inert', visible);
+    ticker(visible);
     if (!visible) return;
     show('auth-main-view');
     /* Only put the caret in the field on a screen with room for it. On a
