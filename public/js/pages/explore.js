@@ -282,7 +282,7 @@ async function renderSearchResults(q) {
       </div>
 
       <!-- AI Deepfake & Credibility Scanner Button -->
-      <button class="btn btn-ghost btn-sm mt12 flex-center gap4" onclick="runAIDeepfakeScanner('${escapeHTML(q)}')" style="width:100%; border-color:var(--purple); color:var(--purple); font-weight:700; background:rgba(154, 98, 255, 0.05)">
+      <button class="btn btn-ghost btn-sm mt12 flex-center gap4" onclick="runAIDeepfakeScanner('${escapeHTML(q)}')" style="width:100%; border-color:var(--purple); color:var(--purple); font-weight:700; background:rgba(255, 226, 103, 0.05)">
         <span class="material-symbols-rounded" style="font-size:16px">security</span> Run AI Deepfake &amp; Scam Scan
       </button>
       

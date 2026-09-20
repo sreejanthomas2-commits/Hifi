@@ -61,7 +61,7 @@ const CMD = (() => {
                    perms: ['view','post','upload','react','thread','speak','video','stream','events','boards','invite','mention','pin','moderate','analytics'] },
     creator:     { name: 'Creator',     level: 40,  color: '#EC6CB9',
                    perms: ['view','post','upload','react','thread','speak','video','stream','events','boards','invite','pin'] },
-    contributor: { name: 'Contributor', level: 30,  color: '#7C5CFF',
+    contributor: { name: 'Contributor', level: 30,  color: '#FCD535',
                    perms: ['view','post','upload','react','thread','speak','video','boards','invite'] },
     expert:      { name: 'Expert',      level: 25,  color: '#26A69A',
                    perms: ['view','post','upload','react','thread','speak','boards','invite'] },
@@ -112,7 +112,7 @@ const CMD = (() => {
     { id: 'labnotes', name: 'Lab Notes', handle: '@labnotes', icon: 'biotech', color: '#14B8A6',
       desc: 'Papers, replication and science that survives a second look.',
       members: 28500, online: 940, verified: true, category: 'science', tags: ['Research', 'Papers'] },
-    { id: 'insiders', name: 'Trending Insiders', handle: '@insiders', icon: 'workspace_premium', color: '#7C5CFF',
+    { id: 'insiders', name: 'Trending Insiders', handle: '@insiders', icon: 'workspace_premium', color: '#FCD535',
       desc: 'The community you run: product news, feedback and early builds.',
       members: 3120, online: 210, verified: true, category: 'brand', tags: ['Trending', 'Product'], mine: true },
     { id: 'learners', name: 'Learn Together', handle: '@learntogether', icon: 'school', color: '#F59E0B',
@@ -969,7 +969,7 @@ const CMD = (() => {
     const m = me();
     const c = {
       id, name: form.name, handle: '@' + form.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14),
-      icon: form.icon || 'groups', color: form.color || '#7C5CFF', desc: form.desc || '',
+      icon: form.icon || 'groups', color: form.color || '#FCD535', desc: form.desc || '',
       category: form.category || 'tech', tags: (form.tags || '').split(',').map(s => s.trim()).filter(Boolean),
       members: 0, online: 1, verified: false, owner: m.handle, mine: true,
       privacy: form.privacy || 'public', createdAt: Date.now()

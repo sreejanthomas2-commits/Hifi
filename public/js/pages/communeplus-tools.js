@@ -593,10 +593,10 @@
   const shell = (dark, body, script) => `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
 <style>
-:root{--bg:${dark ? '#12141A' : '#FFFFFF'};--card:${dark ? '#1B1E26' : '#F4F5F8'};--t1:${dark ? '#F2F3F5' : '#12141A'};--t2:${dark ? '#A6ACB8' : '#555B66'};--b:${dark ? '#2A2E38' : '#E2E4E9'};--brand:#7C5CFF}
+:root{--bg:${dark ? '#12141A' : '#FFFFFF'};--card:${dark ? '#1B1E26' : '#F4F5F8'};--t1:${dark ? '#F2F3F5' : '#12141A'};--t2:${dark ? '#A6ACB8' : '#555B66'};--b:${dark ? '#2A2E38' : '#E2E4E9'};--brand:#FCD535}
 *{box-sizing:border-box}body{margin:0;padding:16px;background:var(--bg);color:var(--t1);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
 button{font:700 13px system-ui;padding:9px 14px;border-radius:10px;border:1px solid var(--b);background:var(--card);color:var(--t1);cursor:pointer}
-button.p{background:var(--brand);color:#fff;border-color:transparent}input,textarea{width:100%;font:14px system-ui;padding:9px 11px;border-radius:10px;border:1px solid var(--b);background:var(--card);color:var(--t1)}
+button.p{background:var(--brand-fill);color:var(--on-brand);border-color:transparent}input,textarea{width:100%;font:14px system-ui;padding:9px 11px;border-radius:10px;border:1px solid var(--b);background:var(--card);color:var(--t1)}
 label{display:block;font:700 11px system-ui;text-transform:uppercase;letter-spacing:.05em;color:var(--t2);margin:10px 0 4px}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.muted{color:var(--t2);font-size:12px}
 .big{font:900 64px system-ui;letter-spacing:-.04em;text-align:center;margin:10px 0}.ok{color:#1A9E6C}.bad{color:#E5484D}code{font:12px ui-monospace,monospace;word-break:break-all}
 </style></head><body>${body}<script>${script}</script></body></html>`;

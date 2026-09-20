@@ -295,7 +295,7 @@ const QRGEN = (() => {
     const badge = brandLetter ? `
       <rect x="${(c - r * 1.35).toFixed(2)}" y="${(c - r * 1.35).toFixed(2)}"
             width="${(r * 2.7).toFixed(2)}" height="${(r * 2.7).toFixed(2)}" rx="${(r * 0.8).toFixed(2)}" fill="#fff"/>
-      <circle cx="${c}" cy="${c}" r="${r.toFixed(2)}" fill="#7C5CFF"/>
+      <circle cx="${c}" cy="${c}" r="${r.toFixed(2)}" fill="#FCD535"/>
       <text x="${c}" y="${(c + r * 0.36).toFixed(2)}" text-anchor="middle"
             font-family="Inter, system-ui, sans-serif" font-weight="900"
             font-size="${(r * 1.15).toFixed(2)}" fill="#fff">${brandLetter}</text>` : '';

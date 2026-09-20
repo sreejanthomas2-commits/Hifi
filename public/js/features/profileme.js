@@ -28,10 +28,10 @@ const PME = (() => {
 
   const COVERS = {
     classic: ['Classic', 'linear-gradient(135deg, var(--blue), var(--purple), var(--pink))'],
-    sunset:  ['Sunset', 'linear-gradient(135deg, #FF7A59, #FF3D8B 55%, #7C5CFF)'],
+    sunset:  ['Sunset', 'linear-gradient(135deg, #FF7A59, #FF3D8B 55%, #FCD535)'],
     ocean:   ['Ocean', 'linear-gradient(135deg, #00C6FB, #005BEA)'],
     forest:  ['Forest', 'linear-gradient(135deg, #0BAB64, #3BB78F)'],
-    aurora:  ['Aurora', 'radial-gradient(at 15% 20%, #7C5CFF 0, transparent 50%), radial-gradient(at 85% 10%, #EC6CB9 0, transparent 45%), radial-gradient(at 60% 100%, #38BDF8 0, transparent 50%), #151826'],
+    aurora:  ['Aurora', 'radial-gradient(at 15% 20%, #FCD535 0, transparent 50%), radial-gradient(at 85% 10%, #EC6CB9 0, transparent 45%), radial-gradient(at 60% 100%, #38BDF8 0, transparent 50%), #151826'],
     peach:   ['Peach', 'linear-gradient(135deg, #FFD3A5, #FD6585)'],
     night:   ['Night', 'linear-gradient(135deg, #0F2027, #203A43, #2C5364)'],
     graphite:['Graphite', 'linear-gradient(135deg, #3A3F4B, #11141A)']
@@ -228,7 +228,7 @@ const PME = (() => {
 
   function cropImage(file, cover) {
     if (!(window.CCR && CCR.crop)) { toast('The photo editor is not available right now.'); return Promise.resolve(null); }
-    return CCR.crop(file, cover ? 'banner' : 'avatar', '#7C5CFF', cover
+    return CCR.crop(file, cover ? 'banner' : 'avatar', '#FCD535', cover
       ? { title: 'Position your cover', hint: 'Drag to position. Shown across the top of your profile.', ok: 'Use this cover', spec: { w: 1500, h: 500, max: 380000 } }
       : { title: 'Position your profile photo', hint: 'Drag to position. Shown as a circle.', ok: 'Use this photo', round: true, spec: { w: 400, h: 400, max: 110000 } });
   }

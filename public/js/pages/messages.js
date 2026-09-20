@@ -410,7 +410,7 @@ function toggleComments(postId) {
   const comments = DATA.commentsDb[postId] || [];
   const commentsHtml = comments.map(c => `
     <div class="comment-item py8" style="align-items:flex-start">
-      <div class="avatar av-xs" style="background:var(--g-brand); width:24px; height:24px; font-size:10px; display:grid; place-items:center; color:#fff">${c.author[0]}</div>
+      <div class="avatar av-xs" style="background:var(--g-brand); width:24px; height:24px; font-size:10px; display:grid; place-items:center; color:var(--on-brand)">${c.author[0]}</div>
       <div style="flex:1">
         <div class="fw7 fs12 tc-1">${c.author} <span style="font-size:10px; color:var(--t3); font-weight:normal">${c.handle} · ${c.time}</span></div>
         <div class="fs12 tc-2 mt2">${escapeHTML(c.body)}</div>
@@ -1123,7 +1123,7 @@ window.openCreateGroupModal = function() {
         <div class="flex-col gap8" style="max-height: 150px; overflow-y: auto;">
           <label style="display: flex; align-items: center; gap: 12px; padding: 8px; background: var(--bg2); border-radius: 8px; cursor: pointer;">
             <input type="checkbox" checked style="accent-color: var(--blue);">
-            <div class="avatar av-xs" style="background: var(--purple);">S</div>
+            <div class="avatar av-xs" style="background: var(--brand-fill);">S</div>
             <span class="tc-1 fs14 fw6">Sarah Chen</span>
           </label>
           <label style="display: flex; align-items: center; gap: 12px; padding: 8px; background: var(--bg2); border-radius: 8px; cursor: pointer;">

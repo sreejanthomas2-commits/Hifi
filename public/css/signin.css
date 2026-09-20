@@ -21,16 +21,18 @@
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 #auth-modal {
-  --ts-night-a:  #14111f;
-  --ts-night-b:  #241a3d;
-  --ts-glow:     #8f6cff;
+  /* A warm charcoal night, not a violet one. The glow above it is the
+     same yellow the buttons use. */
+  --ts-night-a:  #121115;
+  --ts-night-b:  #221d12;
+  --ts-glow:     #f0c419;
   --ts-star:     #ffffff;
   --ts-wire:     #ffffff40;
   --ts-card-a:   #ffffff16;
   --ts-card-b:   #ffffff08;
   --ts-edge:     #ffffff28;
-  --ts-ink:      #16142a;
-  --ts-handle:   #cfc4ff;
+  --ts-ink:      #1a1710;
+  --ts-handle:   #e6d79a;
   --ts-cat:      #ffb47a;
   --ts-cat-in:   #ff8fa8;
   --ts-nose:     #ff8fa8;
@@ -53,9 +55,12 @@
   --ts-t1:       #191824;
   --ts-t2:       #625d72;
   --ts-t3:       #918ba1;
-  --ts-brand:    #7951c9;
-  --ts-brand-dk: #6841b6;
-  --ts-brand-sf: #f4effc;
+  --ts-brand:    #8a6400;   /* accent text: amber, readable on the card */
+  --ts-brand-dk: #6f5000;
+  --ts-brand-sf: #fff8e1;
+  --ts-fill:     #fcd535;   /* the button itself, with dark ink */
+  --ts-fill-dk:  #f0c419;
+  --ts-ink:      #181a20;
 
   position: fixed; inset: 0; z-index: 9999;
   /* index.css's .auth-modal-overlay makes this a centring flexbox. That
@@ -70,8 +75,8 @@
   font-family: Inter, system-ui, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   background:
-    radial-gradient(110% 70% at 18% 0%, #3a2a66 0%, transparent 58%),
-    radial-gradient(90% 65% at 100% 100%, #2c1f52 0%, transparent 62%),
+    radial-gradient(110% 70% at 18% 0%, #3a3018 0%, transparent 58%),
+    radial-gradient(90% 65% at 100% 100%, #2b2411 0%, transparent 62%),
     linear-gradient(165deg, var(--ts-night-a), var(--ts-night-b));
 }
 #auth-modal.hidden { display: none !important; }
@@ -79,7 +84,7 @@
 #auth-modal button, #auth-modal input { font: inherit; }
 #auth-modal button { cursor: pointer; }
 #auth-modal button:focus-visible,
-#auth-modal input:focus-visible { outline: 3px solid #b49aff; outline-offset: 3px; }
+#auth-modal input:focus-visible { outline: 3px solid #ffe267; outline-offset: 3px; }
 #auth-modal .hidden { display: none !important; }
 
 body:has(#auth-modal:not(.hidden)) { overflow: hidden; }
@@ -165,7 +170,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
   position: absolute; display: inline-flex; align-items: center; gap: 5px;
   font-size: 11.5px; font-weight: 550;
   padding: 9px 13px; border-radius: 13px; white-space: nowrap;
-  background: #2a2148e6; border: 1px solid #ffffff22; color: #efe9ff;
+  background: #262012e6; border: 1px solid #ffffff22; color: #f6efdc;
   box-shadow: 0 12px 30px #00000059;
   animation: ts-bubble 9s ease-in-out infinite; opacity: 0;
 }
@@ -198,7 +203,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
   margin: 0 0 20px; font-size: 15px; font-weight: 600;
   letter-spacing: -.2px; color: #c3bade; text-align: center;
 }
-.ts-tagline em { font-style: normal; color: #bda4ff; }
+.ts-tagline em { font-style: normal; color: #ffe267; }
 
 /* The card. Sits in the hole the four animals leave in the middle. */
 .ts-card {
@@ -214,7 +219,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 }
 .ts-form-wrap { width: 100%; }
 
-.ts-eyebrow { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1.7px; color: #8b77b8; }
+.ts-eyebrow { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1.7px; color: #a5790a; }
 .ts-card h2 {
   font-size: 31px; line-height: 1.16; letter-spacing: -1.3px;
   font-weight: 660; margin: 10px 0 7px; color: var(--ts-t1);
@@ -246,7 +251,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
   padding: 0 14px; font-size: 14px; color: var(--ts-t1); outline: none;
   transition: border-color .15s, box-shadow .15s;
 }
-#auth-modal input:focus { border-color: #8a68dc; box-shadow: 0 0 0 3px #8255d422; }
+#auth-modal input:focus { border-color: #d9b32c; box-shadow: 0 0 0 3px #8255d422; }
 #auth-modal input::placeholder { color: #a9a4b3; }
 
 .ts-password-label { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
@@ -260,13 +265,13 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 
 .ts-submit {
   height: 46px; width: 100%; border: 0; border-radius: 11px;
-  background: var(--ts-brand); color: #fff;
+  background: var(--ts-fill); color: var(--ts-ink);
   display: flex; align-items: center; justify-content: center; gap: 12px;
   font-weight: 620; font-size: 13.5px;
-  box-shadow: 0 8px 20px #7951c93d;
+  box-shadow: 0 8px 20px #fcd5353d;
   transition: background .15s, translate .12s, box-shadow .15s;
 }
-.ts-submit:hover { background: var(--ts-brand-dk); box-shadow: 0 10px 26px #7951c957; }
+.ts-submit:hover { background: var(--ts-fill-dk); box-shadow: 0 10px 26px #fcd53557; }
 .ts-submit:active { translate: 0 1px; }
 .ts-submit:disabled { opacity: .6; cursor: wait; box-shadow: none; }
 .ts-submit span { font-size: 18px; }
@@ -322,7 +327,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 [data-theme="dark"] #auth-modal {
   --ts-panel: #15141de8; --ts-line: #2e2c3d; --ts-field: #1d1b28;
   --ts-t1: #f0eef6; --ts-t2: #a9a3b8; --ts-t3: #7c768b;
-  --ts-brand: #a184ec; --ts-brand-dk: #8f6ee2; --ts-brand-sf: #241d38;
+  --ts-brand: #f2c94c; --ts-brand-dk: #e0b63b; --ts-brand-sf: #2b2411;
 }
 [data-theme="dark"] .ts-card { border-color: #ffffff1f; }
 [data-theme="dark"] #auth-modal label { color: #bdb6cc; }

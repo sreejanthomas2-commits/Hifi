@@ -267,7 +267,7 @@ function profileSectionHTML(tab) {
       </div>
       <div class="grid-4 gap12">
         <div class="card product-card text-center p12" style="background:var(--card2)">
-          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-pink); display:grid; place-items:center; color:#fff">
+          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-pink); display:grid; place-items:center; color:var(--on-brand)">
             <span class="material-symbols-rounded" style="font-size:24px">movie</span>
           </div>
           <div class="fw8 fs13 tc-1 mt8">UI Design Secrets</div>
@@ -277,7 +277,7 @@ function profileSectionHTML(tab) {
           </button>
         </div>
         <div class="card product-card text-center p12" style="background:var(--card2)">
-          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:#fff">
+          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand)">
             <span class="material-symbols-rounded" style="font-size:24px">bolt</span>
           </div>
           <div class="fw8 fs13 tc-1 mt8">5AM Cardio Hustle</div>
@@ -297,7 +297,7 @@ function profileSectionHTML(tab) {
           </button>
         </div>
         <div class="card product-card text-center p12" style="background:var(--card2)">
-          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:#fff">
+          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand)">
             <span class="material-symbols-rounded" style="font-size:24px">terminal</span>
           </div>
           <div class="fw8 fs13 tc-1 mt8">CSS Glassmorphism in 15s</div>
@@ -407,7 +407,7 @@ function profileSectionHTML(tab) {
         <span class="badge badge-green">Active Listening</span>
       </div>
       <div class="card p20 mb16 flex gap16" style="align-items:center; background:linear-gradient(135deg, var(--card), var(--card2))">
-        <div class="avatar av-xl flex-center" style="background:var(--g-brand); font-size:32px; display:grid; place-items:center; color:#fff">
+        <div class="avatar av-xl flex-center" style="background:var(--g-brand); font-size:32px; display:grid; place-items:center; color:var(--on-brand)">
           <span class="material-symbols-rounded" style="font-size:32px">mic</span>
         </div>
         <div style="flex:1">
@@ -751,11 +751,11 @@ function profileSectionHTML(tab) {
           </div>
         </div>
         <div class="order-tracker mt16 flex gap4" style="align-items:center; justify-content:center">
-          <div style="width:12px; height:12px; border-radius:50%; background:var(--blue)"></div>
-          <div style="flex:1; height:3px; background:var(--blue)"></div>
-          <div style="width:12px; height:12px; border-radius:50%; background:var(--blue)"></div>
-          <div style="flex:1; height:3px; background:var(--blue)"></div>
-          <div style="width:12px; height:12px; border-radius:50%; background:var(--blue); animation:pulse-dot 1.5s infinite"></div>
+          <div style="width:12px; height:12px; border-radius:50%; background:var(--brand-fill)"></div>
+          <div style="flex:1; height:3px; background:var(--brand-fill)"></div>
+          <div style="width:12px; height:12px; border-radius:50%; background:var(--brand-fill)"></div>
+          <div style="flex:1; height:3px; background:var(--brand-fill)"></div>
+          <div style="width:12px; height:12px; border-radius:50%; background:var(--brand-fill); animation:pulse-dot 1.5s infinite"></div>
           <div style="flex:1; height:3px; background:var(--border)"></div>
           <div style="width:12px; height:12px; border-radius:50%; background:var(--border)"></div>
         </div>
@@ -895,7 +895,7 @@ function profileSectionHTML(tab) {
             <span class="badge badge-purple">Level 14</span>
           </div>
           <div class="flex gap12 mt12" style="align-items:center">
-            <div class="avatar av-lg flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:#fff">
+            <div class="avatar av-lg flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand)">
               <span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--orange)">bolt</span>
             </div>
             <div style="flex:1">
@@ -911,7 +911,7 @@ function profileSectionHTML(tab) {
             <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--green); color:var(--bg); font-weight:800; font-size:11px" class="flex-center">M</div>
             <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--green); color:var(--bg); font-weight:800; font-size:11px" class="flex-center">T</div>
             <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--green); color:var(--bg); font-weight:800; font-size:11px" class="flex-center">W</div>
-            <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--blue); color:var(--bg); font-weight:800; font-size:11px; animation:pulse-dot 1.5s infinite" class="flex-center">T</div>
+            <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--brand-fill); color:var(--bg); font-weight:800; font-size:11px; animation:pulse-dot 1.5s infinite" class="flex-center">T</div>
             <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--card2); border:1px solid var(--border); color:var(--t3); font-weight:800; font-size:11px" class="flex-center">F</div>
             <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--card2); border:1px solid var(--border); color:var(--t3); font-weight:800; font-size:11px" class="flex-center">S</div>
             <div style="width:24px; height:24px; border-radius:var(--r1); background:var(--card2); border:1px solid var(--border); color:var(--t3); font-weight:800; font-size:11px" class="flex-center">S</div>
@@ -1083,9 +1083,9 @@ const PG = (() => {
     ['ai', 'AI Assistant', 'auto_awesome'], ['settings', 'Profile settings', 'tune']
   ];
   const CIRCLES = [
-    ['wallet', 'Wallet', 'account_balance_wallet', '#7C5CFF'], ['send', 'Send', 'send', '#2EBD85'],
+    ['wallet', 'Wallet', 'account_balance_wallet', '#FCD535'], ['send', 'Send', 'send', '#2EBD85'],
     ['receive', 'Receive', 'qr_code_2', '#3B82F6'], ['scan', 'Scan', 'qr_code_scanner', '#0EA5E9'],
-    ['swap', 'Swap', 'currency_exchange', '#EC4899'], ['trade', 'Trade', 'candlestick_chart', '#7C4DFF'],
+    ['swap', 'Swap', 'currency_exchange', '#EC4899'], ['trade', 'Trade', 'candlestick_chart', '#8A6400'],
     ['earn', 'Earn', 'savings', '#F0B90B'], ['p2p', 'P2P', 'swap_horiz', '#26A69A'], ['nfts', 'NFTs', 'token', '#F355DA']
   ];
   const TITLES = Object.fromEntries([...TABS, ...LIBRARY, ...MENU].map(([k, l]) => [k, l]));

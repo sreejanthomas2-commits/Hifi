@@ -40,7 +40,7 @@ function setupHeader() {
             </div>
           </div>
           <div class="notif-item unread" onclick="handleNotificationClick('messages', event)">
-            <div class="notif-item-avatar" style="background:var(--blue)">💬</div>
+            <div class="notif-item-avatar" style="background:var(--brand-fill)">💬</div>
             <div class="notif-item-content">
               <div class="notif-item-text"><strong>Marcus Webb</strong>: "Hey Alex! Did you check out the new Tokyo minimal design?"</div>
               <div class="notif-item-time">15m ago</div>

@@ -61,7 +61,7 @@ const STU = (() => {
     { k: 'light',   n: 'Light',   css: "'Inter', system-ui, sans-serif",                w: 300 }
   ];
 
-  const COLORS = ['#FFFFFF', '#000000', '#FF3B5C', '#FF9F0A', '#FFD60A', '#32D74B', '#0A84FF', '#7C5CFF', '#FF2D95', '#9AA0AA'];
+  const COLORS = ['#FFFFFF', '#000000', '#FF3B5C', '#FF9F0A', '#FFD60A', '#32D74B', '#0A84FF', '#FCD535', '#FF2D95', '#9AA0AA'];
 
   const STICKERS = [
     '🔥', '💜', '😂', '😍', '🤯', '👀', '✨', '💯', '🙌', '👏',

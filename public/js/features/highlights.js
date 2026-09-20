@@ -19,7 +19,7 @@ const HL = (() => {
   const MAX_HL = 30, MAX_FRAMES = 20, TITLE_MAX = 20, TEXT_MAX = 200;
   const FRAME_MS = 5000;
   const BGS = [
-    'linear-gradient(160deg, #7C5CFF, #EC4899)',
+    'linear-gradient(160deg, #FCD535, #EC4899)',
     'linear-gradient(160deg, #0EA5E9, #2EBD85)',
     'linear-gradient(160deg, #F97316, #F43F5E)',
     'linear-gradient(160deg, #111827, #4B5563)',

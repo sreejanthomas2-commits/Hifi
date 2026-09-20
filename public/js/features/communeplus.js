@@ -1976,7 +1976,7 @@ const CPM = (() => {
     const c = CMD.byId(cid);
     const seeded = c && ['insiders', 'eth', 'devcore', 'studio', 'sec'].indexOf(c.id) > -1;
     return { enabled: !!seeded, name: c ? c.name + ' Pass' : 'Pass', perks: ['Pass-holder space', 'Pass-holder votes', 'Early event seats'], supply: 0,
-      minted: seeded ? Math.floor(200 + rng(cid + ':pass')() * 1800) : 0, color: c ? c.color : '#7C5CFF', seed: !!seeded };
+      minted: seeded ? Math.floor(200 + rng(cid + ':pass')() * 1800) : 0, color: c ? c.color : '#FCD535', seed: !!seeded };
   }
   function savePass(cid, patch) {
     if (!CMD.can(cid, 'manage')) return { error: 'The owner designs the membership pass.' };

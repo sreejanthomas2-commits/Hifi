@@ -379,7 +379,7 @@ const SF = (() => {
       <div class="card sf-creator-card">
         <button class="icon-btn sf-close" onclick="SF.closeCreatorPage()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
         <div class="sf-creator-head">
-          <div class="avatar av-lg" style="background:var(--g-brand); display:grid; place-items:center; color:#fff; font-weight:800">${esc(initials)}</div>
+          <div class="avatar av-lg" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand); font-weight:800">${esc(initials)}</div>
           <div>
             <h3 class="fw9 tc-1 m0">${esc(name)}</h3>
             <div class="fs12 tc-3">${esc(handle)}</div>

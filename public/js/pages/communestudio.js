@@ -316,7 +316,7 @@ const CST = (() => {
     HUB.modal('New role', `
       <label class="hub-f"><span>Name</span><input id="cst-r-n" placeholder="Curator"></label>
       <div class="hub-form-row">
-        <label class="hub-f"><span>Colour</span><input type="color" id="cst-r-c" value="#7C5CFF"></label>
+        <label class="hub-f"><span>Colour</span><input type="color" id="cst-r-c" value="#FCD535"></label>
         <label class="hub-f"><span>Level</span><input type="number" id="cst-r-l" value="35" min="1" max="95"></label>
       </div>
       <label class="hub-check"><input type="checkbox" id="cst-r-s"> Members can assign this to themselves</label>
@@ -330,7 +330,7 @@ const CST = (() => {
     const level = Math.min(CMD.myLevel(cid) - 1, Number(($('cst-r-l') || {}).value || 30));
     const list = CMD.roles(cid).map(r => ({ ...r }));
     list.push({
-      id: 'r' + Date.now().toString(36), name, level, color: ($('cst-r-c') || {}).value || '#7C5CFF',
+      id: 'r' + Date.now().toString(36), name, level, color: ($('cst-r-c') || {}).value || '#FCD535',
       self: !!($('cst-r-s') || {}).checked,
       perms: ['view', 'post', 'react', 'thread', 'speak', 'boards']
     });
@@ -482,7 +482,7 @@ const CST = (() => {
       <h3>Messages by channel</h3>
       ${a.byChannel.length ? `<svg viewBox="0 0 ${w} ${h}" class="cst-chart" preserveAspectRatio="xMidYMid meet">
         <defs><linearGradient id="cstg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#9A83FF"></stop><stop offset="100%" stop-color="#7C5CFF"></stop></linearGradient></defs>
+          <stop offset="0%" stop-color="#FFE267"></stop><stop offset="100%" stop-color="#FCD535"></stop></linearGradient></defs>
         ${bars}
       </svg>` : '<p class="hub-none">No channel activity yet.</p>'}
     </section>

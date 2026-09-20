@@ -218,7 +218,7 @@ const AS = (() => {
   }
 
   /* ── Allocation ──────────────────────────────────────────────────── */
-  const SLICES = [['spot', 'Spot', '#7C5CFF'], ['earn', 'Earn', '#F0B90B'], ['funding', 'Funding', '#2EBD85']];
+  const SLICES = [['spot', 'Spot', '#FCD535'], ['earn', 'Earn', '#F0B90B'], ['funding', 'Funding', '#2EBD85']];
   function allocHTML(t) {
     const vals = { spot: t.spotVal, earn: t.earn.total, funding: t.fundingVal };
     if (t.total <= 0) return '';

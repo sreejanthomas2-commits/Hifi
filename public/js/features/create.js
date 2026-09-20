@@ -46,7 +46,7 @@ const CR = (() => {
     ['close', 'Close friends', 'stars']
   ];
   const BGS = [
-    'linear-gradient(140deg, #7C5CFF, #EC4899)',
+    'linear-gradient(140deg, #FCD535, #EC4899)',
     'linear-gradient(140deg, #0EA5E9, #2EBD85)',
     'linear-gradient(140deg, #F97316, #F43F5E)',
     'linear-gradient(140deg, #111827, #4B5563)',

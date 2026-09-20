@@ -577,7 +577,7 @@ function togglePlayStoreVideo() {
     const g = ctx.createLinearGradient(0, 0, cv.width, cv.height);
     g.addColorStop(0, '#1a0b2e'); g.addColorStop(1, '#0b1a2e');
     ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.strokeStyle = 'rgba(124,77,255,0.55)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(252,213,53,0.55)'; ctx.lineWidth = 2;
     for (let i = 0; i < 6; i++) {
       ctx.beginPath();
       for (let x = 0; x <= cv.width; x += 8) {

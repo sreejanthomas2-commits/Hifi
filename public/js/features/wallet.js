@@ -64,7 +64,7 @@ const WL = (() => {
     mew:           { label: 'MyEtherWallet',   slug: 'my-ether-wallet', color: '#1896A4', chain: 'Ethereum' },
     daimo:         { label: 'Daimo',           slug: 'daimo',           color: '#007AFF', chain: 'Base' },
 
-    demo:          { label: 'Demo Wallet',     slug: null, emoji: '🧪', color: '#7C4DFF', chain: 'Simulated', popular: true }
+    demo:          { label: 'Demo Wallet',     slug: null, emoji: '🧪', color: '#8A6400', chain: 'Simulated', popular: true }
   };
 
   /* Supported networks. `family` decides how we talk to an account:
@@ -78,7 +78,7 @@ const WL = (() => {
     bnb:      { label: 'BNB Chain', symbol: 'BNB', color: '#F0B90B', chainId: '0x38',   family: 'evm' },
     solana:   { label: 'Solana',    symbol: 'SOL', color: '#14F195', family: 'solana' },
     cosmos:   { label: 'Cosmos',    symbol: 'ATOM', color: '#2E3148', family: 'cosmos' },
-    simulated:{ label: 'Simulated', symbol: 'ETH', color: '#7C4DFF', family: 'demo' }
+    simulated:{ label: 'Simulated', symbol: 'ETH', color: '#8A6400', family: 'demo' }
   };
 
   const netByChainId = id => Object.keys(NETWORKS).find(k => NETWORKS[k].chainId === id);

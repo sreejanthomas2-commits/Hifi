@@ -49,7 +49,7 @@ const CH = (() => {
       desc: 'Yield, liquidity and the art of not getting rekt.',
       members: 71300, online: 4890, verified: false, tags: ['DeFi', 'Yield'],
       token: { sym: 'DEGEN', price: 0.09, holders: 34100, supply: 400000000 }, treasury: 620000 },
-    { id: 'l2',    name: 'Layer 2 Lab',        handle: '@l2lab', icon: 'layers', color: '#7C4DFF',
+    { id: 'l2',    name: 'Layer 2 Lab',        handle: '@l2lab', icon: 'layers', color: '#8A6400',
       desc: 'Rollups, proving systems and the road to cheap blockspace.',
       members: 24600, online: 980, verified: true, tags: ['L2', 'Rollups'],
       token: { sym: 'ROLL', price: 1.32, holders: 7600, supply: 25000000 }, treasury: 1180000 },

@@ -51,7 +51,7 @@ const NT = (() => {
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   const ico = (n, cls) => `<span class="material-symbols-rounded${cls ? ' ' + cls : ''}" aria-hidden="true">${esc(n)}</span>`;
   // Colours can come from user-made communities; only plain colour values reach a style attribute.
-  const safeColor = (c, d) => (/^#[0-9a-f]{3,8}$/i.test(String(c || '')) || /^(rgb|hsl)a?\([\d\s.,%]+\)$/i.test(String(c || '')) ? String(c) : (d || '#7C5CFF'));
+  const safeColor = (c, d) => (/^#[0-9a-f]{3,8}$/i.test(String(c || '')) || /^(rgb|hsl)a?\([\d\s.,%]+\)$/i.test(String(c || '')) ? String(c) : (d || '#FCD535'));
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
   const now = () => Date.now();
   const rid = p => `${p}_${now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -75,7 +75,7 @@ const NT = (() => {
     if (d < HOUR) return Math.max(1, Math.ceil(d / 60000)) + 'm left';
     return Math.ceil(d / HOUR) + 'h left';
   }
-  const COLORS = ['#7C5CFF', '#5C6BC0', '#26A69A', '#EF5350', '#AB47BC', '#FF7043', '#42A5F5', '#EC4899'];
+  const COLORS = ['#FCD535', '#5C6BC0', '#26A69A', '#EF5350', '#AB47BC', '#FF7043', '#42A5F5', '#EC4899'];
   const colorOf = s => COLORS[Math.abs([...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7)) % COLORS.length];
   const initials = n => String(n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
@@ -511,7 +511,7 @@ const NT = (() => {
         locationData: { name: 'Brooklyn, NY' } }),
       make('u_luna', 540, com
         ? { text: 'Design critique tonight — bring your WIP', audienceType: 'followers', contentType: 'content',
-            attachedContentId: com.id, attachedContentType: 'community', attachedContent: { type: 'community', id: com.id, title: com.name, subtitle: `${(com.members || 0).toLocaleString()} members`, icon: com.icon || 'groups', color: com.color || '#7C5CFF' } }
+            attachedContentId: com.id, attachedContentType: 'community', attachedContent: { type: 'community', id: com.id, title: com.name, subtitle: `${(com.members || 0).toLocaleString()} members`, icon: com.icon || 'groups', color: com.color || '#FCD535' } }
         : { text: 'Design critique tonight — bring your WIP ✏️', audienceType: 'followers' }),
       // Not visible to you: you don't follow Kai, and you're not on Priya's Close Friends.
       make('u_kai', 90, { text: 'Track PR today 🏃', audienceType: 'followers' }),
@@ -1626,7 +1626,7 @@ const NT = (() => {
     }
     const names = [...b.people];
     const who = names.length === 1 ? `<strong>${esc(names[0])}</strong>` : `<strong>${esc(names[0])}</strong> and ${names.length - 1} ${names.length === 2 ? 'other' : 'others'}`;
-    const html = `<div class="notif-item-avatar" style="background:var(--brand)">📝</div>
+    const html = `<div class="notif-item-avatar" style="background:var(--brand-fill)">📝</div>
       <div class="notif-item-content"><div class="notif-item-text">${who} ${names.length === 1 ? esc(verb) : 'interacted with'} your note</div><div class="notif-item-time">just now</div></div>`;
     if (list) {
       if (!b.el || !document.contains(b.el)) {

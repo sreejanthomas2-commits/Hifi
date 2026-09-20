@@ -293,7 +293,7 @@ const DEP = (() => {
   /* ── 1 · How do you want to add funds ────────────────────────────── */
   function methodHTML() {
     const rows = [
-      ['crypto', 'token', 'Deposit crypto', 'Receive coins from another exchange or wallet', '#7C5CFF', true],
+      ['crypto', 'token', 'Deposit crypto', 'Receive coins from another exchange or wallet', '#FCD535', true],
       ['p2p', 'swap_horiz', 'Buy with P2P', 'Pay a seller in your local currency, off-platform', '#26A69A', typeof P2P !== 'undefined'],
       ['payid', 'qr_code_2', 'Ask someone on Trending', 'Share your pay code in a chat', '#EC6CB9', typeof PAY !== 'undefined' && !!PAY.openMyQR]
     ].filter(r => r[5]);

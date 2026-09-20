@@ -43,9 +43,9 @@ const CCR = (() => {
     'workspace_premium', 'verified', 'star', 'bolt', 'local_fire_department', 'diamond', 'token', 'currency_bitcoin',
     'account_balance', 'monitoring', 'candlestick_chart', 'savings', 'storefront', 'shopping_bag', 'work', 'campaign',
     'newspaper', 'home', 'construction', 'shield', 'celebration', 'theater_comedy', 'nightlife', 'cake', 'checkroom'];
-  const COLORS = ['#7C5CFF', '#EC6CB9', '#FF6B6B', '#F97316', '#F59E0B', '#22C55E', '#14B8A6', '#0EA5E9', '#3B82F6', '#8B5CF6', '#64748B', '#111827'];
+  const COLORS = ['#FCD535', '#EC6CB9', '#FF6B6B', '#F97316', '#F59E0B', '#22C55E', '#14B8A6', '#0EA5E9', '#3B82F6', '#8B5CF6', '#64748B', '#111827'];
 
-  const okColor = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? c : '#7C5CFF';
+  const okColor = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? c : '#FCD535';
   const okImage = s => typeof s === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(s);
 
   const BANNERS = {
@@ -55,7 +55,7 @@ const CCR = (() => {
     grid:    ['Grid', c => `linear-gradient(rgba(255,255,255,.13) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(90deg, rgba(255,255,255,.13) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(135deg, ${c}, #151826)`],
     dots:    ['Dots', c => `radial-gradient(rgba(255,255,255,.28) 1.2px, transparent 1.7px) 0 0 / 16px 16px, linear-gradient(135deg, ${c}, ${c}99)`],
     waves:   ['Waves', c => `repeating-radial-gradient(circle at 100% 100%, transparent 0 18px, rgba(255,255,255,.1) 18px 20px), linear-gradient(135deg, ${c}, #151826)`],
-    sunset:  ['Sunset', () => 'linear-gradient(135deg, #FF7A59, #FF3D8B 55%, #7C5CFF)'],
+    sunset:  ['Sunset', () => 'linear-gradient(135deg, #FF7A59, #FF3D8B 55%, #FCD535)'],
     ocean:   ['Ocean', () => 'linear-gradient(135deg, #00C6FB, #005BEA)'],
     forest:  ['Forest', () => 'linear-gradient(135deg, #0BAB64, #3BB78F)'],
     night:   ['Night', () => 'linear-gradient(135deg, #0F2027, #203A43, #2C5364)']
@@ -169,7 +169,7 @@ const CCR = (() => {
         cv.width = Math.min(spec.w, Math.max(kind === 'banner' ? 600 : 160, Math.round(sw * 2)));
         cv.height = Math.round(cv.width / spec.aspect);
         cv.getContext('2d').drawImage(img, -x / s, -y / s, sw, sh, 0, 0, cv.width, cv.height);
-        done(encode(cv, spec.max, fill || '#7C5CFF'));
+        done(encode(cv, spec.max, fill || '#FCD535'));
       });
     })).catch(err => { toast(err.message); return null; });
   }
@@ -357,7 +357,7 @@ const CCR = (() => {
   function openCreate() {
     drafts.w = {
       step: 0, name: '', handle: '', handleTouched: false, tagline: '', desc: '', category: 'tech', tags: '', language: 'English',
-      avatar: '', icon: 'groups', color: '#7C5CFF', banner: '', bannerPreset: 'glow',
+      avatar: '', icon: 'groups', color: '#FCD535', banner: '', bannerPreset: 'glow',
       privacy: 'public', listed: true, age: 'all',
       entryMode: 'free', offerTiers: true, currency: 'USD', trialDays: 0, yearlyDiscount: 17,
       tiers: [{ name: 'Supporter', price: 4.99, perks: 'Supporter badge, Members-only channels, Early access' },

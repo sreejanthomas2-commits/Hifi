@@ -994,7 +994,7 @@ window.TR = TR;
 function getTradeTemplate() {
   return `<section id="pane-trade" class="pane">
     <h1 class="pane-title" style="display:flex; align-items:center; gap:10px">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:32px; color:#7C4DFF">candlestick_chart</span>
+      <span class="material-symbols-rounded emoji-3d" style="font-size:32px; color:#8A6400">candlestick_chart</span>
       <span>Spot</span> Trading
     </h1>
     <div class="tr-banner">

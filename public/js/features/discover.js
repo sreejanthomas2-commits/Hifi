@@ -711,7 +711,7 @@ const DX = (() => {
       const icon = typeof CCR !== 'undefined' && CCR.icon ? CCR.icon(c) : ico(esc(c.icon || 'groups'));
       return `<div ${common} role="button" tabindex="0">
         <span class="dx-cban" style="background:${bg}"></span>${more}${hot}
-        <span class="dx-cbody"><span class="dx-cico" style="--c:${esc(c.color || '#7C5CFF')}">${icon}</span>
+        <span class="dx-cbody"><span class="dx-cico" style="--c:${esc(c.color || '#FCD535')}">${icon}</span>
           <b>${esc(it.title)}</b><em>${compact(it.stats.members)} members · ${compact(it.stats.online)} online</em>
           <span class="dx-cdesc">${esc(c.tagline || c.desc || '')}</span>
           <span class="dx-pill">${it.joined ? ico('check') + 'Joined' : ico('groups') + 'Community'}</span></span></div>`;
@@ -1156,7 +1156,7 @@ const DX = (() => {
   }
 
   function entityIcon(it) {
-    if (it.kind === 'community' && it.c) return `<span class="dx-cico sm" style="--c:${esc(it.c.color || '#7C5CFF')}">${typeof CCR !== 'undefined' && CCR.icon ? CCR.icon(it.c) : ico(esc(it.c.icon || 'groups'))}</span>`;
+    if (it.kind === 'community' && it.c) return `<span class="dx-cico sm" style="--c:${esc(it.c.color || '#FCD535')}">${typeof CCR !== 'undefined' && CCR.icon ? CCR.icon(it.c) : ico(esc(it.c.icon || 'groups'))}</span>`;
     if (it.kind === 'creator') return `<span class="dx-av sm" style="--h:${hash(it.handle) % 360}">${esc(initials(it.title))}</span>`;
     return `<span class="dx-tico sm">${it.hashtag ? '#' : ico(TOPICS[it.primary] ? TOPICS[it.primary][1] : 'tag')}</span>`;
   }

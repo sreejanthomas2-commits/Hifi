@@ -619,7 +619,7 @@ function renderWhoToFollow() {
     return `
     <div class="trend-item flex-between" style="padding:10px 0; border-bottom:1px solid var(--border)">
       <div class="flex gap8" style="align-items:center; flex:1; min-width:0">
-        <div class="avatar av-xs" style="background:var(--g-brand); display:grid; place-items:center; color:#fff; font-size:11px; font-weight:800">${escapeHTML(postInitials(f.name))}</div>
+        <div class="avatar av-xs" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand); font-size:11px; font-weight:800">${escapeHTML(postInitials(f.name))}</div>
         <div style="flex:1; min-width:0">
           <div class="fw8 tc-1" style="font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${f.name} <span class="badge badge-blue fs9" style="margin-left:4px; padding:2px 4px">${f.match} match</span></div>
           <div class="fs10 tc-3" style="margin-top:2px">Shared: ${f.shared.join(', ')}</div>
@@ -862,7 +862,7 @@ function openStoryComposer() {
         </button>
       </div>
       <!-- Send Button -->
-      <button class="icon-btn" style="width:56px; height:56px; border-radius:50%; background:var(--blue); color:#fff; box-shadow:0 4px 16px rgba(33,150,243,0.4); display:grid; place-items:center; border:none;" onclick="submitStory('Direct Message')">
+      <button class="icon-btn" style="width:56px; height:56px; border-radius:50%; background:var(--brand-fill); color:var(--on-brand); box-shadow:0 4px 16px rgba(33,150,243,0.4); display:grid; place-items:center; border:none;" onclick="submitStory('Direct Message')">
         <span class="material-symbols-rounded" style="font-size:28px;">send</span>
       </button>
     </div>
@@ -1158,7 +1158,7 @@ function renderExplore() {
       const initials = u.name.split(' ').map(n=>n[0]).join('');
       return `
       <div class="card" style="padding:14px;text-align:center;cursor:pointer;transition:var(--tr-spring)" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-        <div class="avatar av-md" style="margin:0 auto 8px;background:var(--g-brand);display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff">${initials}</div>
+        <div class="avatar av-md" style="margin:0 auto 8px;background:var(--g-brand);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--on-brand)">${initials}</div>
         <div style="font-size:13px;font-weight:700">${u.name}</div>
         <div style="font-size:11px;color:var(--t3)">${u.handle}</div>
         <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="showToast('Following ${u.name}!')">Follow</button>

@@ -208,7 +208,7 @@ function getSettingsTemplate() {
           transition: .4s;
         }
         input:checked + .slider {
-          background-color: var(--blue);
+          background-color: var(--brand-fill);
           border-color: var(--blue);
         }
         input:checked + .slider:before {

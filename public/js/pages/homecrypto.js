@@ -36,7 +36,7 @@ const HC = (() => {
 
   /* ── 1. Quick rail ───────────────────────────────────────────────── */
   const ACTIONS = [
-    { label: 'Trade',     icon: 'candlestick_chart', color: '#7C4DFF', go: () => navigateTo('trade') },
+    { label: 'Trade',     icon: 'candlestick_chart', color: '#8A6400', go: () => navigateTo('trade') },
     { label: 'Earn',      icon: 'savings',           color: '#F0B90B', go: () => navigateTo('earn') },
     { label: 'Pay',       icon: 'qr_code_scanner',   color: '#EC6CB9', go: () => openPay() },
     { label: 'P2P',       icon: 'swap_horiz',        color: '#26A69A', go: () => navigateTo('p2p') },

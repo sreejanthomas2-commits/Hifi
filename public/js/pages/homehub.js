@@ -268,7 +268,7 @@ const HX = (() => {
      here takes payment details. */
   const FUNDS = [
     { icon: 'token', color: '#F0A23B', t: 'Deposit crypto', d: 'Receive coins from another exchange or wallet', go: () => { if (typeof DEP !== 'undefined') DEP.open('asset'); else receive(); } },
-    { icon: 'account_balance_wallet', color: '#7C5CFF', t: 'Deposit to Spot', d: 'Move paper USDT from your wallet into trading', go: () => navigateTo('portfolio') },
+    { icon: 'account_balance_wallet', color: '#FCD535', t: 'Deposit to Spot', d: 'Move paper USDT from your wallet into trading', go: () => navigateTo('portfolio') },
     { icon: 'swap_horiz', color: '#26A69A', t: 'Buy with P2P', d: 'Pay a seller in local currency, off-platform', go: () => { if (typeof P2P !== 'undefined') P2P.setSide('buy'); navigateTo('p2p'); } },
     { icon: 'qr_code_2', color: '#EC6CB9', t: 'Receive crypto', d: 'Show your wallet address and QR code', go: () => receive() },
     { icon: 'request_quote', color: '#F0A23B', t: 'Request a payment', d: 'Your Trending pay code for friends', go: () => { if (typeof PAY !== 'undefined') PAY.openMyQR(); } },

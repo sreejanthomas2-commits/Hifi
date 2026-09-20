@@ -1599,7 +1599,7 @@ const HUB = (() => {
         <label class="hub-f"><span>Icon</span><select id="hub-c-i">
           ${['groups', 'rocket_launch', 'sports_esports', 'music_note', 'code', 'palette', 'science', 'sports_soccer', 'currency_bitcoin', 'school']
             .map(i => `<option value="${i}">${i.replace(/_/g, ' ')}</option>`).join('')}</select></label>
-        <label class="hub-f"><span>Colour</span><input type="color" id="hub-c-col" value="#7C5CFF"></label>
+        <label class="hub-f"><span>Colour</span><input type="color" id="hub-c-col" value="#FCD535"></label>
       </div>
       <label class="hub-f"><span>Tags</span><input id="hub-c-t" placeholder="comma, separated"></label>
       <p class="hub-none sm">You become the owner, with every channel, role and Studio tool unlocked.</p>
