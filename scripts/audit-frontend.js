@@ -16,7 +16,7 @@
    ║  name, so the pane quietly drew a different file's grid           ║
    ║  instead, with nothing reported anywhere.                         ║
    ║                                                                   ║
-   ║  Five checks:                                                     ║
+   ║  Six checks:                                                      ║
    ║                                                                   ║
    ║   0. PARSES  one unparseable file takes the whole module graph    ║
    ║      with it. The browser reports a bare SyntaxError with no      ║
@@ -60,6 +60,14 @@
    ║      nothing, with no error — which is how the Category Portal    ║
    ║      came to open blank on every single visit. Chain it:          ║
    ║      navigateTo('category').then(() => …).                        ║
+   ║                                                                   ║
+   ║   5. PHANTOM EXPORT  a module built as                            ║
+   ║      const X = (() => { … return { a, b }; })() throws on load if ║
+   ║      it returns a name it never defined — and then the whole      ║
+   ║      module is gone. window.X is undefined, every caller takes    ║
+   ║      its `typeof X === 'undefined'` branch, and the page sits     ║
+   ║      there saying something reassuring like "still loading…".     ║
+   ║      Check 0 cannot see it: the file parses perfectly.            ║
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 'use strict';
@@ -283,6 +291,40 @@ for (const s of all) {
   });
 }
 if (!unawaited) console.log('   ok   every navigateTo() that then touches a pane waits for it');
+
+/* A module built as `const X = (() => { … return { a, b }; })()` throws a
+   ReferenceError at load time if it returns a name it never defined —
+   and then the whole module is gone. window.X is undefined, every caller
+   takes its `typeof X === 'undefined'` branch, and the page says
+   something reassuring like "still loading…" forever. Check 0 does not
+   see it: the file parses perfectly. */
+console.log('\n5. modules returning a name they never defined');
+let phantom = 0;
+for (const s of all) {
+  const src = body(s);
+  /* Only the module's own closing return — the one at the end of the
+     IIFE that becomes its public surface, written at two spaces. Object
+     literals returned from ordinary functions sit deeper than that, and
+     their `ok: false` style entries are values, not names. */
+  const surfaces = [...src.matchAll(/^  return \{([^{}]*)\};\s*$/gm)];
+  for (const m of surfaces.slice(-1)) {
+    for (const raw of m[1].split(',')) {
+      const name = raw.trim();
+      if (!name || !/^[A-Za-z_$][\w$]*$/.test(name)) continue;   // shorthand only
+      const declared = new RegExp(
+        '(?:function\\s*\\*?\\s+' + name + '\\b' +
+        '|(?:const|let|var|class)\\s+' + name + '\\b' +
+        '|\\b' + name + '\\s*(?:=|,)[^=]' +
+        '|\\(\\s*' + name + '\\s*[,)])').test(src);
+      if (declared) continue;
+      const line = src.slice(0, m.index).split('\n').length + 1;
+      console.log(`   FAIL ${rel(s)}:${line} returns ${name}, which nothing in the file defines`);
+      console.log('        the module throws on load and every caller sees it as missing');
+      phantom++; errors++;
+    }
+  }
+}
+if (!phantom) console.log('   ok   every returned name exists');
 
 console.log(`\n${errors} error(s), ${warnings} warning(s)\n`);
 process.exitCode = errors ? 1 : 0;

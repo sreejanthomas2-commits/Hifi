@@ -8546,3 +8546,22 @@ button.cmp-stat:hover { background: var(--bh); }
   .cvt-amt { font-size: 22px; }
   .cvt-sel { max-width: 76px; }
 }
+
+/* ── UID · your address inside Trending ──────────────────────────────
+   Shown on the wallet and under your payment code. Styled as a code,
+   not as an on-chain address: features/uid.js explains why the two must
+   never be mistaken for each other. */
+.wv-tag { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.wv-tag-l { font-size: 11px; color: var(--t3); font-weight: 600; letter-spacing: .3px; }
+.wv-tag-v { display: inline-flex; align-items: center; gap: 7px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 7px 11px; color: var(--t1); cursor: pointer; transition: var(--tr); }
+.wv-tag-v b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; letter-spacing: .6px; font-weight: 700; }
+.wv-tag-v:hover { border-color: var(--blue); background: var(--card); }
+.wv-tag-v .material-symbols-rounded { font-size: 16px; color: var(--t3); }
+.wv-tag-qr { background: none; border: 0; color: var(--blue); font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
+.wv-tag-qr:hover { text-decoration: underline; }
+.wv-tag-note { flex-basis: 100%; font-size: 10.5px; color: var(--t3); line-height: 1.5; }
+
+.pay-qr-tag { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; color: var(--t1); cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; font-weight: 700; letter-spacing: .6px; transition: var(--tr); }
+.pay-qr-tag:hover { border-color: var(--blue); }
+.pay-qr-tag .material-symbols-rounded { font-size: 16px; color: var(--t3); letter-spacing: 0; }
+.pay-qr-note { margin-top: 8px; font-size: 10.5px; line-height: 1.55; color: var(--t3); max-width: 300px; }

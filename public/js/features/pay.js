@@ -450,37 +450,29 @@ const PAY = (() => {
     return true;
   }
 
-  /* ── Identity ────────────────────────────────────────────────────── */
-  function digits(seed) {
-    let h = 2166136261;
-    for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
-    return String(100000000 + (h % 900000000));
-  }
-  const prettyId = id => String(id || '').replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
-
-  function myId() {
-    if (!D.id) {
-      D.id = String(100000000 + Math.floor(Math.random() * 900000000));
-      save();
-    }
-    return D.id;
-  }
-
-  function me() {
-    const u = (typeof S !== 'undefined' && S.user) ? S.user : {};
-    const name = `${u.fname || 'Guest'} ${u.lname || ''}`.trim() || 'Guest';
-    let handle = String(u.handle || '').trim();
-    if (!handle || handle === 'Sign In') handle = '@' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    if (handle[0] !== '@') handle = '@' + handle;
-    return { name, handle, payId: myId() };
-  }
-
-  const contacts = () => ((typeof DATA !== 'undefined' && DATA.users) || [])
-    .map(u => ({ name: u.name, handle: u.handle, online: !!u.online, payId: digits(u.handle) }));
+  /* ── Identity ──────────────────────────────────────────────────────
+     All of it comes from features/uid.js now. It used to be split: your
+     own Pay ID was a random number minted here on first use, while
+     everyone else's was a hash of their handle - so the number on your
+     code was not the number another copy of the app would work out for
+     you, and it changed on every new device. One root fixes both. */
+  const prettyId = id => UID.pretty(id);
+  const myId = () => UID.payId();
+  const myTag = () => UID.tag();
+  const me = () => UID.me();
+  const contacts = () => UID.contacts();
 
   const contactBy = handle => contacts().find(c => c.handle.toLowerCase() === String(handle || '').toLowerCase());
 
   const initials = n => String(n || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  function copyTag() {
+    const t = myTag();
+    try {
+      navigator.clipboard.writeText(t);
+      toast('Tag copied — ' + t);
+    } catch (e) { toast('Your Tag is ' + t); }
+  }
 
   /* ── Chat delivery ───────────────────────────────────────────────── */
   /* A request or receipt belongs in the conversation with that person, so
@@ -559,7 +551,7 @@ const PAY = (() => {
     const t = q.get('t');
     if (t !== 'u' && t !== 'r') return { ok: false, raw };
 
-    const clean = s => String(s || '').replace(/[ -]/g, '').slice(0, 80);
+    const clean = s => String(s || '').replace(/[-]/g, '').slice(0, 80);
     const p = {
       ok: true, type: t,
       payId: String(q.get('id') || '').replace(/\D/g, '').slice(0, 12),
@@ -991,6 +983,10 @@ const PAY = (() => {
         ${code}
         <div class="pay-qr-name">${esc(m.name)}</div>
         <div class="pay-qr-handle">${esc(m.handle)} · Pay ID ${esc(prettyId(m.payId))}</div>
+        <button type="button" class="pay-qr-tag" onclick="PAY.copyTag()" title="Copy your Trending Tag">
+          <span class="material-symbols-rounded ms-16">content_copy</span>${esc(m.tag)}</button>
+        <div class="pay-qr-note">Your address inside Trending. Anyone here can send to it.
+          It is not a blockchain address — nothing on a chain can reach it.</div>
         ${amount ? `<div class="pay-qr-amt">${esc(qty(amount))} ${esc(asset)}<span> · ${esc(usd(amount * priceOf(asset)))}</span></div>` : ''}
       </div>
 
@@ -1037,7 +1033,7 @@ const PAY = (() => {
       </div>
       <input type="file" id="pay-file" accept="image/*" capture="environment" hidden onchange="PAY.onFile(this)">
       <div class="pay-sec">Or paste a payment link</div>
-      <textarea class="pay-input" id="pay-paste" rows="2" placeholder="Paste a Trending payment link or code"></textarea>
+      <textarea class="pay-input" id="pay-paste" rows="2" placeholder="Paste a link, or type a Tag like TRD-4K7M-92XQ"></textarea>
       <button class="btn btn-primary mt8" style="width:100%" onclick="PAY.usePasted()">Open code</button>
       ${note}`;
   }
@@ -1174,6 +1170,17 @@ const PAY = (() => {
         WAD.fromScan(onchain, { origin: origin === 'cfi' ? 'cfi' : 'chat', cfi: snap });
         return;
       }
+      /* Not a link, but people read a Tag off a screen and type it in,
+         or paste the nine digits. Both address the same account. */
+      const direct = UID.resolve(text);
+      if (direct.ok) {
+        stopCam();
+        go('pay', { to: { name: direct.account.name, handle: direct.account.handle, payId: direct.account.payId },
+                    asset: 'USDT', amount: '', note: '', locked: false, rid: '' });
+        return;
+      }
+      if (direct.self) { setScanStatus(direct.reason, true); toast(direct.reason); return; }
+
       if (/^(0x[a-f0-9]{6,}|bc1|bitcoin:|ethereum:)/i.test(String(text).trim())) {
         setScanStatus('That looks like a blockchain address. Paper balances stay inside the app, so only Trending codes work here.', true);
       } else {
@@ -1553,7 +1560,7 @@ const PAY = (() => {
     createRequest, cancelRequest, declineRequest, payRequest, pay,
     pickImage, onFile, usePasted, focusPaste, copyMyLink, shareMyLink, copyLink, share, saveQR,
     cardHTML, previewOf, parsePayload, linkFor, myLink, requestLink,
-    contacts, me, statusOf, ASSETS,
+    contacts, me, statusOf, ASSETS, myTag, copyTag,
     get state() { return D; }
   };
 })();

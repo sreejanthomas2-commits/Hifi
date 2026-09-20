@@ -41,6 +41,28 @@ const WV = (() => {
   const qty = v => (has() ? MNY.qty(v) : '0');
 
   /* ── Header ──────────────────────────────────────────────────────── */
+  /* Your address inside Trending. It comes from UID, so it is the same
+     code on every device this account opens - and it is deliberately
+     nothing like an on-chain address. features/uid.js says why. */
+  function tagHTML() {
+    if (typeof UID === 'undefined') return '';
+    const m = UID.me();
+    return `<div class="wv-tag">
+      <span class="wv-tag-l">Your Trending address</span>
+      <button type="button" class="wv-tag-v" onclick="WV.copyTag()" title="Copy">
+        ${ico('qr_code_2')}<b>${esc(m.tag)}</b>${ico('content_copy')}</button>
+      <button type="button" class="wv-tag-qr" onclick="PAY.openMyQR()">Show my code</button>
+      ${m.guest ? '<span class="wv-tag-note">Sign in and this address follows your account onto any device. As a guest it lives in this browser only.</span>' : ''}
+    </div>`;
+  }
+
+  function copyTag() {
+    if (typeof UID === 'undefined') return;
+    const t = UID.tag();
+    try { navigator.clipboard.writeText(t); showToast('Address copied — ' + t); }
+    catch (e) { showToast('Your address is ' + t); }
+  }
+
   function heroHTML() {
     const n = MNY.netWorth();
     const mv = MNY.dayMove(n.rows);
@@ -61,6 +83,7 @@ const WV = (() => {
              <span>${esc(l)}</span><b>${esc(money(v))}</b></button>`).join('')}
       </div>
       <div class="wv-hero-note">Simulated balances — no real money moves. Real deposits and withdrawals are separate.</div>
+      ${tagHTML()}
     </section>`;
   }
 
@@ -328,7 +351,7 @@ const WV = (() => {
     if (back) back.scrollTop = scroll;
   }
 
-  return { html, repaint, act, go, move, setSwap, doSwap, clearHistory };
+  return { html, repaint, act, go, move, setSwap, doSwap, clearHistory, copyTag };
 })();
 
 window.WV = WV;
