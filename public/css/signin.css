@@ -195,38 +195,10 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 
 .ts-wm { width: 148px; height: auto; margin: 6px 0 10px; }
 .ts-tagline {
-  margin: 0 0 9px; font-size: 15px; font-weight: 600;
+  margin: 0 0 20px; font-size: 15px; font-weight: 600;
   letter-spacing: -.2px; color: #c3bade; text-align: center;
 }
 .ts-tagline em { font-style: normal; color: #bda4ff; }
-
-/* ── The ticker ───────────────────────────────────────────────────
-   Real prices, or a dash. Never a number the app made up. */
-.ts-ticker {
-  display: flex; flex-wrap: wrap; justify-content: center;
-  align-items: center; gap: 6px 14px;
-  margin: 0 0 16px; min-height: 20px;
-}
-.ts-tk { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12px; }
-.ts-tk b { color: #cfc4ff; font-weight: 700; letter-spacing: .4px; font-size: 11px; }
-.ts-tk-p { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
-.ts-tk-m { font-size: 10.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ts-tk-m.up { color: #4ade9b; }
-.ts-tk-m.dn { color: #ff7f9c; }
-.ts-tk-peg { font-size: 9.5px; font-weight: 700; letter-spacing: .6px;
-  color: #b3a6d8; border: 1px solid #ffffff2b; border-radius: 5px; padding: 1px 5px; text-transform: uppercase; }
-.ts-tk-src {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 9.5px; letter-spacing: .7px; text-transform: uppercase;
-  color: #8f88a8; font-weight: 600;
-}
-.ts-tk-src::before {
-  content: ''; width: 5px; height: 5px; border-radius: 50%;
-  background: #6b647f;
-}
-.ts-tk-src.on { color: #9fe3c0; }
-.ts-tk-src.on::before { background: #4ade9b; animation: ts-pulse 2.2s ease-in-out infinite; }
-@keyframes ts-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
 /* The card. Sits in the hole the four animals leave in the middle. */
 .ts-card {
@@ -385,8 +357,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 
   .ts-page { padding: 14px 18px 16px; }
   .ts-wm { width: 132px; margin: 2px 0 6px; }
-  .ts-tagline { font-size: 14px; margin-bottom: 7px; }
-  .ts-ticker { margin-bottom: 4px; gap: 5px 10px; font-size: 11px; }
+  .ts-tagline { font-size: 14px; margin-bottom: 0; }
   .ts-card { margin: 0; max-width: 420px; }
   .ts-entry-foot { flex-direction: column; gap: 4px; text-align: center; margin-top: 16px; }
 }
@@ -395,20 +366,19 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
    rhythm so the whole page still fits between the animals without a
    scrollbar. 900px catches the common 1280x800 and 1440x900. */
 @media (max-height: 900px) and (min-width: 901px) {
-  .ts-page { padding: 8px 24px 8px; }
+  .ts-page { padding: 10px 24px 10px; }
   .ts-wm { width: 124px; margin: 0 0 5px; }
-  .ts-tagline { font-size: 13px; margin-bottom: 7px; }
-  .ts-ticker { margin-bottom: 8px; gap: 5px 11px; }
-  .ts-card { padding: 16px 24px 14px; border-radius: 18px; }
+  .ts-tagline { font-size: 13px; margin-bottom: 10px; }
+  .ts-card { padding: 18px 24px 16px; border-radius: 18px; }
   .ts-card h2 { font-size: 26px; margin: 7px 0 4px; }
-  .ts-subtitle { font-size: 12.5px; margin-bottom: 12px; }
-  .ts-providers { gap: 6px; }
+  .ts-subtitle { font-size: 12.5px; margin-bottom: 14px; }
+  .ts-providers { gap: 7px; }
   .ts-prov, .ts-submit, #auth-modal input { height: 42px; }
   .ts-password > button { top: 10px; }
-  .ts-divider { margin: 11px 0; }
+  .ts-divider { margin: 13px 0; }
   .ts-password-label { margin-top: 12px; }
-  .ts-signup { margin: 10px 0 11px; }
-  .ts-wallet { padding-top: 11px; }
+  .ts-signup { margin: 12px 0 13px; }
+  .ts-wallet { padding-top: 13px; }
   .ts-wallet div span { display: none; }
   .ts-entry-foot { margin-top: 12px; }
 }
