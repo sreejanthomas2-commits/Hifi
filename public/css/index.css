@@ -8583,3 +8583,15 @@ button.cmp-stat:hover { background: var(--bh); }
 .story-popup-who:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .story-popup-who-text { min-width: 0; }
 .story-popup-who .story-popup-username { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── A profile opened directly ───────────────────────────────────────
+   Reached from a story rather than by searching, the account view is
+   that person's profile page, so its header says so: back, and their
+   handle. No search field, because nobody came here to search. */
+.sr-head-profile { justify-content: flex-start; gap: 10px; }
+.sr-head-title {
+  flex: 1; min-width: 0;
+  font-size: 15px; font-weight: 700; color: var(--t1);
+  letter-spacing: -.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}

@@ -267,9 +267,20 @@ const SR = (() => {
   function paint() {
     const host = document.getElementById('sr-overlay');
     if (!host || !V) return;
-    host.innerHTML = `
-      <div class="sr-sheet" role="dialog" aria-label="Search">
-        <div class="sr-head">
+    /* Opened straight onto a person - from a story, say - this is their
+       profile, and a profile does not have a search field across the top
+       of it. Back and their handle, nothing else. Arrive here by
+       searching and the search chrome stays, because that is where you
+       came from and where Back should return you. */
+    const asProfile = V.direct && V.view === 'account' && V.account;
+
+    const head = asProfile
+      ? `<div class="sr-head sr-head-profile">
+          <button class="icon-btn" onclick="SR.close()" aria-label="Back">
+            <span class="material-symbols-rounded ms-20">arrow_back</span></button>
+          <div class="sr-head-title">${esc(V.account.handle)}</div>
+        </div>`
+      : `<div class="sr-head">
           ${V.view === 'search' ? '' : `<button class="icon-btn" onclick="SR.back()" aria-label="Back">
             <span class="material-symbols-rounded ms-20">arrow_back</span></button>`}
           <div class="sr-field">
@@ -281,11 +292,16 @@ const SR = (() => {
               <span class="material-symbols-rounded ms-18">cancel</span></button>` : ''}
           </div>
           <button class="sr-cancel" onclick="SR.close()">Cancel</button>
-        </div>
+        </div>`;
+
+    host.innerHTML = `
+      <div class="sr-sheet${asProfile ? ' sr-sheet-profile' : ''}" role="dialog" aria-label="${asProfile ? 'Profile' : 'Search'}">
+        ${head}
         <div id="sr-body" class="sr-body"></div>
       </div>`;
     host.onclick = e => { if (e.target === host) close(); };
     paintBody();
+    /* No field to focus on a profile, and nothing to raise a keyboard for. */
     const inp = document.getElementById('sr-input');
     if (inp) inp.focus();
   }
@@ -528,6 +544,11 @@ const SR = (() => {
     open('', true);
     V.view = 'account';
     V.account = a;
+    /* direct: present it as a profile rather than a search result.
+       fromDiscover: Back closes, because there is no search behind it to
+       go back to - the same thing Discover already needed. */
+    V.direct = true;
+    V.fromDiscover = true;
     remember(a.name);
     paint();
     return true;
