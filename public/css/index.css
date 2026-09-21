@@ -822,11 +822,6 @@ select.input { appearance: none; cursor: pointer; }
   position: relative;
   margin: 0 auto;
 }
-.chat-quick-replies {
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.chat-quick-replies::-webkit-scrollbar { display: none; }
 .attach-menu {
   position: absolute;
   bottom: 50px;
@@ -1648,8 +1643,6 @@ select.input { appearance: none; cursor: pointer; }
 @keyframes msgr-blink { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
 
 /* Quick replies + composer */
-.msgr-quick { display: flex; gap: 8px; padding: 6px 16px; overflow-x: auto; scrollbar-width: none; }
-.msgr-quick::-webkit-scrollbar { display: none; }
 .msgr-composer { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--border); }
 .msgr-input-wrap { flex: 1; position: relative; display: flex; align-items: center; gap: 4px; background: var(--card2); border: 1px solid var(--border); border-radius: 24px; padding: 4px 8px; }
 .msgr-input-wrap .chat-input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--t1); font-size: 14px; padding: 8px 4px; }
@@ -2364,8 +2357,6 @@ select.input { appearance: none; cursor: pointer; }
   padding: 1px 6px; font-size: inherit; font-weight: 700; cursor: pointer; }
 .cfi-chip:hover { background: rgba(252,213,53,.3); }
 
-.msgr-quick-sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
-.cfi-quick-act { display: inline-flex; align-items: center; gap: 4px; }
 .cfi-head-btn { color: var(--purple); }
 .msgr-attach-sep { font-size: 9px; font-weight: 900; letter-spacing: .14em; color: var(--t3);
   padding: 8px 8px 4px; border-top: 1px solid var(--border); margin-top: 4px; }

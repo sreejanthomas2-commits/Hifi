@@ -891,7 +891,7 @@ const NT = (() => {
     toast('Reply sent');
     if (typeof navigateTo === 'function' && (typeof S === 'undefined' || S.pane !== 'messages')) navigateTo('messages');
     setTimeout(() => {
-      if (typeof TG !== 'undefined') { TG.open('c:' + convo.id); if (typeof renderQuickReplies === 'function') renderQuickReplies(); }
+      if (typeof TG !== 'undefined') TG.open('c:' + convo.id);
       if (typeof replyBack === 'function') replyBack();
     }, 80);
   }

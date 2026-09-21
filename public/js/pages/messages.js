@@ -1047,8 +1047,6 @@ function getMessagesTemplate() {
         <!-- Reply / edit context, filled by TG -->
         <div id="tg-context"></div>
 
-        <div class="msgr-quick" id="chat-quick-replies"></div>
-
         <div class="msgr-composer">
           <div class="msgr-input-wrap">
             <button class="icon-btn msgr-ghost-btn" onclick="toggleEmojiMenu()" title="Emoji">

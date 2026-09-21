@@ -10,9 +10,6 @@
 
 'use strict';
 
-const QUICK_REPLIES = ['Sounds good 👍', 'On my way', 'Let me check', 'Thanks!', '😂'];
-const CRYPTO_REPLIES = ['Price of BTC?', 'Top movers', 'How\'s the market?'];
-
 function allConversations() {
   return (typeof DATA !== 'undefined' && Array.isArray(DATA.conversations)) ? DATA.conversations : [];
 }
@@ -63,31 +60,6 @@ function replyBack() {
   }, 1400);
 }
 
-/* ── Quick replies ───────────────────────────────────────────────── */
-function renderQuickReplies() {
-  const host = $id('chat-quick-replies');
-  if (!host || typeof TG === 'undefined') return;
-
-  const c = TG.activeChat();
-  const isDesk = c && c.src === 'convo' && typeof CFI !== 'undefined' && CFI.isBot(c.raw.id);
-  const replies = isDesk ? CRYPTO_REPLIES : QUICK_REPLIES;
-
-  const text = replies.map(r =>
-    `<button class="btn btn-ghost btn-sm" onclick="TG.send(${JSON.stringify(r).replace(/"/g, '&quot;')})">${escapeHTML(r)}</button>`
-  ).join('');
-
-  const crypto = typeof CFI === 'undefined' ? '' : `
-    <span class="msgr-quick-sep"></span>
-    <button class="btn btn-ghost btn-sm cfi-quick-act" onclick="openChatCrypto('send')">
-      <span class="material-symbols-rounded ms-16">north_east</span> Send</button>
-    <button class="btn btn-ghost btn-sm cfi-quick-act" onclick="openChatCrypto('request')">
-      <span class="material-symbols-rounded ms-16">south_west</span> Request</button>
-    <button class="btn btn-ghost btn-sm cfi-quick-act" onclick="openChatCrypto('price')">
-      <span class="material-symbols-rounded ms-16">monitoring</span> Price</button>`;
-
-  host.innerHTML = text + crypto;
-}
-
 /* ── Composer extras ─────────────────────────────────────────────── */
 function toggleAttachmentMenu() {
   const menu = $id('chat-attach-menu');
@@ -134,7 +106,7 @@ function searchEnter(value) {
   const q = String(value || '').trim();
   if (!q || typeof TG === 'undefined') return;
   const hit = TG.visibleChats()[0];
-  if (hit && TG.state.search) { TG.open(hit.key); renderQuickReplies(); return; }
+  if (hit && TG.state.search) { TG.open(hit.key); return; }
   askAlina(q);
 }
 
@@ -147,7 +119,6 @@ function askAlina(value) {
   if (inp) inp.value = '';
   TG.setSearch('');
   TG.open('c:' + alina.id);
-  renderQuickReplies();
   TG.send(q);
 }
 
@@ -161,7 +132,6 @@ function setupMessages() {
   if (!$id('chat-list')) return;
   if (typeof TG === 'undefined') return;
   TG.setup();
-  renderQuickReplies();
 }
 
 /* ── Back-compatible shims ───────────────────────────────────────── */
@@ -169,7 +139,7 @@ function setupMessages() {
    nothing has to know the chat list changed owners. */
 function renderConversations() { if (typeof TG !== 'undefined') TG.paintList(); }
 function renderChatMessages() { if (typeof TG !== 'undefined') TG.paintThread(); }
-function openChat(id) { if (typeof TG !== 'undefined') { TG.open('c:' + id); renderQuickReplies(); } }
+function openChat(id) { if (typeof TG !== 'undefined') TG.open('c:' + id); }
 function sendChatMessage(preset) { if (typeof TG !== 'undefined') TG.send(preset); }
 function filterChats(type) { if (typeof TG !== 'undefined') TG.setFolder(type === 'all' ? 'all' : type); }
 function searchChats(v) { if (typeof TG !== 'undefined') TG.setSearch(v); }
@@ -177,7 +147,6 @@ function searchChats(v) { if (typeof TG !== 'undefined') TG.setSearch(v); }
 window.setupMessages = setupMessages;
 window.renderConversations = renderConversations;
 window.renderChatMessages = renderChatMessages;
-window.renderQuickReplies = renderQuickReplies;
 window.openChat = openChat;
 window.sendChatMessage = sendChatMessage;
 window.filterChats = filterChats;
@@ -204,11 +173,9 @@ window.updateUnreadBadge = updateUnreadBadge;
    dead module graph. */
 import { publish } from '../globals.js?v=3';
 publish('pages/messenger.js', {
-  QUICK_REPLIES: () => QUICK_REPLIES, CRYPTO_REPLIES: () => CRYPTO_REPLIES,
   allConversations: () => allConversations,
   conversationById: () => conversationById,
   updateUnreadBadge: () => updateUnreadBadge, replyBack: () => replyBack,
-  renderQuickReplies: () => renderQuickReplies,
   toggleAttachmentMenu: () => toggleAttachmentMenu,
   closeChatAttach: () => closeChatAttach,
   sendMockAttachment: () => sendMockAttachment,
