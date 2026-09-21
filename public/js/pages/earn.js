@@ -100,8 +100,12 @@ const EN = (() => {
   const hasTR = () => typeof TR !== 'undefined';
 
   function priceOf(sym) {
+    /* One price for the whole app. Earn used to carry its own TREND
+       figure ($0.42) while the wallet and Pay used MNY's $0.10, so the
+       same tokens were worth four times more here than anywhere else. */
+    if (typeof MNY !== 'undefined' && MNY.price) return MNY.price(sym);
     if (sym === 'USDT') return 1;
-    if (sym === 'TREND') return 0.42;             // pre-listing reference price
+    if (sym === 'TREND') return 0.10;             // pre-listing reference price, as MNY declares it
     const c = (window.liveCryptoPrices || {})[sym];
     return c ? c.usd : 0;
   }
@@ -140,9 +144,15 @@ const EN = (() => {
   function accrue() {
     const now = Date.now();
     if (!E.lastAccrual) { E.lastAccrual = now; save(); return; }
-    const dt = now - E.lastAccrual;
+    const prev = E.lastAccrual;
+    const dt = now - prev;
     if (dt < 1000) return;
     E.lastAccrual = now;
+
+    /* The stretch of this tick a position was actually open for. A term
+       stops paying at maturity and a pool at its end, even when the app
+       was closed across that moment and this tick covers a week. */
+    const spanOf = (start, end) => Math.max(0, Math.min(now, end || now) - Math.max(prev, start || prev));
 
     let credited = 0;
 
@@ -150,7 +160,7 @@ const EN = (() => {
       if (s.status !== 'active') return;
       const p = PRODUCTS.find(x => x.id === s.productId);
       if (!p) return;
-      const earned = s.amount * (p.apy / 100) * (dt / YEAR_MS);
+      const earned = s.amount * (p.apy / 100) * (spanOf(s.startedAt, p.term ? s.maturesAt : 0) / YEAR_MS);
       s.accrued += earned;
       credited += earned * priceOf(s.coin);
       if (p.term && now >= s.maturesAt) s.status = 'matured';
@@ -161,7 +171,7 @@ const EN = (() => {
       const pool = POOLS.find(x => x.id === p.poolId);
       if (!pool) return;
       const value = p.amount * priceOf(p.stakeCoin);
-      const rewardUsd = value * (pool.apy / 100) * (dt / YEAR_MS);
+      const rewardUsd = value * (pool.apy / 100) * (spanOf(p.startedAt, p.endsAt) / YEAR_MS);
       p.farmed += rewardUsd / (priceOf(pool.sym) || 1);
       if (now >= p.endsAt) p.status = 'ended';
     });
@@ -187,7 +197,10 @@ const EN = (() => {
     const avg = moves.reduce((a, b) => a + b, 0) / moves.length;
     const beta = t.risk === 'High' ? 1.6 : t.risk === 'Medium' ? 1.1 : 0.7;
     const heldDays = Math.max(0, (Date.now() - (since || Date.now())) / (24 * 60 * 60 * 1000));
-    return avg * beta * Math.min(1, 0.35 + heldDays);
+    /* Zero the moment you start and the full day's move after a day held.
+       It used to open at 35% of the day's move, so a copy opened and
+       closed a tick later paid out a return nobody had been exposed to. */
+    return avg * beta * Math.min(1, heldDays);
   }
 
   /* ── 1. Copy trading ─────────────────────────────────────────────── */

@@ -79,8 +79,11 @@ const MNY = (() => {
     const c = liveMap()[k];
     const px = c ? num(c.usd) : 0;
     if (px > 0) {
+      /* A remembered price (the cached list at start-up, or a coin the
+         stream has not refreshed) still values a holding, but it is not
+         live: nothing may be converted or traded at it. */
       return {
-        usd: px, known: true, live: true, reference: false,
+        usd: px, known: true, live: !c.stale, reference: false,
         change24h: num(c.change24h != null ? c.change24h : c.usd_24h_change),
         name: c.name || k
       };
@@ -205,7 +208,13 @@ const MNY = (() => {
     if (amt <= 0) return { ok: false, msg: 'Enter an amount to transfer.' };
     if ((a === 'spot' || b === 'spot') && !hasTR()) return { ok: false, msg: 'The trading account is unavailable.' };
     const have = balanceOf(k, a);
-    if (amt > have + 1e-12) return { ok: false, msg: `${ACCOUNTS[a].label} holds ${qty(have)} ${k}.` };
+    if (amt > have + 1e-12) {
+      // Spot's balance here is what open orders haven't set aside; say so.
+      const held = a === 'spot' && hasTR() && TR.lockedOf ? num(TR.lockedOf(k)) : 0;
+      return { ok: false, msg: held > 1e-12
+        ? `Spot has ${qty(have)} ${k} free — ${qty(held)} is held by open orders.`
+        : `${ACCOUNTS[a].label} holds ${qty(have)} ${k}.` };
+    }
     if (!rawDebit(k, amt, a)) return { ok: false, msg: 'The transfer could not be made.' };
     if (!rawCredit(k, amt, b)) { rawCredit(k, amt, a); return { ok: false, msg: 'The transfer could not be made.' }; }
     if (!o.silent) {

@@ -545,25 +545,28 @@ async function likePost(e, id) {
     IX.burstReaction('❤️', e.clientX, e.clientY, 8);
   }
   
+  // The heart turns now, not after the cloud answers - it may never.
+  renderFeed();
+
   // If it's a Firestore post (string ID), update the cloud database
   if (typeof id === 'string' && window.db && window.firebaseDoc && window.firebaseUpdateDoc) {
     try {
       const postRef = window.firebaseDoc(window.db, 'posts', id);
-      await window.firebaseUpdateDoc(postRef, {
+      const giveUp = new Promise((_, reject) => setTimeout(() => reject(new Error('no answer from Firestore')), 8000));
+      await Promise.race([window.firebaseUpdateDoc(postRef, {
         likes: window.firebaseIncrement ? window.firebaseIncrement(change) : p.likes
-      });
+      }), giveUp]);
     } catch (err) {
       console.error("Error updating likes:", err);
       // Revert local UI if failed
       p.liked = !p.liked;
       p.likes -= change;
       showToast('Error liking post.');
+      renderFeed();
     }
   } else {
     savePostsToLocal();
   }
-  
-  renderFeed();
 }
 
 /* Every row used to open the Politics category portal, whichever trend
@@ -694,24 +697,25 @@ async function publishPost() {
   };
 
   input.value = '';
-  
+
+  /* Local first, always: the post is on your feed and in storage the
+     moment you press Post, and the cloud copy follows if it can. It used
+     to wait on Firestore alone, and this project's Firestore database
+     was never created, so the write hung or failed. The box had already
+     been cleared by then, so the post was simply gone. When the cloud
+     copy does arrive, the feed listener keeps one of the two (it matches
+     them by text). */
+  const localPost = { ...newPost, id: Date.now(), time: Date.now(), mine: true };
+  DATA.posts.unshift(localPost);
+  savePostsToLocal();
+  renderFeed();
+  showToast('Posted ✨');
+
   if (window.db && window.firebaseCollection && window.firebaseAddDoc) {
-    try {
-      const postsRef = window.firebaseCollection(window.db, 'posts');
-      await window.firebaseAddDoc(postsRef, newPost);
-      showToast('Post published to the global network! 🌍');
-    } catch (e) {
-      console.error("Error adding document: ", e);
-      showToast('Error publishing post. ❌');
-    }
-  } else {
-    // Fallback to local
-    newPost.id = Date.now();
-    newPost.time = Date.now();
-    newPost.mine = true;
-    DATA.posts.unshift(newPost);
-    savePostsToLocal();
-    renderFeed();
+    const giveUp = new Promise((_, reject) => setTimeout(() => reject(new Error('no answer from Firestore')), 8000));
+    Promise.race([window.firebaseAddDoc(window.firebaseCollection(window.db, 'posts'), newPost), giveUp])
+      .then(() => { localPost.synced = true; savePostsToLocal(); })
+      .catch(err => console.warn('Post kept on this device; the cloud copy was not saved.', err && err.message));
   }
 
   // Social-to-earn: publishing is a contribution, so it pays (up to a daily cap).

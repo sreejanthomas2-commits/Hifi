@@ -49,6 +49,9 @@ const CT = (() => {
     const c = (window.liveCryptoPrices || {})[sym];
     return c ? c.usd : 0;
   }
+  /* A remembered price is shown, never acted on: no swap, no recurring
+     buy and no alert fires on it until a live quote arrives. */
+  const isStale = sym => sym !== 'USDT' && !!((window.liveCryptoPrices || {})[sym] || {}).stale;
 
   function coinList() {
     const live = Object.keys(window.liveCryptoPrices || {});
@@ -86,9 +89,15 @@ const CT = (() => {
 
     const rate = convertRate(from, to);
     if (!rate) return { ok: false, msg: 'No live price for that pair.' };
+    if (isStale(from) || isStale(to)) {
+      return { ok: false, msg: `${isStale(from) ? from : to} is showing its last known price — converting resumes when a live quote arrives.` };
+    }
 
     const have = TR.availableOf(from);
-    if (amt > have + 1e-12) return { ok: false, msg: `Insufficient ${from} — you hold ${qty(have)}.` };
+    if (amt > have + 1e-12) {
+      const held = TR.lockedOf ? TR.lockedOf(from) : 0;
+      return { ok: false, msg: `Insufficient ${from} — you hold ${qty(have)}${held > 1e-12 ? ` free, ${qty(held)} in open orders` : ''}.` };
+    }
 
     const received = amt * rate * (1 - CONVERT_FEE);
     if (!TR.debitAsset(from, amt)) return { ok: false, msg: 'Debit failed.' };
@@ -130,7 +139,7 @@ const CT = (() => {
     C.alerts.forEach(a => {
       if (a.triggered) return;
       const p = priceOf(a.coin);
-      if (!p) return;
+      if (!p || isStale(a.coin)) return;
       const hit = a.direction === 'above' ? p >= a.target : p <= a.target;
       if (!hit) return;
       a.triggered = true;
@@ -199,6 +208,12 @@ const CT = (() => {
 
     const price = priceOf(p.coin);
     if (!price) return false;
+    // Wait for a live price rather than buy at a remembered one; the
+    // plan stays due and runs on the first live tick.
+    if (isStale(p.coin)) {
+      if (manual) toast(`${p.coin} is showing its last known price — try again when a live quote arrives.`);
+      return false;
+    }
 
     if (TR.availableOf('USDT') < p.amount) {
       p.active = false;

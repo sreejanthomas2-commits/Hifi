@@ -34,14 +34,21 @@
       // User is signed in
       console.log('✅ User signed in:', user.displayName || user.email);
       
-      const displayName = user.displayName || user.email.split('@')[0];
+      /* A phone-number account has no email and often no display name, so
+         neither can be assumed. This used to read user.email.split(), which
+         threw for a phone sign-in: Firebase signed the person in and the app
+         never let them in. The handle falls back to the uid, never to digits
+         of the phone number, which would be public on the profile. */
+      const shortId = String(user.uid || '').slice(0, 6).toLowerCase();
+      const emailName = user.email ? user.email.split('@')[0] : '';
+      const displayName = user.displayName || emailName || 'Trending user';
       const nameParts = displayName.split(' ');
       
       S.user = {
         uid: user.uid,
         fname: nameParts[0] || 'User',
         lname: nameParts.slice(1).join(' ') || '',
-        handle: '@' + (user.email ? user.email.split('@')[0] : 'user'),
+        handle: '@' + (emailName || 'user' + shortId),
         email: user.email,
         avatar: user.photoURL || null,
         bio: 'Verified Trending member 🛡️',
@@ -97,8 +104,8 @@
       if (!userSnap.exists()) {
         // First time user — create profile
         await setDoc(userRef, {
-          displayName: user.displayName || user.email.split('@')[0],
-          email: user.email,
+          displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Trending user'),
+          email: user.email || null,
           photoURL: user.photoURL || null,
           xp: 0,
           level: 1,

@@ -57,6 +57,7 @@ const CVT = (() => {
     const q = MNY.quote(s);
     if (q.reference) return `${sym_(s)} has no market yet — its price here is a reference, not something to convert at.`;
     if (!q.known) return `There is no price for ${sym_(s)} right now.`;
+    if (!q.live) return `${sym_(s)} is showing its last known price — converting resumes when a live quote arrives.`;
     return '';
   }
 

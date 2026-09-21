@@ -144,6 +144,8 @@ const P2P = (() => {
     const list = offers(P.side, P.coin, P.fiat);
     const o = list.find(x => x.id === offerId);
     if (!o) return toast('That ad is no longer available.');
+    // Your own ad sits in the book for others; you can't take the other side of it.
+    if (o.mineAd) return toast("That's your own ad — manage it under My ads.");
 
     const amt = parseFloat(fiatAmount);
     if (!amt || amt <= 0) return toast('Enter an amount.');
@@ -186,9 +188,17 @@ const P2P = (() => {
     const o = P.orders.find(x => x.id === id);
     if (!o || o.status !== 'pending_payment') return;
     o.status = 'paid';
+    o.paidAt = Date.now();
     save(); paint();
     toast('Marked as paid — waiting for the seller to release');
+    release(id, 2600);
+  }
 
+  /* The simulated seller releases a moment after you mark the order paid.
+     The timer doesn't survive a reload, so an order reloaded mid-release
+     is picked up again at start-up (below) instead of spinning on
+     "Seller is releasing escrow…" forever. */
+  function release(id, wait) {
     setTimeout(() => {
       const cur = P.orders.find(x => x.id === id);
       if (!cur || cur.status !== 'paid') return;
@@ -199,7 +209,7 @@ const P2P = (() => {
       }
       save(); paint();
       toast(`Released — ${qtyFmt(cur.qty)} ${cur.coin} credited to your account ✅`);
-    }, 2600);
+    }, wait);
   }
 
   /* Seller confirms fiat landed; escrowed crypto goes to the buyer. */
@@ -345,9 +355,11 @@ const P2P = (() => {
               <div><span>Limits</span><b>${fiatFmt(o.minF, o.fiat)} – ${fiatFmt(o.maxF, o.fiat)}</b></div>
               <div class="p2p-pays">${o.pays.map(p => `<span class="p2p-pay">${esc(p)}</span>`).join('')}</div>
             </div>
-            <button class="btn btn-sm ${P.side === 'buy' ? 'p2p-btn-buy' : 'p2p-btn-sell'}" onclick="P2P.openOrderForm('${o.id}')">
+            ${o.mineAd
+              ? `<button class="btn btn-ghost btn-sm" onclick="P2P.setTab('ads')">Manage ad</button>`
+              : `<button class="btn btn-sm ${P.side === 'buy' ? 'p2p-btn-buy' : 'p2p-btn-sell'}" onclick="P2P.openOrderForm('${o.id}')">
               ${P.side === 'buy' ? 'Buy' : 'Sell'} ${esc(o.coin)}
-            </button>
+            </button>`}
           </div>`;
         }).join('')}
       </div>`;
@@ -507,6 +519,9 @@ const P2P = (() => {
         maxF: document.getElementById('ad-max').value,
         pay: document.getElementById('ad-pay').value })">Post ad</button>`);
   }
+
+  // Orders reloaded while the seller was releasing finish now.
+  setTimeout(() => P.orders.filter(o => o.status === 'paid').forEach(o => release(o.id, 1200)), 0);
 
   return {
     paint, setSide, setTab, setCoin, setFiat, setPay,

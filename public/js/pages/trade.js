@@ -2,9 +2,10 @@
    ║  SPOT TRADING DESK                                               ║
    ║                                                                  ║
    ║  Trade every coin in the live CoinGecko feed (150 pairs vs USDT).║
-   ║  Market and limit orders, an order book, open orders, fills,     ║
-   ║  holdings with average cost and P&L, and deposit / withdraw      ║
-   ║  between the social wallet and the trading account.              ║
+   ║  Market, limit and stop-limit orders, an order book, open orders ║
+   ║  (with their funds set aside), order and trade history, holdings ║
+   ║  with average cost and P&L, and deposit / withdraw between the   ║
+   ║  social wallet and the trading account.                          ║
    ║                                                                  ║
    ║  IMPORTANT: this is a PAPER account. Orders never leave the      ║
    ║  browser — there is no exchange connection and no custody. It    ║
@@ -25,8 +26,9 @@ const TR = (() => {
   const DEFAULT = {
     cash: 100000,                 // paper USDT
     holdings: {},                 // SYM -> { qty, avgCost }
-    orders: [],                   // open limit orders
+    orders: [],                   // open limit and stop-limit orders
     fills: [],                    // executed trades, newest first
+    history: [],                  // orders that finished: filled or cancelled
     realized: 0,                  // realised P&L in USDT
     feesPaid: 0,
     pair: 'BTC'
@@ -131,6 +133,35 @@ const TR = (() => {
 
   const holding = sym => T.holdings[sym] || { qty: 0, avgCost: 0 };
 
+  /* What open orders have set aside. A resting buy holds its quote at the
+     limit price plus the fee; a resting sell holds the coin. Everything
+     that spends from Spot (the wallet, Convert, Earn, tips and chat)
+     asks availableOf(), so money promised to an order can't also leave
+     by another door. Before this, two buys could each promise 80% of
+     the cash, and a coin on a resting sell could be sent away. */
+  const orderNeeds = o => o.side === 'buy'
+    ? { sym: o.quote || 'USDT', qty: o.qty * o.price * (1 + FEE) }
+    : { sym: o.sym, qty: o.qty };
+  function lockedOf(sym, except) {
+    return T.orders.reduce((s, o) => {
+      if (o === except) return s;
+      const n = orderNeeds(o);
+      return n.sym === sym ? s + n.qty : s;
+    }, 0);
+  }
+  const totalOf = sym => (sym === 'USDT' ? T.cash : holding(sym).qty);
+
+  /* A finished order, for the Order history tab. */
+  function logOrder(o, status, at) {
+    if (!Array.isArray(T.history)) T.history = [];
+    T.history.unshift({
+      id: o.id, side: o.side, sym: o.sym, qty: o.qty, price: o.price, stop: o.stop || 0,
+      type: o.stop ? 'stop' : (o.type || 'limit'), quote: o.quote || 'USDT',
+      status, at: at || 0, placed: o.t || Date.now(), t: Date.now()
+    });
+    if (T.history.length > 100) T.history.length = 100;
+  }
+
   function positionValue() {
     return Object.keys(T.holdings).reduce((s, k) => s + holding(k).qty * priceOf(k), 0);
   }
@@ -176,10 +207,12 @@ const TR = (() => {
     if (T.fills.length > 200) T.fills.length = 200;
   }
 
-  /* Validates then either fills now (market) or rests on the book (limit). */
-  function placeOrder(side, sym, type, qty, limitPrice) {
+  /* Validates, then fills now (a market order, or a limit already through
+     the market), rests on the book (limit), or waits for its trigger
+     (stop-limit). */
+  function placeOrder(side, sym, type, qty, limitPrice, stopPrice) {
     qty = parseFloat(qty);
-    if (!['buy', 'sell'].includes(side) || !['market', 'limit'].includes(type)) return {ok:false,msg:'Invalid spot order.'};
+    if (!['buy', 'sell'].includes(side) || !['market', 'limit', 'stop'].includes(type)) return {ok:false,msg:'Invalid spot order.'};
     if (sym === QUOTE || !pairs().includes(sym)) return {ok:false,msg:'Select a valid spot pair.'};
     if (isStale(sym) || staleQuote(QUOTE)) {
       return { ok: false, msg: `${tick(isStale(sym) ? sym : QUOTE)} is showing its last known price — trading resumes when a live quote arrives.` };
@@ -189,9 +222,19 @@ const TR = (() => {
     if (!sym || !mkt) return { ok: false, msg: 'No live price for that pair.' };
     if (!qty || qty <= 0 || !isFinite(qty)) return { ok: false, msg: 'Enter a valid amount.' };
 
-    const price = type === 'limit' ? parseFloat(limitPrice) : mkt;
-    if (type === 'limit' && (!price || price <= 0 || !isFinite(price))) {
+    const price = type === 'market' ? mkt : parseFloat(limitPrice);
+    if (type !== 'market' && (!price || price <= 0 || !isFinite(price))) {
       return { ok: false, msg: 'Enter a valid limit price.' };
+    }
+
+    const stop = type === 'stop' ? parseFloat(stopPrice) : 0;
+    if (type === 'stop') {
+      if (!stop || stop <= 0 || !isFinite(stop)) return { ok: false, msg: 'Enter a valid stop price.' };
+      /* A stop already through the market would trigger the moment it was
+         placed, which makes it a limit order. Exchanges refuse it as a
+         stop for the same reason. */
+      if (side === 'buy' && stop <= mkt) return { ok: false, msg: `A buy stop must be above the current price (${quoteFmt(mkt)}).` };
+      if (side === 'sell' && stop >= mkt) return { ok: false, msg: `A sell stop must be below the current price (${quoteFmt(mkt)}).` };
     }
 
     /* A market order takes the book, not the mid: walk the real ladder and
@@ -201,26 +244,34 @@ const TR = (() => {
         String(MD.status().pair).toUpperCase() === String(sym).toUpperCase()) {
       swept = MD.sweep(side, qty);
     }
-    const execPrice = type === 'market' ? (swept && swept.avg ? swept.avg : mkt) : price;
 
+    /* A limit order already through the market fills at once, and at the
+       market: the limit is the worst price you accept, not the price you
+       pay. It used to fill at the limit, so a buy typed at twice the
+       market paid twice the market. */
+    const marketable = type === 'market' ||
+      (type === 'limit' && ((side === 'buy' && price >= mkt) || (side === 'sell' && price <= mkt)));
+    const fillAt = type === 'market' ? (swept && swept.avg ? swept.avg : mkt)
+      : marketable ? (side === 'buy' ? Math.min(price, mkt) : Math.max(price, mkt))
+      : price;
+
+    // Funds come out of what isn't already set aside for other orders.
     if (side === 'buy') {
-      const cost = qty * execPrice * (1 + FEE);
-      if (cost > quoteBalance(QUOTE)) return { ok: false, msg: `Insufficient ${QUOTE} — need ${quoteFmt(cost)}, have ${quoteFmt(quoteBalance(QUOTE))}.` };
+      const cost = qty * fillAt * (1 + FEE);
+      const free = availableOf(QUOTE);
+      if (cost > free + 1e-9) {
+        return { ok: false, msg: `Insufficient ${QUOTE} — need ${quoteFmt(cost)}, have ${quoteFmt(free)}${lockedOf(QUOTE) > 0 ? ' free (the rest is in open orders)' : ''}.` };
+      }
     } else {
-      if (qty > holding(sym).qty + 1e-12) {
-        return { ok: false, msg: `Insufficient ${sym} — you hold ${qtyFmt(holding(sym).qty)}.` };
+      const free = availableOf(sym);
+      if (qty > free + 1e-12) {
+        return { ok: false, msg: `Insufficient ${sym} — you hold ${qtyFmt(free)}${lockedOf(sym) > 0 ? ` free, ${qtyFmt(lockedOf(sym))} in open orders` : ''}.` };
       }
     }
 
-    /* A limit order that is already through the market fills at once —
-       otherwise it would sit on the book at a better price than the market. */
-    const marketable = type === 'market' ||
-      (side === 'buy' && price >= mkt) ||
-      (side === 'sell' && price <= mkt);
-
     if (marketable) {
-      const fillAt = type === 'market' ? execPrice : price;
       settle(side, sym, qty, fillAt);
+      logOrder({ id: Date.now() + Math.random(), side, sym, qty, price: fillAt, type, quote: QUOTE }, 'filled', fillAt);
       save();
       const slip = swept && Math.abs(swept.slippage) >= 0.02
         ? ` · ${swept.slippage >= 0 ? '+' : ''}${swept.slippage.toFixed(2)}% slippage`
@@ -229,46 +280,96 @@ const TR = (() => {
         msg: `${side === 'buy' ? 'Bought' : 'Sold'} ${qtyFmt(qty)} ${sym} @ ${quoteFmt(fillAt)}${slip}` };
     }
 
-    T.orders.unshift({ id: Date.now() + Math.random(), side, sym, qty, price, quote: QUOTE, t: Date.now() });
+    const order = { id: Date.now() + Math.random(), side, sym, qty, price, quote: QUOTE, t: Date.now(), type };
+    if (type === 'stop') order.stop = stop;
+    T.orders.unshift(order);
     save();
-    return { ok: true, filled: false, msg: `Limit ${side} ${qtyFmt(qty)} ${sym} @ ${quoteFmt(price)} resting on the book` };
+    return type === 'stop'
+      ? { ok: true, filled: false, msg: `Stop-limit ${side} ${qtyFmt(qty)} ${sym} — triggers at ${quoteFmt(stop)}, limit ${quoteFmt(price)}` }
+      : { ok: true, filled: false, msg: `Limit ${side} ${qtyFmt(qty)} ${sym} @ ${quoteFmt(price)} resting on the book` };
   }
 
   function cancelOrder(id) {
     const i = T.orders.findIndex(o => String(o.id) === String(id));
     if (i < 0) return;
+    logOrder(T.orders[i], 'cancelled');
     T.orders.splice(i, 1);
     save();
     toast('Order cancelled');
     repaint();
   }
 
-  /* Called on every price refresh: fills any resting order the market
-     has moved through. */
+  async function cancelAll() {
+    const n = T.orders.length;
+    if (!n) return;
+    if (typeof appConfirm === 'function' &&
+        !(await appConfirm(`Cancel all ${n} open orders? The funds they hold go back to your balance.`,
+          { title: 'Cancel all orders', ok: 'Cancel all', cancel: 'Keep them', danger: true }))) return;
+    T.orders.forEach(o => logOrder(o, 'cancelled'));
+    T.orders = [];
+    save();
+    toast(`${n} order${n > 1 ? 's' : ''} cancelled`);
+    repaint();
+  }
+
+  /* A paper account can be started over. Holdings, cash, orders and the
+     history go back to the opening 100,000 USDT; the pair and quote stay. */
+  async function resetAccount() {
+    if (typeof appConfirm === 'function' &&
+        !(await appConfirm('Your paper balance goes back to 100,000 USDT. Holdings, open orders and trade history are cleared. Nothing real is affected.',
+          { title: 'Reset the paper account?', ok: 'Reset', danger: true }))) return;
+    T = { ...JSON.parse(JSON.stringify(DEFAULT)), pair: T.pair, quote: T.quote };
+    save();
+    toast('Paper account reset — 100,000 USDT');
+    repaint();
+    if (typeof MNY !== 'undefined' && MNY.repaint) MNY.repaint();
+  }
+
+  /* Called on every price refresh. Triggers any stop the market has
+     reached, and fills any resting order it has moved through. */
   function matchOpenOrders() {
     if (!T.orders.length) return;
-    const stillOpen = [];
-    let filledCount = 0;
+    let filled = 0, triggered = 0;
 
-    T.orders.forEach(o => {
+    T.orders.slice().forEach(o => {
       const quote = o.quote || 'USDT';
       const mkt = pairPrice(o.sym, quote);
-      if (!mkt || isStale(o.sym) || staleQuote(quote)) { stillOpen.push(o); return; }
+      if (!mkt || isStale(o.sym) || staleQuote(quote)) return;
+
+      /* A stop-limit waits for its trigger, then becomes a limit order at
+         its limit price: filled at once if the market is already through
+         the limit, resting on the book if not. */
+      let taker = false;
+      if (o.type === 'stop') {
+        if (!(o.side === 'buy' ? mkt >= o.stop : mkt <= o.stop)) return;
+        o.type = 'limit';
+        o.triggeredAt = Date.now();
+        triggered++;
+        taker = true;
+      }
+
       const hit = (o.side === 'buy' && mkt <= o.price) || (o.side === 'sell' && mkt >= o.price);
-      if (!hit) { stillOpen.push(o); return; }
+      if (!hit) return;
 
-      // Re-check funds — the balance may have moved since the order rested.
-      if (o.side === 'buy' && o.qty * o.price * (1 + FEE) > quoteBalance(quote)) { stillOpen.push(o); return; }
-      if (o.side === 'sell' && o.qty > holding(o.sym).qty + 1e-12) { stillOpen.push(o); return; }
+      // The order's own reserve pays for it. Check nothing has eaten into
+      // the balance underneath it since it was placed.
+      const need = orderNeeds(o);
+      if (need.qty > totalOf(need.sym) - lockedOf(need.sym, o) + 1e-9) return;
 
-      settle(o.side, o.sym, o.qty, o.price, quote);
-      filledCount++;
+      // A resting order gets its own price; one that just triggered takes
+      // the market, like any order that arrives through it.
+      const at = taker ? (o.side === 'buy' ? Math.min(o.price, mkt) : Math.max(o.price, mkt)) : o.price;
+      T.orders = T.orders.filter(x => x !== o);
+      settle(o.side, o.sym, o.qty, at, quote);
+      logOrder(o, 'filled', at);
+      filled++;
     });
 
-    if (filledCount) {
-      T.orders = stillOpen;
+    if (filled || triggered) {
       save();
-      toast(`${filledCount} limit order${filledCount > 1 ? 's' : ''} filled ✅`);
+      toast(filled
+        ? `${filled} order${filled > 1 ? 's' : ''} filled ✅`
+        : `Stop triggered — limit order placed`);
       repaint();
     }
   }
@@ -278,7 +379,7 @@ const TR = (() => {
      one — so they move balances through save() rather than poking at
      the state object directly. */
   function availableOf(sym) {
-    return sym === 'USDT' ? T.cash : holding(sym).qty;
+    return Math.max(0, totalOf(sym) - lockedOf(sym));
   }
 
   function creditAsset(sym, qty, atPrice) {
@@ -300,12 +401,12 @@ const TR = (() => {
 
   function debitAsset(sym, qty) {
     if (!Number.isFinite(qty) || qty <= 0) return false;
+    // Only what open orders haven't set aside can leave.
+    if (availableOf(sym) < qty - 1e-12) return false;
     if (sym === 'USDT') {
-      if (T.cash < qty) return false;
       T.cash -= qty;
     } else {
       const h = holding(sym);
-      if (h.qty < qty - 1e-12) return false;
       const left = h.qty - qty;
       if (left <= 1e-12) delete T.holdings[sym];
       else T.holdings[sym] = { qty: left, avgCost: h.avgCost };
@@ -329,7 +430,7 @@ const TR = (() => {
     if (!Number.isFinite(amt) || amt <= 0) return toast('Enter an amount to deposit.');
     if (typeof MNY === 'undefined') return toast('Accounts are still loading…');
     const r = MNY.transfer(QUOTE, amt, 'funding', 'spot');
-    toast(r.ok ? `Deposited ${usd(amt)} into the trading account` : r.msg);
+    toast(r.ok ? `Deposited ${quoteFmt(amt)} into the trading account` : r.msg);
     if (r.ok) { save(); repaint(); }
   }
 
@@ -338,7 +439,7 @@ const TR = (() => {
     if (!Number.isFinite(amt) || amt <= 0) return toast('Enter an amount to withdraw.');
     if (typeof MNY === 'undefined') return toast('Accounts are still loading…');
     const r = MNY.transfer(QUOTE, amt, 'spot', 'funding');
-    toast(r.ok ? `Withdrew ${usd(amt)} to your wallet` : r.msg);
+    toast(r.ok ? `Withdrew ${quoteFmt(amt)} to your wallet` : r.msg);
     if (r.ok) { save(); repaint(); }
   }
 
@@ -533,6 +634,9 @@ const TR = (() => {
   let orderType = 'market';
   let search = '';
   let watchOnly = false;
+  let lower = 'open';               // Open orders | Order history
+  let right = 'fills';              // Trade history | Holdings
+  let lastEdited = 'qty';           // the box that holds still as the price moves: qty or total
 
   /* Only symbols in the live feed are tradable. Refusing here stops a bad
      pair from being persisted and breaking the desk on the next load. */
@@ -559,6 +663,8 @@ const TR = (() => {
   const isTradable = sym => pairs().includes(String(sym || '').toUpperCase());
   function setSide(s) { side = s; repaint(); }
   function setType(t) { orderType = t; repaint(); }
+  function setLower(v) { lower = v === 'history' ? 'history' : 'open'; repaint(); }
+  function setRight(v) { right = v === 'holdings' ? 'holdings' : 'fills'; repaint(); }
   function setSearch(v) { search = (v || '').toUpperCase(); paintPairList(); }
 
   function paintPairList() {
@@ -645,7 +751,6 @@ const TR = (() => {
     const c = live()[sym];
     if (!c) { root.innerHTML = '<div class="tr-empty">Waiting for live market data…</div>'; return; }
 
-    const h = holding(sym);
     const d = depth(sym);
     const feed = (typeof MD !== 'undefined') ? MD.status() : { live: false };
     wireFeed();
@@ -653,14 +758,65 @@ const TR = (() => {
       MD.watchPair(sym, chartIv);
     }
 
+    /* Typing survives a repaint (an order filling, a side switch) as long
+       as the pair is the same. A new pair starts with an empty form. */
+    const keep = {};
+    if (root.dataset.pair === sym && root.dataset.side === side) {
+      ['tr-qty', 'tr-total', 'tr-price', 'tr-stop'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value !== '') keep[id] = el.value;
+      });
+    } else lastEdited = 'qty';
+
+    const typeTag = o => (o.stop || o.type === 'stop' ? '<small class="tr-otype">STOP</small>' : '');
     const openRows = T.orders.length ? T.orders.map(o => `
       <div class="tr-row">
-        <span class="${o.side === 'buy' ? 'up' : 'down'}">${o.side.toUpperCase()}</span>
+        <span class="${o.side === 'buy' ? 'up' : 'down'}">${o.side.toUpperCase()}${typeTag(o)}</span>
         <span>${esc(tick(o.sym))}/${esc(o.quote || 'USDT')}</span>
         <span>${qtyFmt(o.qty)}</span>
-        <span>${pxFmt(o.price)} ${esc(o.quote || 'USDT')}</span>
-        <button class="tr-x" onclick="TR.cancelOrder('${o.id}')">✕</button>
+        <span>${o.type === 'stop' ? `<span class="tc-3">${o.side === 'buy' ? '≥' : '≤'} ${pxFmt(o.stop)} →</span> ` : ''}${pxFmt(o.price)} ${esc(o.quote || 'USDT')}</span>
+        <button class="tr-x" onclick="TR.cancelOrder('${o.id}')" aria-label="Cancel order">✕</button>
       </div>`).join('') : '<div class="tr-empty">No open orders.</div>';
+
+    const hist = Array.isArray(T.history) ? T.history : [];
+    const historyRows = hist.length ? hist.slice(0, 20).map(o => `
+      <div class="tr-row">
+        <span class="${o.side === 'buy' ? 'up' : 'down'}">${o.side.toUpperCase()}${o.type === 'stop' ? '<small class="tr-otype">STOP</small>' : o.type === 'market' ? '<small class="tr-otype">MKT</small>' : ''}</span>
+        <span>${esc(tick(o.sym))}/${esc(o.quote)}</span>
+        <span>${qtyFmt(o.qty)}</span>
+        <span>${pxFmt(o.status === 'filled' && o.at ? o.at : o.price)} ${esc(o.quote)}</span>
+        <span class="tr-st ${o.status}">${o.status === 'filled' ? 'Filled' : 'Cancelled'}</span>
+      </div>`).join('') : '<div class="tr-empty">Filled and cancelled orders show up here.</div>';
+
+    /* Holdings on the desk itself, so you can see what you can sell
+       without leaving for the Assets page. A row opens its pair. */
+    const heldKeys = Object.keys(T.holdings).filter(k => holding(k).qty > 1e-12)
+      .sort((a, b) => holding(b).qty * priceOf(b) - holding(a).qty * priceOf(a));
+    // Cash reads to the cent; a coin keeps its precision.
+    const amt = (k, v) => (k === 'USDT' ? v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : qtyFmt(v));
+    const inOrders = k => (lockedOf(k) > 1e-12 ? ` <small class="tc-3">· ${amt(k, lockedOf(k))} in orders</small>` : '');
+    const holdRows = `
+      <div class="tr-row">
+        <span><b>USDT</b></span>
+        <span>${amt('USDT', T.cash)}${inOrders('USDT')}</span>
+        <span>${usd(T.cash)}</span>
+        <span class="tc-3">cash</span>
+      </div>` + heldKeys.map(k => {
+        const h = holding(k), px = priceOf(k);
+        const pnl = (px - h.avgCost) * h.qty;
+        const pnlPct = h.avgCost > 0 ? ((px - h.avgCost) / h.avgCost) * 100 : 0;
+        const open = isTradable(k);
+        return `
+      <div class="tr-row${open ? ' tr-row-link' : ''}"${open ? ` onclick="TR.setPair('${esc(k)}')"` : ''}>
+        <span><b>${esc(tick(k))}</b></span>
+        <span>${qtyFmt(h.qty)}${inOrders(k)}</span>
+        <span>${px ? usd(h.qty * px) : '—'}</span>
+        <span class="${pnl >= 0 ? 'up' : 'down'}">${px && h.avgCost ? `${usd(pnl)} · ${pct(pnlPct)}` : '—'}</span>
+      </div>`;
+      }).join('');
+
+    const lockedHere = side === 'buy' ? lockedOf(QUOTE) : lockedOf(sym);
+    const stopDefault = roundPx(pairPrice(sym) * (side === 'buy' ? 1.01 : 0.99));
 
     const fillRows = T.fills.length ? T.fills.slice(0, 12).map(f => `
       <div class="tr-row">
@@ -680,7 +836,7 @@ const TR = (() => {
           <select aria-label="Asset type" class="input mb8" onchange="TR.setAssetFilter(this.value)">
             ${[['all','All assets'],['crypto','Crypto'],['stocks','Tokenized stocks']].map(([v,n]) => '<option value="'+v+'" '+(assetFilter===v?'selected':'')+'>'+n+'</option>').join('')}
           </select>
-          <p class="fs11 tc-3">Spot · No leverage. USDC/USD1 use converted reference prices. To fund these pairs, buy USDC or USD1 with your paper USDT first.</p>
+          <p class="fs11 tc-3">Spot · No leverage. USDC/USD1 use converted reference prices. To fund these pairs, buy USDC or USD1 with your paper USDT first. <button type="button" class="tr-link" onclick="TR.resetAccount()">Reset paper account</button></p>
           <input class="input tr-search" placeholder="Search ${pairs().length} pairs…" oninput="TR.setSearch(this.value)" value="${esc(search)}">
           <button class="tr-watch-filter${watchOnly ? ' active' : ''}" onclick="TR.toggleWatchOnly()">
             ${watchOnly ? '★ Watchlist only' : '☆ Show watchlist only'}
@@ -724,14 +880,24 @@ const TR = (() => {
               <div class="tr-types">
                 <button class="tr-type${orderType === 'market' ? ' active' : ''}" onclick="TR.setType('market')">Market</button>
                 <button class="tr-type${orderType === 'limit' ? ' active' : ''}" onclick="TR.setType('limit')">Limit</button>
+                <button class="tr-type${orderType === 'stop' ? ' active' : ''}" onclick="TR.setType('stop')">Stop-limit</button>
               </div>
 
-              ${orderType === 'limit' ? `
-                <label class="form-label">Limit price (${QUOTE})</label>
-                <input class="input mb8" id="tr-price" type="number" step="any" value="${pairPrice(sym)}">` : ''}
+              ${orderType === 'stop' ? `
+                <label class="form-label">Stop price (${QUOTE})</label>
+                <input class="input mb8" id="tr-stop" type="number" step="any" inputmode="decimal" value="${stopDefault}">` : ''}
 
-              <label class="form-label">Amount (${esc(sym)})</label>
-              <input class="input" id="tr-qty" type="number" step="any" placeholder="0.00" oninput="TR.previewCost()">
+              ${orderType !== 'market' ? `
+                <label class="form-label">Limit price (${QUOTE})</label>
+                <input class="input mb8" id="tr-price" type="number" step="any" inputmode="decimal" value="${orderType === 'stop' ? stopDefault : pairPrice(sym)}" oninput="TR.previewCost()">` : ''}
+
+              ${orderType === 'stop' ? `<p class="tr-hint">When the price ${side === 'buy' ? 'rises' : 'falls'} to the stop, a limit order goes on the book at the limit price. Use a sell stop below the market to limit a loss, or a buy stop above it to catch a breakout.</p>` : ''}
+
+              <label class="form-label">Amount (${esc(tick(sym))})</label>
+              <input class="input" id="tr-qty" type="number" step="any" inputmode="decimal" placeholder="0.00" oninput="TR.fromQty()">
+
+              <label class="form-label tr-total-l">Total (${QUOTE})</label>
+              <input class="input" id="tr-total" type="number" step="any" inputmode="decimal" placeholder="0.00" oninput="TR.fromTotal()">
 
               <div class="tr-quick">
                 ${[25, 50, 75, 100].map(p => `<button class="tr-q" onclick="TR.quick(${p})">${p}%</button>`).join('')}
@@ -748,8 +914,12 @@ const TR = (() => {
 
               <div class="tr-bal">
                 <span>Available</span>
-                <b>${side === 'buy' ? quoteFmt(quoteBalance(QUOTE)) : qtyFmt(h.qty) + ' ' + esc(sym)}</b>
+                <b>${side === 'buy' ? quoteFmt(availableOf(QUOTE)) : qtyFmt(availableOf(sym)) + ' ' + esc(tick(sym))}</b>
               </div>
+              ${lockedHere > 1e-12 ? `<div class="tr-bal">
+                <span>In open orders</span>
+                <b>${side === 'buy' ? quoteFmt(lockedHere) : qtyFmt(lockedHere) + ' ' + esc(tick(sym))}</b>
+              </div>` : ''}
             </div>
 
             <div class="card tr-book">
@@ -761,21 +931,40 @@ const TR = (() => {
           </div>
 
           <div class="tr-cols">
-            <div class="card">
-              <div class="tr-sec-t">Open orders · ${T.orders.length}</div>
-              ${openRows}
+            <div class="card tr-panel">
+              <div class="tr-subtabs" role="tablist">
+                <button type="button" role="tab" aria-selected="${lower === 'open'}" class="tr-subtab${lower === 'open' ? ' active' : ''}" onclick="TR.setLower('open')">Open orders · ${T.orders.length}</button>
+                <button type="button" role="tab" aria-selected="${lower === 'history'}" class="tr-subtab${lower === 'history' ? ' active' : ''}" onclick="TR.setLower('history')">Order history</button>
+                ${lower === 'open' && T.orders.length > 1 ? '<button type="button" class="tr-cancel-all" onclick="TR.cancelAll()">Cancel all</button>' : ''}
+              </div>
+              ${lower === 'open' ? openRows : historyRows}
             </div>
-            <div class="card">
-              <div class="tr-sec-t">Trade history</div>
-              ${fillRows}
+            <div class="card tr-panel">
+              <div class="tr-subtabs" role="tablist">
+                <button type="button" role="tab" aria-selected="${right === 'fills'}" class="tr-subtab${right === 'fills' ? ' active' : ''}" onclick="TR.setRight('fills')">Trade history</button>
+                <button type="button" role="tab" aria-selected="${right === 'holdings'}" class="tr-subtab${right === 'holdings' ? ' active' : ''}" onclick="TR.setRight('holdings')">Holdings</button>
+              </div>
+              ${right === 'fills' ? fillRows : holdRows}
             </div>
           </div>
         </main>
       </div>`;
 
+    root.dataset.pair = sym;
+    root.dataset.side = side;
+    Object.keys(keep).forEach(id => { const el = document.getElementById(id); if (el) el.value = keep[id]; });
+
     paintPairList();
     previewCost();
   }
+
+  /* A price rounded to the decimals the desk shows for its size. */
+  function roundPx(v) {
+    if (!(v > 0)) return '';
+    const d = v >= 100 ? 2 : v >= 1 ? 4 : v >= 0.01 ? 6 : 8;
+    return +v.toFixed(d);
+  }
+  const trim8 = v => v.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
 
   function chart(points, up) {
     const w = 640, hh = 130, pad = 6;
@@ -798,35 +987,62 @@ const TR = (() => {
   function readQty() { const el = document.getElementById('tr-qty'); return el ? parseFloat(el.value) || 0 : 0; }
   function readPrice() {
     const el = document.getElementById('tr-price');
-    return orderType === 'limit' && el ? parseFloat(el.value) || 0 : pairPrice(T.pair);
+    return orderType !== 'market' && el ? parseFloat(el.value) || 0 : pairPrice(T.pair);
   }
+  function readStop() {
+    const el = document.getElementById('tr-stop');
+    return orderType === 'stop' && el ? parseFloat(el.value) || 0 : 0;
+  }
+
+  /* Amount and Total are two ways to size the same order. Whichever was
+     typed last holds still: type 100 USDT and the amount follows the
+     price as it moves; type 0.01 BTC and the total does. */
+  function fromQty() { lastEdited = 'qty'; previewCost(); }
+  function fromTotal() { lastEdited = 'total'; previewCost(); }
 
   function previewCost() {
     const box = document.getElementById('tr-preview');
     if (!box) return;
-    const gross = readQty() * readPrice();
+    const qEl = document.getElementById('tr-qty');
+    const tEl = document.getElementById('tr-total');
+    const px = readPrice();
+    if (lastEdited === 'total' && qEl && tEl) {
+      const tv = parseFloat(tEl.value) || 0;
+      qEl.value = tv > 0 && px > 0 ? trim8(tv / px) : '';
+    }
+    const gross = readQty() * px;
+    if (lastEdited === 'qty' && tEl && document.activeElement !== tEl) {
+      tEl.value = gross > 0 ? String(+gross.toFixed(gross >= 1 ? 2 : 6)) : '';
+    }
     box.innerHTML = `
       <div class="tr-kv"><span>Order value</span><b>${quoteFmt(gross)}</b></div>
-      <div class="tr-kv"><span>Fee (0.1%)</span><b>${quoteFmt(gross * FEE)}</b></div>`;
+      <div class="tr-kv"><span>Fee (0.1%)</span><b>${quoteFmt(gross * FEE)}</b></div>
+      <div class="tr-kv"><span>${side === 'buy' ? 'Total with fee' : 'You receive'}</span><b>${quoteFmt(gross * (side === 'buy' ? 1 + FEE : 1 - FEE))}</b></div>`;
   }
 
-  /* Percentage buttons: of cash when buying, of the position when selling. */
+  /* Percentage buttons: of free cash when buying, of the free position
+     when selling. Whatever open orders hold isn't counted. */
   function quick(p) {
     const el = document.getElementById('tr-qty');
     if (!el) return;
     const price = readPrice() || pairPrice(T.pair);
     if (!price) return;
     const v = side === 'buy'
-      ? (quoteBalance(QUOTE) * (p / 100)) / (price * (1 + FEE))
-      : holding(T.pair).qty * (p / 100);
-    el.value = v > 0 ? v.toFixed(8).replace(/0+$/, '').replace(/\.$/, '') : '';
+      ? (availableOf(QUOTE) * (p / 100)) / (price * (1 + FEE))
+      : availableOf(T.pair) * (p / 100);
+    el.value = v > 0 ? trim8(v) : '';
+    lastEdited = 'qty';
     previewCost();
   }
 
   function submit() {
-    const r = placeOrder(side, T.pair, orderType, readQty(), readPrice());
+    const r = placeOrder(side, T.pair, orderType, readQty(), readPrice(), readStop());
     toast(r.msg);
-    if (r.ok) repaint();
+    if (!r.ok) return;
+    // A placed order starts the next one from an empty form.
+    ['tr-qty', 'tr-total'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    lastEdited = 'qty';
+    repaint();
   }
 
   /* ── Portfolio ──────────────────────────────────────────────────── */
@@ -977,11 +1193,12 @@ const TR = (() => {
   }
 
   return {
-    placeOrder, cancelOrder, matchOpenOrders, deposit, withdraw, multiChainHTML,
+    placeOrder, cancelOrder, cancelAll, resetAccount, matchOpenOrders, deposit, withdraw, multiChainHTML,
     setChartInterval: setInterval_, paintBook, paintTape, paintChart, onPriceTick,
     setQuote, setAssetFilter, quoteBalance, pairPrice, setPair, setSide, setType, setSearch, quick, submit, previewCost, toggleWatchOnly,
+    setLower, setRight, fromQty, fromTotal,
     paintDesk, paintPortfolio, repaint, pairs, equity, unrealized, holding,
-    availableOf, creditAsset, debitAsset, priceOf, usd, qtyFmt, isTradable,
+    availableOf, lockedOf, creditAsset, debitAsset, priceOf, usd, qtyFmt, isTradable,
     get QUOTE() { return QUOTE; },
     get state() { return T; },
     get FEE() { return FEE; }

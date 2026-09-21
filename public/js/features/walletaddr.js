@@ -172,7 +172,7 @@ const WAD = (() => {
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
   const ic = (s, n) => (typeof coinIcon === 'function' ? coinIcon(s, n) : '');
   const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const clean = (s, max) => String(s == null ? '' : s).replace(/[ -]/g, '').trim().slice(0, max);
+  const clean = (s, max) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max);
 
   function shortAddr(a) {
     const s = String(a || '');

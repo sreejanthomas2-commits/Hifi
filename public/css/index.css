@@ -559,6 +559,21 @@ select.input { appearance: none; cursor: pointer; }
 .fs11 { font-size: 11px; } .fs12 { font-size: 12px; } .fs13 { font-size: 13px; } .fs14 { font-size: 14px; }
 .fs16 { font-size: 16px; } .fs18 { font-size: 18px; }
 .hidden { display: none !important; }
+/* Utilities the markup has always used and nothing ever defined. Full-
+   width buttons came out as wide as their label, "card p20" panels had
+   no padding at all (.card has none of its own) and centred text wasn't. */
+.w100 { width: 100%; }
+.m0 { margin: 0; } .mx-auto { margin-left: auto; margin-right: auto; }
+.mt2 { margin-top: 2px; } .mt6 { margin-top: 6px; } .mb6 { margin-bottom: 6px; } .mb24 { margin-bottom: 24px; }
+.p8 { padding: 8px; } .p12 { padding: 12px; } .p16 { padding: 16px; } .p20 { padding: 20px; } .p24 { padding: 24px; }
+.pt12 { padding-top: 12px; } .pb8 { padding-bottom: 8px; } .pb12 { padding-bottom: 12px; }
+.px10 { padding-left: 10px; padding-right: 10px; }
+.py4 { padding-top: 4px; padding-bottom: 4px; } .py8 { padding-top: 8px; padding-bottom: 8px; }
+.gap6 { gap: 6px; }
+.fs9 { font-size: 9px; } .fs10 { font-size: 10px; } .fs15 { font-size: 15px; }
+.fw6 { font-weight: 600; }
+.text-center, .tc-center { text-align: center; } .tc-right { text-align: right; }
+.text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Icon size utilities (material symbols) */
 .ms-14 { font-size: 14px !important; } .ms-16 { font-size: 16px !important; } .ms-18 { font-size: 18px !important; }
@@ -1862,6 +1877,29 @@ select.input { appearance: none; cursor: pointer; }
 .tr-x { background:none; border:none; color:var(--t3); cursor:pointer; font-size:12px; }
 .tr-x:hover { color:var(--red); }
 .tr-empty { font-size:12px; color:var(--t3); padding:12px 0; }
+/* Stop-limit, the Total box, order history and holdings on the desk */
+.tr-panel { padding:16px; }
+.tr-total-l { margin-top:10px; }
+.tr-hint { font-size:11px; color:var(--t3); line-height:1.45; margin:-2px 0 10px; }
+.tr-bal + .tr-bal { margin-top:4px; }
+.tr-subtabs { display:flex; align-items:flex-end; gap:16px; margin-bottom:8px; border-bottom:1px solid var(--border);
+  overflow-x:auto; white-space:nowrap; scrollbar-width:none; }
+.tr-subtabs::-webkit-scrollbar { display:none; }
+.tr-subtab { background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-1px; padding:0 0 8px;
+  font-size:11px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:var(--t3); cursor:pointer; }
+.tr-subtab:hover { color:var(--t2); }
+.tr-subtab.active { color:var(--t1); border-bottom-color:var(--brand-fill); }
+.tr-cancel-all { margin-left:auto; background:none; border:none; padding:0 0 8px; font-size:11px; font-weight:800;
+  color:var(--red); cursor:pointer; }
+.tr-otype { font-size:9px; font-weight:800; letter-spacing:.06em; color:var(--t3); border:1px solid var(--border);
+  border-radius:var(--rf); padding:0 5px; margin-left:5px; vertical-align:1px; }
+.tr-st { font-size:10px; font-weight:800; border-radius:var(--rf); padding:1px 8px; }
+.tr-st.filled { color:var(--green); background:color-mix(in srgb, var(--green) 13%, transparent); }
+.tr-st.cancelled { color:var(--t3); background:var(--card2); }
+.tr-row-link { cursor:pointer; }
+.tr-row-link:hover { color:var(--t1); }
+.tr-link { background:none; border:none; padding:0; font:inherit; color:var(--brand); cursor:pointer;
+  text-decoration:underline; text-underline-offset:2px; }
 .up { color:var(--green); } .down { color:var(--red); }
 
 /* == PORTFOLIO ===================================================== */
