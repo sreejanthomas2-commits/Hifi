@@ -626,7 +626,7 @@ const WAD = (() => {
     V = { view: view || 'home', trail: [], origin: o.origin || 'cfi', cfi: o.cfi || null, hint: o.hint || '',
           chatId: chatId != null ? chatId : activeChat(),
           net: 'ethereum', address: '', label: '', coin: 'USDT', amount: '', note: '',
-          ownId: (primaryOwn() || {}).id || '', peerId: '', err: '', warn: '' };
+          ownId: (primaryOwn() || {}).id || '', peerId: '', err: '', warn: '', speed: 'standard' };
     if (V.view === 'send') preselectPeer();
     render();
   }
@@ -652,9 +652,29 @@ const WAD = (() => {
     const c = String(coin || (sheet && sheet.coin) || 'USDT').toUpperCase();
     const amt = amount != null ? amount : (sheet ? sheet.amount : '');
     if (typeof CFI !== 'undefined' && CFI.close) CFI.close();
-    open(chatId, 'home', { origin: 'cfi', cfi: sheet, hint: kind === 'request' ? 'share' : 'send' });
+    openFor(kind === 'request' ? 'share' : 'send', { chatId, origin: 'cfi', cfi: sheet, coin: c, amount: amt });
+  }
+
+  /* Straight to sending or receiving on-chain, with the coin and amount
+     already chosen elsewhere carried over. It used to land on an overview
+     that explained both routes a second time and made you pick again.
+     The network follows the coin: BTC means Bitcoin, SOL means Solana. */
+  function openFor(view, o) {
+    const v = view === 'share' ? 'share' : 'send';
+    const c = String(o.coin || 'USDT').toUpperCase();
+    open(o.chatId != null ? o.chatId : activeChat(), v, { origin: o.origin || 'chat', cfi: o.cfi || null, hint: v });
+    if (coinsFor(V.net).indexOf(c) === -1) {
+      const k = NET_KEYS.find(n => coinsFor(n).indexOf(c) !== -1);
+      if (k && !V.peerId) V.net = k;
+      else if (!k) toast(`${c} can't be sent on-chain from here — pick a coin this network carries.`);
+    }
     V.coin = c;
-    V.amount = amt ? String(amt) : '';
+    if (v === 'share') {
+      const own = ownList().filter(a => !a.simulated);
+      const match = own.find(a => coinsFor(a.net).indexOf(c) !== -1);
+      if (match) V.ownId = match.id;
+    }
+    V.amount = parseFloat(o.amount) > 0 ? String(o.amount) : '';
     render();
   }
 
@@ -725,6 +745,7 @@ const WAD = (() => {
     const snap = V ? V.cfi : null;
     close();
     if (origin === 'cfi' && typeof CFI !== 'undefined' && CFI.restore) CFI.restore(snap);
+    else if (origin === 'pay' && typeof PAY !== 'undefined' && PAY.openHub) PAY.openHub();
   }
 
   /* After saving: back to the screen that asked for it, or on to `view`. */
@@ -737,14 +758,38 @@ const WAD = (() => {
 
   /* "Use in-app send/request": the same step, in the Trending lane. */
   function toInApp() {
-    const snap = V ? V.cfi : null, chatId = V ? V.chatId : null, hint = V ? V.hint : '';
+    const snap = V ? V.cfi : null, chatId = V ? V.chatId : null;
+    const receiving = !!V && (V.view === 'share' || V.hint === 'share');
+    const coin = V ? V.coin : 'USDT', amount = V ? V.amount : '';
     close();
-    if (hint === 'share' && typeof PAY !== 'undefined' && PAY.openRequestForChat) {
+    if (typeof PAY === 'undefined') return;
+    if (chatId == null) {
+      // Not in a chat: the same step in Pay, where you choose who.
+      if (receiving) PAY.openRequestFor('');
+      else PAY.openPayTo({ asset: coin, amount });
+      return;
+    }
+    if (receiving && PAY.openRequestForChat) {
       PAY.openRequestForChat(chatId, { origin: 'cfi', cfi: snap });
       return;
     }
     if (typeof CFI !== 'undefined' && CFI.restore) CFI.restore(snap ? { ...snap, kind: 'send' } : { kind: 'send', chatId });
   }
+
+  /* The route this sheet is, with the free one a tap away: the same two
+     cards every payment screen shows (features/payflow.js). */
+  function lanesFor(kind) {
+    if (typeof PF === 'undefined') return '';
+    return PF.lanes({ kind, active: 'chain', who: V.chatId ? peerName(V.chatId) : '', onApp: 'WAD.toInApp()' });
+  }
+
+  function pickSpeed(sp) {
+    if (!V) return;
+    V.speed = sp;
+    render();
+  }
+
+  const isToken = () => V.coin !== netOf(V.net).symbol;
 
   function f(key, value, repaint) {
     if (!V) return;
@@ -838,14 +883,14 @@ const WAD = (() => {
     return `
       <div class="wad-lanes">
         <div class="wad-lane">
-          <div class="wad-lane-h"><span class="material-symbols-rounded ms-18 tc-purple">bolt</span> In Trending</div>
-          <p>Moves your in-app balance to ${chatId ? esc(who) + '’s' : 'another'} Trending account straight away. No address
-          needed — that’s why Send and Request never asked for one.</p>
+          <div class="wad-lane-h"><span class="material-symbols-rounded ms-18 tc-purple">bolt</span> Trending balance</div>
+          <p>Moves your in-app balance to ${chatId ? esc(who) + '’s' : 'another'} Trending account straight away. Instant,
+          free, and no address needed.</p>
           ${chatId ? `<button class="btn btn-sm btn-ghost" onclick="WAD.toInApp()">${V.hint === 'share' ? 'Use in-app request' : 'Use in-app send'}</button>` : ''}
         </div>
         <div class="wad-lane active">
-          <div class="wad-lane-h"><span class="material-symbols-rounded ms-18 tc-green">link</span> On-chain</div>
-          <p>A real transfer between two wallets, using a wallet address. Trending holds the address, the QR and the
+          <div class="wad-lane-h"><span class="material-symbols-rounded ms-18 tc-green">link</span> Crypto wallet</div>
+          <p>A real on-chain transfer to a wallet address, with a network fee. Trending holds the address, the QR and the
           record; your wallet app signs and sends it.</p>
         </div>
       </div>
@@ -982,7 +1027,8 @@ const WAD = (() => {
   function shareView() {
     const mine = ownList().filter(a => !a.simulated);
     if (!mine.length) {
-      return `<div class="pay-empty">You need a receiving address first — one from your own wallet.</div>
+      return `${lanesFor('request')}
+        <div class="pay-empty">You need a receiving address first — one from your own wallet.</div>
         <div class="pay-actions">
           <button class="btn btn-primary" onclick="WAD.go('add')"><span class="material-symbols-rounded ms-18">add</span> Add address</button>
           <button class="btn btn-ghost" onclick="WAD.connectWallet()"><span class="material-symbols-rounded ms-18">account_balance_wallet</span> Connect wallet</button>
@@ -997,6 +1043,7 @@ const WAD = (() => {
     if (coins.indexOf(V.coin) === -1) V.coin = coins[0];
 
     return `
+      ${lanesFor('request')}
       <div class="pay-qrwrap">
         ${qrHTML(sel.address, 208)}
         <div class="pay-qr-name">${esc(sel.label)}</div>
@@ -1036,7 +1083,8 @@ const WAD = (() => {
       <div class="wad-warn">
         <span class="material-symbols-rounded ms-16">warning</span>
         <div>This address receives <b>${esc(n.label)} (${esc(n.tag)})</b> assets only. Coins sent on a different network are
-        usually lost. The amount above is a message, not part of the code — the sender still types it in their wallet.</div>
+        usually lost. The amount above is a message, not part of the code — the sender still types it in their wallet,
+        and pays the network fee from it.</div>
       </div>`;
   }
 
@@ -1073,6 +1121,7 @@ const WAD = (() => {
     if (coins.indexOf(V.coin) === -1) V.coin = coins[0];
 
     return `
+      ${lanesFor('send')}
       ${errHTML()}
       ${saved.length ? `<label class="pay-lbl">Saved for ${esc(firstName(V.chatId))}</label>
         <div class="pay-chips">
@@ -1098,6 +1147,10 @@ const WAD = (() => {
       </div>
       <input class="pay-input mt8" maxlength="${MAX_NOTE}" placeholder="Note (optional)" value="${esc(V.note)}"
         oninput="WAD.f('note', this.value)">
+
+      ${typeof PF !== 'undefined' ? PF.feeWidget({
+        net: V.net, label: netOf(V.net).label, token: isToken(), coin: V.coin,
+        speed: V.speed || 'standard', onPick: 'WAD.pickSpeed' }) : ''}
 
       <button class="btn btn-primary w100 mt12" onclick="WAD.toReview()">Continue</button>
 
@@ -1147,6 +1200,8 @@ const WAD = (() => {
         ${V.warn ? `<div class="pay-hint sm">${esc(V.warn)}</div>` : ''}
       </div>
 
+      ${reviewSum()}
+
       <div class="wad-check">
         <div><span class="material-symbols-rounded ms-16">check</span> The <b>bold</b> characters at each end match what they sent you.</div>
         <div><span class="material-symbols-rounded ms-16">check</span> They expect <b>${esc(V.coin)}</b> on <b>${esc(n.label)}</b>.</div>
@@ -1180,6 +1235,47 @@ const WAD = (() => {
         <div><b>Trending is not sending this.</b> Send it from your wallet app, then mark the card as sent. On-chain
         transfers can’t be reversed by Trending or by anyone else.</div>
       </div>`;
+  }
+
+  /* What this payment costs and what lands, in the same rows every
+     payment ends with. The fee is the estimate for the speed picked on
+     the previous screen; the wallet app has the final word on it. */
+  function reviewSum() {
+    if (typeof PF === 'undefined') return '';
+    const n = netOf(V.net);
+    const amt = parseFloat(V.amount) || 0;
+    const token = isToken();
+    if (!PF.cached(V.net, token)) PF.fee(V.net, token).then(() => { if (V && V.view === 'review') render(); });
+    const fee = PF.feeLine(V.net, token, V.speed || 'standard');
+    const usdAmt = PF.usdOf(amt, V.coin);
+    const who = V.chatId ? firstName(V.chatId) : '';
+    const rows = [
+      ['You send', `${esc(qty(amt))} ${esc(V.coin)}${usdAmt ? ` <small>${esc(usdAmt)}</small>` : ''}`],
+      ['Network fee', fee.tier
+        ? `${esc(fee.text)}<small>${fee.usd ? esc(fee.usd) + ' · ' : ''}${esc(fee.speed)} · paid from your wallet</small>`
+        : `<small>${esc(fee.text)}</small>`],
+      [`${who || 'They'} receive${who ? 's' : ''}`, `${esc(qty(amt))} ${esc(V.coin)}`],
+      ['Arrives', fee.eta ? esc(fee.eta) : 'When the network confirms it']
+    ];
+    if (fee.tier && !token) {
+      const total = amt + parseFloat(fee.tier.amountMax || fee.tier.amount);
+      rows.push(['Total from your wallet', `${esc(PF.coinAmt(total))} ${esc(n.symbol)}`, 'total']);
+    }
+
+    /* A fee that eats a real share of the payment deserves a sentence,
+       and the free route deserves a mention next to it. */
+    let warn = '';
+    if (fee.tier && typeof MNY !== 'undefined') {
+      const feeUsd = parseFloat(fee.tier.amountMax || fee.tier.amount) * MNY.price(fee.coin);
+      const amtUsd = amt * MNY.price(V.coin);
+      if (amtUsd > 0 && feeUsd / amtUsd >= 0.05) {
+        warn = `<div class="pf-warn"><span class="material-symbols-rounded">warning</span><div>The network fee is about
+          ${Math.round((feeUsd / amtUsd) * 100)}% of this payment.${V.chatId
+            ? ` Paying ${esc(who)} from your Trending balance is free — <button type="button" class="pf-link" onclick="WAD.toInApp()">switch</button>.`
+            : ''}</div></div>`;
+      }
+    }
+    return PF.summary(rows) + warn;
   }
 
   function confirmSend() {
@@ -1256,8 +1352,9 @@ const WAD = (() => {
   /* ── The row shown inside the chat crypto panel ──────────────────── */
   /* Rendered by CFI's Send and Request forms so the two lanes are visible at
      the moment someone wonders where the address field went. */
-  function destBar(kind) {
+  function destBar(kind, who) {
     const k = kind === 'request' ? 'request' : 'send';
+    if (typeof PF !== 'undefined') return PF.lanes({ kind: k, active: 'app', who: who || '', onChain: `WAD.fromChat('${k}')` });
     return `<label class="cfi-lbl">Where does it go?</label>
       <div class="cfi-seg wad-seg">
         <button class="cfi-segbtn active" type="button" title="Moves your in-app balance">In Trending</button>
@@ -1280,7 +1377,7 @@ const WAD = (() => {
   else setTimeout(boot, 0);
 
   return {
-    open, openMine, openReceive, openShare, close, go, back, f, onAddress, fromChat, toInApp, parseScan, fromScan,
+    open, openMine, openReceive, openShare, openFor, close, go, back, f, onAddress, fromChat, toInApp, parseScan, fromScan, pickSpeed,
     saveOwn, savePeer, sendToChat, setAmount, toReview, confirmSend, usePeer, ask, connectWallet,
     share, copyAddr, copyText, setPrimary, removeOwn,
     removePeer: id => removePeer(V ? V.chatId : activeChat(), id),

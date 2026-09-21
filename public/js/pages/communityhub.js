@@ -370,13 +370,20 @@ const CH = (() => {
   }
 
   /* ── Tipping ─────────────────────────────────────────────────────── */
-  /* Tips are real USDT out of the paper account, so they debit TR. */
+  /* Tips are paper USDT, paid the way every other payment is: through
+     MNY, from Funding first and then Spot, with a line in the history.
+     They used to debit the trading account directly, so a tip ignored
+     your Funding balance and left no record anywhere. */
   function tip(name) {
-    if (!hasTR()) { toast('Trading account unavailable.'); return; }
     const amount = 1;
-    if (TR.availableOf('USDT') < amount) { toast('Not enough USDT to tip.'); return; }
-    TR.debitAsset('USDT', amount);
-    TR.repaint();
+    if (typeof MNY !== 'undefined') {
+      const r = MNY.spend('USDT', amount, { kind: 'tip', via: 'Community', to: name, note: `Tip to ${name}` });
+      if (!r.ok) { toast(r.msg); return; }
+    } else {
+      if (!hasTR()) { toast('Trading account unavailable.'); return; }
+      if (!TR.debitAsset('USDT', amount)) { toast('Not enough USDT to tip.'); return; }
+      TR.repaint();
+    }
     const c = byId(D.activeId);
     if (c) D.xp[c.id] = (D.xp[c.id] || 0) + 2;
     save(); paint();
@@ -391,9 +398,15 @@ const CH = (() => {
     if (!hasTR()) return { ok: false, msg: 'Trading account unavailable.' };
     if (!amt || amt < 50) return { ok: false, msg: 'Minimum ticket is $50.' };
 
-    const have = TR.availableOf('USDT');
-    if (amt > have + 1e-9) return { ok: false, msg: `Insufficient USDT — you hold ${qty(have)}.` };
-    if (!TR.debitAsset('USDT', amt)) return { ok: false, msg: 'Debit failed.' };
+    // Paid like any other payment, so it shows in the history too.
+    if (typeof MNY !== 'undefined') {
+      const r = MNY.spend('USDT', amt, { kind: 'spend', via: 'Community · backing', to: p.name, note: `Backed ${p.name}` });
+      if (!r.ok) return { ok: false, msg: r.msg };
+    } else {
+      const have = TR.availableOf('USDT');
+      if (amt > have + 1e-9) return { ok: false, msg: `Insufficient USDT — you hold ${qty(have)}.` };
+      if (!TR.debitAsset('USDT', amt)) return { ok: false, msg: 'Debit failed.' };
+    }
 
     // Allocation is priced off the round's valuation and held here, not in
     // the Portfolio — the token does not exist on any market yet.

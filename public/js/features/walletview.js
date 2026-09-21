@@ -91,7 +91,7 @@ const WV = (() => {
     ['send', 'Send', 'north_east'],
     ['request', 'Request', 'request_quote'],
     ['scan', 'Scan &amp; pay', 'qr_code_scanner'],
-    ['myqr', 'My code', 'qr_code_2'],
+    ['myqr', 'Receive', 'qr_code_2'],
     ['convert', 'Convert', 'currency_exchange'],
     ['add', 'Add funds', 'south_west'],
     ['assets', 'All assets', 'account_balance']

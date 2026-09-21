@@ -120,4 +120,222 @@ async function quote(network, opts) {
 const FRESH_MS = Number(process.env.FEE_FRESH_MS || 120000);
 const isFresh = q => !!(q && q.at && Date.now() - q.at < FRESH_MS);
 
-module.exports = { quote, isFresh, FRESH_MS, GAS, BTC_VBYTES };
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  ESTIMATES — for payments Trending does not send                  ║
+   ║                                                                   ║
+   ║  A payment to a wallet address is signed and sent in the person's ║
+   ║  own wallet app. Trending can't set its fee, but it can say what  ║
+   ║  the network is charging right now, at up to three speeds, so the ║
+   ║  choice between "free inside Trending" and "on-chain" is made     ║
+   ║  with the cost in view.                                           ║
+   ║                                                                   ║
+   ║  Same rule as quote(): every number comes from the network. Gas   ║
+   ║  from eth_feeHistory, sat/vB from mempool.space, energy prices    ║
+   ║  from Tron's own chain parameters, Solana's fee from its protocol ║
+   ║  constant. A source that does not answer gives no number.         ║
+   ║                                                                   ║
+   ║  RPCs default to public endpoints so estimates work with nothing  ║
+   ║  configured; WATCHER_RPC_<NETWORK> overrides them, as for quote().║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+const PUBLIC_RPC = {
+  ethereum: 'https://ethereum-rpc.publicnode.com',
+  base: 'https://base-rpc.publicnode.com',
+  arbitrum: 'https://arbitrum-one-rpc.publicnode.com',
+  optimism: 'https://optimism-rpc.publicnode.com',
+  polygon: 'https://polygon-bor-rpc.publicnode.com',
+  bnb: 'https://bsc-rpc.publicnode.com'
+};
+const rpcUrl = network => process.env['WATCHER_RPC_' + network.toUpperCase()] || PUBLIC_RPC[network] || '';
+
+/* The coin the fee is paid in. Not NETWORKS[].code: Base's code is BASE,
+   but its gas is ETH. */
+const GAS_COIN = { ethereum: 'ETH', base: 'ETH', arbitrum: 'ETH', optimism: 'ETH', polygon: 'POL', bnb: 'BNB',
+                   bitcoin: 'BTC', solana: 'SOL', tron: 'TRX' };
+const ROLLUPS = { base: 1, arbitrum: 1, optimism: 1 };
+
+/* Solana charges a fixed 5,000 lamports per signature. A wallet receiving
+   an SPL token for the first time also needs a token account, whose
+   rent-exempt minimum (165 bytes) is 2,039,280 lamports. */
+const SOL_SIG_LAMPORTS = 5000n;
+const SOL_TOKEN_ACCOUNT_LAMPORTS = 2039280n;
+
+/* Tron prices a USDT transfer in energy. The USDT contract uses about
+   64,285 energy when the receiving address already holds USDT and about
+   130,285 when it doesn't, so the fee is a range. Bandwidth is the
+   transaction's size in bytes; every account gets some free each day. */
+const TRON_USDT_ENERGY = { min: 64285n, max: 130285n };
+const TRON_BYTES = { native: 270n, token: 345n };
+
+const EST_TTL = Number(process.env.FEE_ESTIMATE_CACHE_MS || 30000);
+const estCache = new Map();
+
+const SPEEDS = ['slow', 'standard', 'fast'];
+
+/* base units -> "0.000123" with trailing zeros dropped */
+function toCoin(units, decimals) {
+  const neg = units < 0n;
+  const u = neg ? -units : units;
+  const d = 10n ** BigInt(decimals);
+  const whole = u / d;
+  const frac = (u % d).toString().padStart(decimals, '0').replace(/0+$/, '');
+  return (neg ? '-' : '') + whole.toString() + (frac ? '.' + frac : '');
+}
+
+function median(list) {
+  if (!list.length) return 0n;
+  const s = list.slice().sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return s[Math.floor(s.length / 2)];
+}
+
+function eta(seconds) {
+  if (seconds < 60) return `about ${Math.max(1, Math.round(seconds))} s`;
+  const m = Math.round(seconds / 60);
+  return m < 60 ? `about ${m} min` : `about ${Math.round(m / 60)} h`;
+}
+
+/* A tier that costs the same as a faster one isn't a choice: paying that
+   fee gets the faster speed. So it is dropped, and when every tier costs
+   the same, what is left is one tier, called standard. */
+function collapse(tiers) {
+  const kept = tiers.filter((t, i) => !tiers.slice(i + 1).some(n => n.amount === t.amount && n.amountMax === t.amountMax));
+  return kept.length === 1 ? [{ ...kept[0], speed: 'standard' }] : kept;
+}
+
+async function evmEstimate(network, isToken) {
+  const url = rpcUrl(network);
+  const label = NETWORKS[network].label;
+  if (!url) return { ok: false, reason: `No RPC endpoint is set for ${label}, so its fee cannot be estimated.` };
+  const gas = isToken ? GAS.token : GAS.native;
+  const block = NETWORKS[network].blockSeconds || 12;
+  let perGas = null, source = 'eth_feeHistory';
+  try {
+    // Base fee of the next block, plus the tip paid at the 10th, 50th and
+    // 90th percentile over the last ten blocks.
+    const h = await rpc(url, 'eth_feeHistory', ['0xa', 'latest', [10, 50, 90]]);
+    const bases = (h && h.baseFeePerGas || []).map(x => BigInt(x));
+    const next = bases.length ? bases[bases.length - 1] : 0n;
+    const rewards = (h && h.reward) || [];
+    perGas = [0, 1, 2].map(i => next + median(rewards.map(r => BigInt((r && r[i]) || '0x0'))));
+    if (perGas.every(p => p === 0n)) perGas = null;             // a chain that prices by gasPrice alone
+  } catch (e) { perGas = null; }
+  if (!perGas) {
+    try {
+      const gp = BigInt(await rpc(url, 'eth_gasPrice'));
+      if (gp <= 0n) throw new Error('zero');
+      perGas = [gp, gp, gp];
+      source = 'eth_gasPrice';
+    } catch (e) {
+      return { ok: false, reason: `${label} did not answer with a gas price just now.` };
+    }
+  }
+  const blocks = [5, 2, 1];
+  const tiers = collapse(SPEEDS.map((speed, i) => ({
+    speed,
+    amount: toCoin(perGas[i] * gas, 18),
+    eta: eta(block * blocks[i]),
+    basis: `${gas} gas at ${toCoin(perGas[i], 9)} gwei`
+  })));
+  return {
+    ok: true, network, coin: GAS_COIN[network], token: isToken, tiers, source,
+    note: ROLLUPS[network]
+      ? `${label} also adds a small fee for posting to Ethereum, which your wallet includes.`
+      : ''
+  };
+}
+
+async function btcEstimate() {
+  const base = process.env.WATCHER_BITCOIN_API || 'https://mempool.space/api';
+  let r;
+  try {
+    const res = await fetch(base + '/v1/fees/recommended', { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error(String(res.status));
+    r = await res.json();
+  } catch (e) {
+    return { ok: false, reason: 'The Bitcoin fee estimator did not answer just now.' };
+  }
+  const rate = v => BigInt(Math.max(1, Math.ceil(Number(v) || 0)));
+  const vb = BTC_VBYTES.p2wpkh;
+  // mempool.space's own targets: within an hour, half an hour, next block.
+  const picks = [[r.hourFee, 3600], [r.halfHourFee, 1800], [r.fastestFee, 600]];
+  if (picks.some(([v]) => !(Number(v) > 0))) return { ok: false, reason: 'The Bitcoin fee estimator gave no rate just now.' };
+  const tiers = collapse(SPEEDS.map((speed, i) => ({
+    speed,
+    amount: toCoin(rate(picks[i][0]) * vb, 8),
+    eta: eta(picks[i][1]),
+    basis: `${vb} vB at ${rate(picks[i][0])} sat/vB`
+  })));
+  return { ok: true, network: 'bitcoin', coin: 'BTC', token: false, tiers, source: 'mempool.space', note: '' };
+}
+
+function solEstimate(isToken) {
+  return {
+    ok: true, network: 'solana', coin: 'SOL', token: isToken, source: 'protocol',
+    tiers: [{ speed: 'standard', amount: toCoin(SOL_SIG_LAMPORTS, 9), eta: 'a few seconds',
+              basis: '5,000 lamports per signature, set by the protocol' }],
+    extra: isToken
+      ? { amount: toCoin(SOL_TOKEN_ACCOUNT_LAMPORTS, 9), why: 'if their wallet has never held this token (a one-off account deposit)' }
+      : null,
+    note: 'Some wallets add an optional priority fee when the network is busy.'
+  };
+}
+
+async function tronEstimate(isToken) {
+  let params;
+  try {
+    const res = await fetch('https://api.trongrid.io/wallet/getchainparameters', {
+      method: 'POST', headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(6000)
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const body = await res.json();
+    params = {};
+    (body.chainParameter || []).forEach(p => { if (p && p.key) params[p.key] = p.value; });
+  } catch (e) {
+    return { ok: false, reason: 'The Tron network did not answer with its fee rates just now.' };
+  }
+  const energy = BigInt(params.getEnergyFee || 0), byte = BigInt(params.getTransactionFee || 0);
+  if (energy <= 0n || byte <= 0n) return { ok: false, reason: 'The Tron network gave no fee rates just now.' };
+  if (!isToken) {
+    return {
+      ok: true, network: 'tron', coin: 'TRX', token: false, source: 'trongrid',
+      tiers: [{ speed: 'standard', amount: toCoin(TRON_BYTES.native * byte, 6), eta: 'about 1 min',
+                basis: `${TRON_BYTES.native} bytes of bandwidth at ${byte} sun` }],
+      note: 'Free if your account still has its daily free bandwidth.'
+    };
+  }
+  const bw = TRON_BYTES.token * byte;
+  return {
+    ok: true, network: 'tron', coin: 'TRX', token: true, source: 'trongrid',
+    tiers: [{ speed: 'standard',
+              amount: toCoin(TRON_USDT_ENERGY.min * energy + bw, 6),
+              amountMax: toCoin(TRON_USDT_ENERGY.max * energy + bw, 6),
+              eta: 'about 1 min',
+              basis: `${TRON_USDT_ENERGY.min}–${TRON_USDT_ENERGY.max} energy at ${energy} sun` }],
+    note: 'The higher figure applies when their address has never held USDT. Staked TRX energy lowers it.'
+  };
+}
+
+async function estimate(network, opts) {
+  const o = opts || {};
+  const net = NETWORKS[network];
+  if (!net || !GAS_COIN[network]) return { ok: false, unknown: true, reason: 'Fees for that network are not estimated here.' };
+  const isToken = !!o.token;
+  const key = `${network}:${isToken ? 'token' : 'native'}`;
+  const hit = estCache.get(key);
+  if (hit && Date.now() - hit.at < EST_TTL) return { ...hit, cached: true };
+
+  let out;
+  if (net.family === 'evm') out = await evmEstimate(network, isToken);
+  else if (net.family === 'bitcoin') out = await btcEstimate();
+  else if (net.family === 'solana') out = solEstimate(isToken);
+  else if (net.family === 'tron') out = await tronEstimate(isToken);
+  else out = { ok: false, unknown: true, reason: 'Fees for that network are not estimated here.' };
+
+  if (out.ok) {
+    out.at = Date.now();
+    estCache.set(key, out);
+  }
+  return out;
+}
+
+module.exports = { quote, isFresh, FRESH_MS, GAS, BTC_VBYTES, estimate, GAS_COIN, PUBLIC_RPC };

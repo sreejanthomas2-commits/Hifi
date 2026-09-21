@@ -59,6 +59,12 @@ app.get('/api/posts', (req, res) => {
 // Link previews for Trending Notes (server-side fetch with SSRF protections)
 app.use('/api/link-preview', require('./routes/linkPreview'));
 
+// Network fee estimates for payments to a wallet address. Read-only and
+// public: a network name in, the network's current fee out. Trending does
+// not send these payments; the estimate is shown so the person knows the
+// cost before sending from their own wallet app.
+app.use('/api/fees', require('./routes/fees'));
+
 // The signer's queue. Mounted BEFORE the /api/crypto routers: a router
 // mounted on a prefix runs its middleware over every path beneath it, so
 // the user-session check on /api/crypto would otherwise answer these

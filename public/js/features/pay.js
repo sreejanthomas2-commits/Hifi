@@ -655,8 +655,10 @@ const PAY = (() => {
     } else if (!takeInbound(value)) {
       r.status = 'declined';
       r.reason = `Daily settlement cap reached (${usd(INBOUND_CAP)}/day)`;
+    } else if (!credit(r.asset, r.amount, { from: who, note: r.note })) {
+      r.status = 'declined';
+      r.reason = 'Your balance could not be credited';
     } else {
-      credit(r.asset, r.amount, { from: who, note: r.note });
       r.status = 'paid';
       r.paidAt = Date.now();
       D.tx.unshift({
@@ -681,6 +683,10 @@ const PAY = (() => {
 
     if (!canPay(asset)) return { ok: false, msg: 'Pick a supported asset.' };
     if (!amount || amount <= 0) return { ok: false, msg: 'Enter an amount.' };
+    /* The Wallet tab's Send and Withdraw's "Send to Trending users" opened
+       this with nobody on it, and confirming took the money and paid it to
+       "Unknown account". A payment needs someone at the other end. */
+    if (!to.handle && !to.payId) return { ok: false, msg: 'Choose who you are paying first.' };
     if (to.payId && String(to.payId) === String(myId())) return { ok: false, msg: "That's your own code — you can't pay yourself." };
     if (balOf(asset) + 1e-12 < amount) return { ok: false, msg: `Not enough ${asset} — you hold ${qty(balOf(asset))}.` };
 
@@ -850,8 +856,8 @@ const PAY = (() => {
   }
 
   const TITLES = {
-    home: 'Pay', qr: 'My payment code', scan: 'Scan to pay', req: 'Request a payment',
-    made: 'Request ready', pay: 'Confirm payment', done: 'Payment sent', list: 'Requests'
+    home: 'Pay', qr: 'Receive', scan: 'Scan to pay', req: 'Request a payment', who: 'Who are you paying?',
+    made: 'Request ready', pay: 'Send money', done: 'Payment sent', list: 'Requests'
   };
 
   function headHTML() {
@@ -874,6 +880,7 @@ const PAY = (() => {
       case 'pay':  return payView();
       case 'done': return doneView();
       case 'list': return listView();
+      case 'who':  return whoView();
       default:     return homeView();
     }
   }
@@ -904,12 +911,14 @@ const PAY = (() => {
       </div>
 
       <div class="pay-tiles">
-        <button class="pay-tile" onclick="PAY.go('scan')">
-          <span class="material-symbols-rounded">qr_code_scanner</span><span>Scan &amp; pay</span></button>
+        <button class="pay-tile" onclick="PAY.go('who')">
+          <span class="material-symbols-rounded">north_east</span><span>Send</span></button>
         <button class="pay-tile" onclick="PAY.go('qr')">
-          <span class="material-symbols-rounded">qr_code_2</span><span>My QR code</span></button>
+          <span class="material-symbols-rounded">qr_code_2</span><span>Receive</span></button>
         <button class="pay-tile" onclick="PAY.go('req')">
           <span class="material-symbols-rounded">request_quote</span><span>Request</span></button>
+        <button class="pay-tile" onclick="PAY.go('scan')">
+          <span class="material-symbols-rounded">qr_code_scanner</span><span>Scan</span></button>
       </div>
 
       ${pendingIn.length ? `<div class="pay-sec">To pay</div>${pendingIn.slice(0, 3).map(reqRow).join('')}` : ''}
@@ -919,10 +928,29 @@ const PAY = (() => {
         Recent activity
         <button class="pay-link" onclick="PAY.go('list')">All requests</button>
       </div>
-      ${D.tx.length
-        ? D.tx.slice(0, 6).map(txRow).join('')
-        : '<div class="pay-empty">No payments yet. Scan a code or send a request to get started.</div>'}
+      ${activityHTML()}
       ${note}`;
+  }
+
+  /* Every payment, wherever it was made. This listed Pay's own receipts
+     only, so money sent in a chat, a tip or a P2P order never showed up
+     here. MNY's ledger has all of them; moves between your own accounts
+     and conversions aren't payments, so they stay out. */
+  const PAYMENT_KINDS = { spend: 1, receive: 1, tip: 1 };
+  function activityHTML() {
+    if (!hasMNY()) {
+      return D.tx.length ? D.tx.slice(0, 6).map(txRow).join('')
+        : '<div class="pay-empty">No payments yet. Send money or share your code to get started.</div>';
+    }
+    const rows = MNY.ledger(80).filter(e => PAYMENT_KINDS[e.kind]).slice(0, 8);
+    if (!rows.length) return '<div class="pay-empty">No payments yet. Send money or share your code to get started.</div>';
+    return rows.map(e => txRow({
+      dir: e.dir === 'in' ? 'in' : 'out',
+      name: (e.dir === 'in' ? e.from : e.to) || e.via || 'Payment',
+      qty: e.qty, asset: e.sym,
+      note: [e.via, e.note].filter(Boolean).join(' · '),
+      usd: e.value, ts: e.t
+    })).join('');
   }
 
   function txRow(t) {
@@ -932,7 +960,7 @@ const PAY = (() => {
         <span class="material-symbols-rounded ms-18">${out ? 'north_east' : 'south_west'}</span></div>
       <div class="pay-item-main">
         <div class="pay-item-top"><b>${esc(t.name)}</b><span class="${out ? '' : 'tc-green'}">${out ? '-' : '+'}${esc(qty(t.qty))} ${esc(t.asset)}</span></div>
-        <div class="pay-item-sub"><span>${esc(t.note || (out ? 'Payment sent' : 'Payment received'))}</span><span>${esc(usd(t.usd))}</span></div>
+        <div class="pay-item-sub"><span>${esc(t.note || (out ? 'Payment sent' : 'Payment received'))}</span><span>${t.usd != null ? esc(usd(t.usd)) : ''}</span></div>
       </div>
     </div>`;
   }
@@ -1007,7 +1035,100 @@ const PAY = (() => {
         <button class="btn btn-ghost" onclick="PAY.saveQR()">
           <span class="material-symbols-rounded ms-18">download</span> Save image</button>
       </div>
-      <div class="pay-hint">Anyone can scan this with their camera or with Scan &amp; pay. They choose which asset to send unless you set an amount above.</div>`;
+      <div class="pay-hint">Anyone can scan this with their camera or with Scan &amp; pay. They choose which asset to send unless you set an amount above.</div>
+      <div class="pf-alt">
+        <span class="material-symbols-rounded">link</span>
+        <span>Getting paid from a crypto wallet outside Trending?</span>
+        <button class="pay-link" onclick="PAY.toWallet('request')">Show my wallet address</button>
+      </div>`;
+  }
+
+  /* ── Who are you paying? ─────────────────────────────────────────── */
+  /* One box that takes a name, an @handle, a Trending Tag or a Pay ID —
+     the four ways Trending knows a person — and your contacts under it,
+     the people you paid most recently first. */
+  function recentHandles() {
+    const seen = new Set();
+    D.tx.forEach(t => { if (t.dir === 'out' && t.handle) seen.add(t.handle.toLowerCase()); });
+    return [...seen];
+  }
+
+  function whoRow(c, hint) {
+    return `<button type="button" class="pay-who" onclick="PAY.pickWho('${esc(c.handle)}')">
+      <span class="pay-av">${esc(initials(c.name))}</span>
+      <span class="pay-who-t"><b>${esc(c.name)}</b><em>${esc(c.handle)} · ${esc(c.tag)}</em></span>
+      ${hint ? `<span class="pay-who-h">${esc(hint)}</span>` : ''}
+      <span class="material-symbols-rounded ms-18">chevron_right</span>
+    </button>`;
+  }
+
+  function whoList(q) {
+    const text = String(q || '').trim();
+    const p = text ? UID.parse(text) : { ok: false };
+    if (p.ok) {
+      const r = UID.resolve(text);
+      if (r.ok) return whoRow(r.account, p.kind === 'tag' ? 'Tag matches' : p.kind === 'payid' ? 'Pay ID matches' : 'Handle matches');
+      if (p.kind !== 'handle') return `<div class="pay-empty">${esc(r.reason)}</div>`;
+    }
+    const lc = text.toLowerCase();
+    const all = contacts();
+    const list = all.filter(c => !lc || c.name.toLowerCase().includes(lc) || c.handle.toLowerCase().includes(lc)
+      || c.tag.toLowerCase().includes(lc.replace(/\s+/g, '')));
+    if (!list.length) {
+      return `<div class="pay-empty">No one matches “${esc(text)}”. Try their @handle, their Trending Tag (TRD-…) or their Pay ID.</div>`;
+    }
+    if (lc) return `<div class="pay-sec">Matches</div>` + list.slice(0, 30).map(c => whoRow(c)).join('');
+    const recent = recentHandles().map(h => all.find(c => c.handle.toLowerCase() === h)).filter(Boolean).slice(0, 4);
+    const rest = list.filter(c => !recent.includes(c));
+    return (recent.length ? `<div class="pay-sec">Recent</div>` + recent.map(c => whoRow(c)).join('') : '')
+      + `<div class="pay-sec">Your contacts</div>` + rest.slice(0, 30).map(c => whoRow(c)).join('');
+  }
+
+  function whoView() {
+    return `
+      <input class="pay-input" id="pay-who" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+        placeholder="Name, @handle, Trending Tag or Pay ID" value="${esc(V.q || '')}" oninput="PAY.whoSearch(this.value)"
+        aria-label="Who are you paying?">
+      <div id="pay-who-list">${whoList(V.q || '')}</div>
+      <div class="pay-actions">
+        <button class="btn btn-ghost" onclick="PAY.go('scan')">
+          <span class="material-symbols-rounded ms-18">qr_code_scanner</span> Scan their code</button>
+      </div>
+      <div class="pf-alt">
+        <span class="material-symbols-rounded">link</span>
+        <span>Paying a crypto wallet outside Trending?</span>
+        <button class="pay-link" onclick="PAY.toWallet('send')">Use a wallet address</button>
+      </div>
+      ${note}`;
+  }
+
+  function whoSearch(v) {
+    if (!V) return;
+    V.q = v;
+    const box = document.getElementById('pay-who-list');
+    if (box) box.innerHTML = whoList(v);
+  }
+
+  function pickWho(handle) {
+    const c = contactBy(handle);
+    if (!c || !V) return;
+    go('pay', {
+      to: { name: c.name, handle: c.handle, payId: c.payId },
+      asset: V.asset || 'USDT', amount: V.amount || '', note: V.note || '', locked: false, rid: ''
+    });
+  }
+
+  /* The same step on-chain: a wallet address, a network and a fee. */
+  function toWallet(kind) {
+    if (typeof WAD === 'undefined' || !WAD.openFor) { toast('Wallet addresses are still loading…'); return; }
+    const o = V || {};
+    const opts = {
+      chatId: o.chatId != null ? o.chatId : null,
+      origin: o.origin === 'cfi' ? 'cfi' : 'pay', cfi: o.cfi || null,
+      coin: o.asset || 'USDT', amount: o.amount || ''
+    };
+    close();
+    WAD.openFor(kind === 'request' ? 'share' : 'send', opts);
   }
 
   function assetSelect(cur, handler) {
@@ -1233,7 +1354,8 @@ const PAY = (() => {
     const asset = V.asset || 'USDT';
     const ttl = V.ttl || 864e5;
     return `
-      <label class="pay-lbl">Recipient</label>
+      ${typeof PF !== 'undefined' ? PF.lanes({ kind: 'request', active: 'app', onChain: "PAY.toWallet('request')" }) : ''}
+      <label class="pay-lbl">Who pays you?</label>
       <select class="pay-input" onchange="PAY.f('to', this.value)">
         <option value=""${!V.to ? ' selected' : ''}>${V.chatId != null && V.chatName
           ? esc(V.chatName) + ' (this chat)' : 'Anyone with the link'}</option>
@@ -1315,6 +1437,9 @@ const PAY = (() => {
         </div>
       </div>
 
+      ${!V.locked && !V.rid && typeof PF !== 'undefined'
+        ? PF.lanes({ kind: 'send', active: 'app', who: to.name, onChain: "PAY.toWallet('send')" }) : ''}
+
       <label class="pay-lbl">Asset</label>
       ${V.locked
         ? `<div class="pay-locked">${ic(asset, 20)}<b>${esc(asset)}</b><span>set by the request</span></div>`
@@ -1346,23 +1471,33 @@ const PAY = (() => {
     const amt = parseFloat(V.amount) || 0;
     const px = priceOf(asset);
 
+    const expiry = () => (TTLS.find(t => t[1] === (V.ttl || 864e5)) || TTLS[2])[0];
     if (V.view === 'req') {
-      box.innerHTML = `
-        <div class="pay-line"><span>Value</span><b>${esc(usd(amt * px))}</b></div>
-        <div class="pay-line"><span>Goes to</span><b>Your wallet</b></div>
-        <div class="pay-line"><span>Expires</span><b>${esc((TTLS.find(t => t[1] === (V.ttl || 864e5)) || TTLS[2])[0])}</b></div>`;
+      box.innerHTML = typeof PF !== 'undefined'
+        ? PF.summary([
+            ['They pay', `${esc(qty(amt))} ${esc(asset)}${PF.usdOf(amt, asset) ? ` <small>${esc(PF.usdOf(amt, asset))}</small>` : ''}`],
+            ['Network fee', 'Free <small>for both of you</small>', 'free'],
+            ['Paid into', 'Your Trending balance'],
+            ['Expires', esc(expiry())]
+          ])
+        : `<div class="pay-line"><span>Value</span><b>${esc(usd(amt * px))}</b></div>
+           <div class="pay-line"><span>Expires</span><b>${esc(expiry())}</b></div>`;
       return;
     }
 
     const have = balOf(asset);
     const short = amt > 0 && amt > have;
-    box.innerHTML = `
-      <div class="pay-line"><span>Value</span><b>${esc(usd(amt * px))}</b></div>
-      <div class="pay-line"><span>Network fee</span><b>Free · in-app transfer</b></div>
-      <div class="pay-line"><span>Balance after</span><b class="${short ? 'tc-red' : ''}">${esc(qty(Math.max(0, have - amt)))} ${esc(asset)}</b></div>
-      ${short ? `<div class="pay-warn">Not enough ${esc(asset)} — you hold ${esc(qty(have))}.</div>` : ''}`;
+    const who = (V.to && V.to.name) || '';
+    box.innerHTML = (typeof PF !== 'undefined'
+      ? PF.summary(PF.appRows({ coin: asset, amount: amt, who, after: have - amt }))
+      : `<div class="pay-line"><span>Value</span><b>${esc(usd(amt * px))}</b></div>
+         <div class="pay-line"><span>Network fee</span><b>Free · in-app transfer</b></div>`)
+      + (short ? `<div class="pay-warn">Not enough ${esc(asset)} — you hold ${esc(qty(have))}.</div>` : '');
     const btn = document.getElementById('pay-go');
-    if (btn) btn.disabled = !(amt > 0) || short;
+    if (btn) {
+      btn.disabled = !(amt > 0) || short;
+      btn.textContent = amt > 0 ? `Pay ${qty(amt)} ${asset}${who ? ' to ' + who.split(/\s+/)[0] : ''}` : 'Confirm payment';
+    }
   }
 
   function submitPay() {
@@ -1489,6 +1624,13 @@ const PAY = (() => {
   function openPayTo(opts) {
     const o = opts || {};
     const c = o.handle ? contactBy(o.handle) : null;
+    if (!o.handle && !o.name) {
+      V = { view: 'who', origin: o.origin || 'hub', trail: [], q: '',
+            asset: (o.asset || 'USDT').toUpperCase(), amount: o.amount ? String(o.amount) : '', note: o.note || '' };
+      render();
+      setTimeout(() => { const i = document.getElementById('pay-who'); if (i) i.focus(); }, 60);
+      return;
+    }
     V = {
       view: 'pay', origin: o.origin || 'hub', trail: [],
       to: c ? { name: c.name, handle: c.handle, payId: c.payId } : { name: o.name || o.handle || 'Unknown account', handle: o.handle || '', payId: '' },
@@ -1543,6 +1685,10 @@ const PAY = (() => {
   function boot() {
     installDMs();
     seed();
+    /* A request's answer is a timer, and timers don't survive a reload:
+       one sent just before the page closed sat on "pending" until it
+       expired, and was never paid. Waiting ones are picked up again. */
+    D.sent.filter(r => statusOf(r) === 'pending' && (r.to || r.chatId != null)).forEach(r => scheduleSettle(r.rid));
     // Messages may already have painted its list by now.
     if (typeof TG !== 'undefined' && TG.paintList && document.getElementById('chat-list')) TG.paintList();
     setTimeout(handleHash, 600);
@@ -1556,7 +1702,7 @@ const PAY = (() => {
 
   return {
     openHub, openScan, openMyQR, openRequestFor, openRequestForChat, openPayTo, openChat,
-    go, back, finish, close, f, submitPay, submitRequest,
+    go, back, finish, close, f, submitPay, submitRequest, whoSearch, pickWho, toWallet,
     createRequest, cancelRequest, declineRequest, payRequest, pay,
     pickImage, onFile, usePasted, focusPaste, copyMyLink, shareMyLink, copyLink, share, saveQR,
     cardHTML, previewOf, parsePayload, linkFor, myLink, requestLink,

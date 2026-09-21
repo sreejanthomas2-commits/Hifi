@@ -739,12 +739,14 @@ const CFI = (() => {
     paintPreview();
   }
 
-  function coinSelect() {
+  function coinSelect(compact) {
     const list = coinList().slice(0, 160);
-    return `<select class="cfi-input" onchange="CFI.setField('coin', this.value)">
+    // Beside the amount there's room for the symbol only; the balance line
+    // under it says what you hold.
+    return `<select class="cfi-input" aria-label="Coin" onchange="CFI.setField('coin', this.value); CFI.repaint()">
       ${list.map(c => {
         const bal = haveOf(c);
-        return `<option value="${c}"${c === sheet.coin ? ' selected' : ''}>${c}${bal > 0 ? ` — ${qty(bal)}` : ''}</option>`;
+        return `<option value="${c}"${c === sheet.coin ? ' selected' : ''}>${c}${bal > 0 && !compact ? ` — ${qty(bal)}` : ''}</option>`;
       }).join('')}
     </select>`;
   }
@@ -803,9 +805,31 @@ const CFI = (() => {
 
     const verb = { send: 'Send', request: 'Request', gift: 'Fund packet', split: 'Post split' }[k] || 'Confirm';
 
-    // The two lanes are named where the question comes up: in-app balance
-    // (no address) versus a wallet address (on-chain, finished in a wallet).
-    const dest = (k === 'send' || k === 'request') && window.WAD ? WAD.destBar(k) : '';
+    /* Send starts with the question people actually have: how does the
+       money get there? Two cards — Trending balance (instant, free, just
+       their name) or Crypto wallet (on-chain, network fee, their address).
+       The old version was a small switch under the coin, labelled "In
+       Trending" and "Wallet address", that didn't say what either meant. */
+    if (k === 'send') {
+      const lanes = typeof PF !== 'undefined'
+        ? PF.lanes({ kind: 'send', active: 'app', who: peerName(sheet.chatId), onChain: "WAD.fromChat('send')" })
+        : (window.WAD ? WAD.destBar('send') : '');
+      return `
+        ${lanes}
+        <label class="cfi-lbl">Amount</label>
+        <div class="cfi-amtrow">
+          <input class="cfi-input cfi-amt-in" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00"
+                 value="${esc(sheet.amount)}" oninput="CFI.setField('amount', this.value)" aria-label="Amount">
+          ${coinSelect(true)}
+        </div>
+        ${balLine()}
+        ${quickPct}
+        ${extra}
+        <div class="cfi-preview" id="cfi-preview"></div>
+        <button class="btn btn-primary cfi-go" id="cfi-go" onclick="CFI.submit()">Send</button>`;
+    }
+
+    const dest = k === 'request' && window.WAD ? WAD.destBar(k, peerName(sheet.chatId)) : '';
 
     return `
       <label class="cfi-lbl">Coin</label>
@@ -860,6 +884,24 @@ const CFI = (() => {
     }
 
     const amt = parseFloat(sheet.amount) || 0;
+
+    if (sheet.kind === 'send' && typeof PF !== 'undefined') {
+      const have = haveOf(sheet.coin);
+      const who = peerName(sheet.chatId);
+      const inFunding = hasMNY() ? MNY.balanceOf(sheet.coin, 'funding') : have;
+      const short = amt > have + 1e-12;
+      let html = PF.summary(PF.appRows({ coin: sheet.coin, amount: amt, who, after: have - amt }));
+      if (short) html += `<div class="cfi-note short">You hold ${esc(qty(have))} ${esc(sheet.coin)} — lower the amount.</div>`;
+      else if (amt > inFunding + 1e-12) html += `<div class="cfi-note">${esc(qty(amt - inFunding))} ${esc(sheet.coin)} moves over from your Spot account to cover this.</div>`;
+      box.innerHTML = html;
+      const go = document.getElementById('cfi-go');
+      if (go) {
+        go.disabled = !(amt > 0) || short;
+        go.textContent = amt > 0 ? `Send ${qty(amt)} ${sheet.coin} to ${String(who).split(/\s+/)[0]}` : 'Send';
+      }
+      return;
+    }
+
     const rows = [[`Value`, usd(amt * px)]];
     if (sheet.kind === 'gift') rows.push(['Per slot (avg)', `${qty(amt / Math.max(1, sheet.slots))} ${sheet.coin}`]);
     if (sheet.kind === 'split') {
