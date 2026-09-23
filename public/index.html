@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
   <link rel="stylesheet" href="css/index.css?v=192">
-<link rel="stylesheet" href="css/signin.css?v=21">
+<link rel="stylesheet" href="css/signin.css?v=23">
 </head>
 <body>
 
@@ -122,47 +122,128 @@
 
     <g id="tsPost"><rect x="-78" y="-72" width="156" height="130" rx="26" fill="url(#tsCardFill)" stroke="var(--ts-edge)"/></g>
 
+    <!-- One light source for the whole scene: up and to the left. Each
+         animal's gradient runs from its highlight, through its own
+         colour, to its shadow. That is what turns a fill into a body. -->
+    <radialGradient id="tsCatG" cx="32%" cy="24%" r="84%">
+     <stop offset="0%" stop-color="var(--ts-cat-hi)"/><stop offset="58%" stop-color="var(--ts-cat)"/><stop offset="100%" stop-color="var(--ts-cat-lo)"/>
+    </radialGradient>
+    <radialGradient id="tsDuckG" cx="34%" cy="22%" r="84%">
+     <stop offset="0%" stop-color="var(--ts-duck-hi)"/><stop offset="58%" stop-color="var(--ts-duck)"/><stop offset="100%" stop-color="var(--ts-duck-lo)"/>
+    </radialGradient>
+    <radialGradient id="tsFoxG" cx="32%" cy="24%" r="84%">
+     <stop offset="0%" stop-color="var(--ts-fox-hi)"/><stop offset="58%" stop-color="var(--ts-fox)"/><stop offset="100%" stop-color="var(--ts-fox-lo)"/>
+    </radialGradient>
+    <radialGradient id="tsOwlG" cx="32%" cy="22%" r="84%">
+     <stop offset="0%" stop-color="var(--ts-owl-hi)"/><stop offset="58%" stop-color="var(--ts-owl)"/><stop offset="100%" stop-color="var(--ts-owl-lo)"/>
+    </radialGradient>
+
+    <!-- ══ The four of them ═══════════════════════════════
+         Same animals, drawn properly. What each one gained: a body
+         gradient so it has volume instead of reading as a flat
+         sticker, a highlight where the light falls, a catchlight in
+         the eye, cheeks, and a muzzle. The catchlight is the one that
+         matters most - an eye without it is a painted dot, an eye
+         with it is looking at you.
+
+         Every shape still sits inside the same box the old ones did,
+         so nothing around them moves, and the parts the stylesheet
+         animates keep their names and their pivots: .ts-eyes blinks,
+         .ts-tail flicks from its left edge, .ts-wing flaps from its
+         right. -->
+
     <g id="tsCat">
-     <path class="ts-tail" d="M34,22 q24,6 20,-22" fill="none" stroke="var(--ts-cat)" stroke-width="7" stroke-linecap="round"/>
-     <path d="M-28,-20 L-32,-44 L-10,-30 Z" fill="var(--ts-cat)"/>
-     <path d="M28,-20 L32,-44 L10,-30 Z" fill="var(--ts-cat)"/>
-     <path d="M-26,-22 L-28,-36 L-16,-27 Z" fill="var(--ts-cat-in)"/>
-     <path d="M26,-22 L28,-36 L16,-27 Z" fill="var(--ts-cat-in)"/>
-     <ellipse cx="0" cy="0" rx="34" ry="30" fill="var(--ts-cat)"/>
-     <g class="ts-eyes"><ellipse cx="-11" cy="-3" rx="4.2" ry="5" fill="var(--ts-ink)"/><ellipse cx="11" cy="-3" rx="4.2" ry="5" fill="var(--ts-ink)"/></g>
-     <path d="M0,7 l-4,3 h8 z" fill="var(--ts-nose)"/>
-     <g stroke="var(--ts-ink)" stroke-width="1.6" stroke-linecap="round" opacity=".45">
-      <path d="M-34,2 h-14"/><path d="M-34,9 h-13"/><path d="M34,2 h14"/><path d="M34,9 h13"/>
+     <path class="ts-tail" d="M25,20 C44,23 55,10 54,-11 C53.5,-18.5 49,-21 46.5,-15.5 C44.5,-11 47.5,-2 41,4.5 C35.5,10 29.5,10 25,8.5 Z" fill="var(--ts-cat-lo)"/>
+     <path d="M-31,-16 q-9,-19 -5,-28 q4,-7 11,-1 q10,8 17,17 z" fill="url(#tsCatG)"/>
+     <path d="M31,-16 q9,-19 5,-28 q-4,-7 -11,-1 q-10,8 -17,17 z" fill="url(#tsCatG)"/>
+     <path d="M-27,-19 q-5,-12 -3,-18 q2,-4 6,-1 q6,5 11,12 z" fill="var(--ts-cat-in)"/>
+     <path d="M27,-19 q5,-12 3,-18 q-2,-4 -6,-1 q-6,5 -11,12 z" fill="var(--ts-cat-in)"/>
+     <ellipse cx="0" cy="0" rx="34" ry="30" fill="url(#tsCatG)"/>
+     <ellipse cx="-9" cy="-14" rx="18" ry="10.5" fill="#fff" opacity=".17"/>
+     <ellipse cx="0" cy="11" rx="17.5" ry="11" fill="#fff" opacity=".2"/>
+     <ellipse cx="-21.5" cy="7" rx="7" ry="4.6" fill="var(--ts-blush)" opacity=".42"/>
+     <ellipse cx="21.5" cy="7" rx="7" ry="4.6" fill="var(--ts-blush)" opacity=".42"/>
+     <g class="ts-eyes">
+      <ellipse cx="-11.5" cy="-3" rx="5.4" ry="6.4" fill="var(--ts-ink)"/>
+      <ellipse cx="11.5" cy="-3" rx="5.4" ry="6.4" fill="var(--ts-ink)"/>
+      <circle cx="-9.5" cy="-5.6" r="1.9" fill="#fff"/>
+      <circle cx="13.5" cy="-5.6" r="1.9" fill="#fff"/>
+     </g>
+     <path d="M0,5.6 q3.6,0 2.7,2.6 q-.9,2.5 -2.7,3.3 q-1.8,-.8 -2.7,-3.3 q-.9,-2.6 2.7,-2.6 z" fill="var(--ts-nose)"/>
+     <path d="M0,11.5 q0,3.6 -4.6,3.6 M0,11.5 q0,3.6 4.6,3.6" fill="none" stroke="var(--ts-ink)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+     <g stroke="var(--ts-ink)" stroke-width="1.5" stroke-linecap="round" opacity=".32" fill="none">
+      <path d="M-29,3 q-9,-1.6 -14.5,-4.4"/><path d="M-29,9 q-9,1 -14,3.4"/>
+      <path d="M29,3 q9,-1.6 14.5,-4.4"/><path d="M29,9 q9,1 14,3.4"/>
      </g>
     </g>
 
     <g id="tsDuck">
-     <ellipse cx="0" cy="0" rx="36" ry="27" fill="var(--ts-duck)"/>
-     <circle cx="26" cy="-26" r="21" fill="var(--ts-duck)"/>
-     <path d="M44,-30 q18,4 0,13 z" fill="var(--ts-beak)"/>
-     <circle class="ts-eyes" cx="31" cy="-31" r="3.6" fill="var(--ts-ink)"/>
-     <path class="ts-wing" d="M-30,-4 q14,-12 26,2 q-14,10 -26,-2" fill="var(--ts-duck-w)"/>
+     <path d="M-28,-7 q-17,-7 -19.5,2.6 q9,9 20.5,7 z" fill="var(--ts-duck-lo)"/>
+     <ellipse cx="0" cy="2" rx="34" ry="26" fill="url(#tsDuckG)"/>
+     <path d="M7,-13 q11,-11 25,-9 q-5,15 -23,17 z" fill="url(#tsDuckG)"/>
+     <circle cx="25" cy="-24" r="21" fill="url(#tsDuckG)"/>
+     <ellipse cx="18" cy="-33" rx="11" ry="6.5" fill="#fff" opacity=".22"/>
+     <ellipse cx="-6" cy="16" rx="20" ry="9" fill="#fff" opacity=".14"/>
+     <path d="M42,-28 q16,2.5 15.5,8.5 q-.5,6 -15.5,6.5 q-4.5,-7.5 0,-15 z" fill="var(--ts-beak)"/>
+     <path d="M42.5,-20.5 q14.5,-.5 15,1.5 q-.8,5 -15.5,5.5 q-1.6,-3.6 .5,-7 z" fill="#d97b22" opacity=".45"/>
+     <ellipse cx="18.5" cy="-16" rx="6" ry="4" fill="var(--ts-blush)" opacity=".38"/>
+     <g class="ts-eyes">
+      <circle cx="30" cy="-29" r="4.6" fill="var(--ts-ink)"/>
+      <circle cx="31.6" cy="-30.8" r="1.6" fill="#fff"/>
+     </g>
+     <g class="ts-wing">
+      <path d="M7,-8 C-4,-16 -20,-12 -24,0 C-27,11 -18,18 -7,17 C4,16 8,4 7,-8 Z" fill="var(--ts-duck-w)"/>
+      <g fill="none" stroke="#dca827" stroke-width="1.8" stroke-linecap="round" opacity=".5">
+       <path d="M-17,9 C-11,2 -4,-2 3,-3"/>
+       <path d="M-12,14 C-7,8 -1,4 6,3"/>
+      </g>
+     </g>
     </g>
 
     <g id="tsFox">
-     <path d="M-32,-40 L-18,0 L-44,-4 Z" fill="var(--ts-fox)"/>
-     <path d="M32,-40 L18,0 L44,-4 Z" fill="var(--ts-fox)"/>
-     <ellipse cx="0" cy="0" rx="36" ry="30" fill="var(--ts-fox)"/>
-     <path d="M0,-10 q-20,4 -16,20 q16,12 32,0 q4,-16 -16,-20" fill="var(--ts-fox-w)"/>
-     <g class="ts-eyes"><ellipse cx="-13" cy="-6" rx="4" ry="4.8" fill="var(--ts-ink)"/><ellipse cx="13" cy="-6" rx="4" ry="4.8" fill="var(--ts-ink)"/></g>
-     <path d="M0,6 l-4,3 h8 z" fill="var(--ts-ink)"/>
+     <path d="M-33,-16 q-10,-22 -5,-29 q5,-7 13,0 q10,9 16,18 z" fill="url(#tsFoxG)"/>
+     <path d="M33,-16 q10,-22 5,-29 q-5,-7 -13,0 q-10,9 -16,18 z" fill="url(#tsFoxG)"/>
+     <path d="M-28,-20 q-6,-13 -3,-18 q3,-4 7,0 q6,5 10,12 z" fill="#7c4029" opacity=".5"/>
+     <path d="M28,-20 q6,-13 3,-18 q-3,-4 -7,0 q-6,5 -10,12 z" fill="#7c4029" opacity=".5"/>
+     <path d="M0,-30 q25,0 33,14 q6,11 0,20 q-9,12 -33,12 q-24,0 -33,-12 q-6,-9 0,-20 q8,-14 33,-14 z" fill="url(#tsFoxG)"/>
+     <ellipse cx="-9" cy="-13" rx="17" ry="10" fill="#fff" opacity=".16"/>
+     <path d="M0,-3 q15.5,0 17.5,11 q2,11.5 -17.5,13.5 q-19.5,-2 -17.5,-13.5 q2,-11 17.5,-11 z" fill="var(--ts-fox-w)"/>
+     <ellipse cx="-23" cy="4" rx="6.6" ry="4.4" fill="var(--ts-blush)" opacity=".4"/>
+     <ellipse cx="23" cy="4" rx="6.6" ry="4.4" fill="var(--ts-blush)" opacity=".4"/>
+     <g class="ts-eyes">
+      <ellipse cx="-13" cy="-7" rx="5" ry="6" fill="var(--ts-ink)"/>
+      <ellipse cx="13" cy="-7" rx="5" ry="6" fill="var(--ts-ink)"/>
+      <circle cx="-11.2" cy="-9.3" r="1.8" fill="#fff"/>
+      <circle cx="14.8" cy="-9.3" r="1.8" fill="#fff"/>
+     </g>
+     <path d="M0,4.5 q4,0 3.4,3 q-.8,3 -3.4,4.2 q-2.6,-1.2 -3.4,-4.2 q-.6,-3 3.4,-3 z" fill="var(--ts-ink)"/>
+     <path d="M0,12 q0,3.4 -4.4,3.4 M0,12 q0,3.4 4.4,3.4" fill="none" stroke="var(--ts-ink)" stroke-width="1.5" stroke-linecap="round" opacity=".55"/>
     </g>
 
     <g id="tsOwl">
-     <path d="M-24,-24 L-26,-46 L-8,-32 Z" fill="var(--ts-owl)"/>
-     <path d="M24,-24 L26,-46 L8,-32 Z" fill="var(--ts-owl)"/>
-     <ellipse cx="0" cy="0" rx="36" ry="34" fill="var(--ts-owl)"/>
-     <circle cx="-12" cy="-6" r="13" fill="var(--ts-owl-w)"/>
-     <circle cx="12" cy="-6" r="13" fill="var(--ts-owl-w)"/>
-     <g class="ts-eyes"><circle cx="-12" cy="-6" r="5.4" fill="var(--ts-ink)"/><circle cx="12" cy="-6" r="5.4" fill="var(--ts-ink)"/></g>
-     <path d="M0,4 l-5,6 h10 z" fill="var(--ts-beak)"/>
-     <path d="M-26,16 q26,16 52,0" fill="none" stroke="var(--ts-owl-w)" stroke-width="3" opacity=".65"/>
+     <path d="M-25,-23 q-7,-17 -3,-23 q4,-6 10,0 q7,8 12,16 z" fill="url(#tsOwlG)"/>
+     <path d="M25,-23 q7,-17 3,-23 q-4,-6 -10,0 q-7,8 -12,16 z" fill="url(#tsOwlG)"/>
+     <ellipse cx="0" cy="0" rx="35" ry="33" fill="url(#tsOwlG)"/>
+     <ellipse cx="-10" cy="-16" rx="17" ry="9.5" fill="#fff" opacity=".2"/>
+     <path d="M0,5 q17,0 19,14 q1,12.5 -19,14 q-20,-1.5 -19,-14 q2,-14 19,-14 z" fill="var(--ts-owl-w)" opacity=".42"/>
+     <g fill="none" stroke="var(--ts-owl-lo)" stroke-width="2.2" stroke-linecap="round" opacity=".45">
+      <path d="M-9,14 q9,5 18,0"/><path d="M-11,22 q11,5 22,0"/>
+     </g>
+     <path d="M-21,-9 C-28,-3 -29,11 -23,20 C-15,14 -14,-3 -21,-9 Z" fill="var(--ts-owl-lo)" opacity=".5"/>
+     <path d="M21,-9 C28,-3 29,11 23,20 C15,14 14,-3 21,-9 Z" fill="var(--ts-owl-lo)" opacity=".5"/>
+     <circle cx="-12.5" cy="-7" r="13.5" fill="var(--ts-owl-w)"/>
+     <circle cx="12.5" cy="-7" r="13.5" fill="var(--ts-owl-w)"/>
+     <circle cx="-12.5" cy="-7" r="13.5" fill="none" stroke="var(--ts-owl-lo)" stroke-width="1.6" opacity=".45"/>
+     <circle cx="12.5" cy="-7" r="13.5" fill="none" stroke="var(--ts-owl-lo)" stroke-width="1.6" opacity=".45"/>
+     <g class="ts-eyes">
+      <circle cx="-12.5" cy="-7" r="6.2" fill="var(--ts-ink)"/>
+      <circle cx="12.5" cy="-7" r="6.2" fill="var(--ts-ink)"/>
+      <circle cx="-10.3" cy="-9.4" r="2.2" fill="#fff"/>
+      <circle cx="14.7" cy="-9.4" r="2.2" fill="#fff"/>
+     </g>
+     <path d="M0,2 q4.6,0 4,4.2 q-.7,5 -4,7.2 q-3.3,-2.2 -4,-7.2 q-.6,-4.2 4,-4.2 z" fill="var(--ts-beak)"/>
     </g>
+
    </defs>
   </svg>
 
@@ -234,20 +315,14 @@
 
     <!-- ── the usual way in ── -->
     <div id="auth-main-view">
-     <div class="ts-providers">
-      <button type="button" class="ts-prov" onclick="signInWithGoogle()">
-       <span class="ts-prov-ico ts-g" aria-hidden="true">G</span> Continue with Google
-      </button>
-      <button type="button" class="ts-prov" onclick="TSAuth.apple()">
-       <span class="ts-prov-ico" aria-hidden="true"></span> Continue with Apple
-      </button>
-      <button type="button" class="ts-prov" onclick="TSAuth.phone()">
-       <span class="ts-prov-ico material-symbols-rounded" aria-hidden="true">smartphone</span> Continue with mobile number
-      </button>
-     </div>
+     <!-- Email and password first, the providers under them.
 
-     <div class="ts-divider"><span></span>or use your email<span></span></div>
-
+          The form is what someone who already has an account came
+          here to fill in, and it was below three buttons they had
+          already decided against. A provider is one tap whenever you
+          want it; a password is the thing you have to reach. So the
+          typing is at the top, where the caret lands, and the one-tap
+          routes wait underneath. -->
      <form id="gmail-login-form" onsubmit="signInWithGmail(event)" novalidate>
       <label for="auth-email">Email address</label>
       <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
@@ -262,6 +337,31 @@
       <p id="ts-auth-feedback" role="status"></p>
       <button type="submit" class="ts-submit" id="ts-submit">Sign in <span>↗</span></button>
      </form>
+
+     <div class="ts-divider"><span></span>or continue with<span></span></div>
+
+     <div class="ts-providers">
+      <button type="button" class="ts-prov" onclick="signInWithGoogle()">
+       <span class="ts-prov-ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="18" height="18" focusable="false">
+         <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+         <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+         <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+         <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+        </svg>
+       </span> Continue with Google
+      </button>
+      <button type="button" class="ts-prov" onclick="TSAuth.apple()">
+       <span class="ts-prov-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" focusable="false">
+         <path d="M16.36 12.73c-.02-2.36 1.93-3.5 2.02-3.55-1.1-1.61-2.81-1.83-3.42-1.85-1.46-.15-2.85.86-3.59.86-.74 0-1.88-.84-3.09-.82-1.59.02-3.06.92-3.88 2.34-1.65 2.87-.42 7.11 1.19 9.44.79 1.14 1.73 2.42 2.96 2.37 1.19-.05 1.64-.77 3.08-.77s1.84.77 3.1.74c1.28-.02 2.09-1.16 2.87-2.31.9-1.32 1.27-2.6 1.29-2.67-.03-.01-2.48-.95-2.5-3.78zM14.03 5.8c.65-.79 1.09-1.89.97-2.98-.94.04-2.08.63-2.75 1.41-.6.7-1.13 1.82-.99 2.89 1.05.08 2.12-.53 2.77-1.32z"/>
+        </svg>
+       </span> Continue with Apple
+      </button>
+      <button type="button" class="ts-prov" onclick="TSAuth.phone()">
+       <span class="ts-prov-ico material-symbols-rounded" aria-hidden="true">smartphone</span> Continue with mobile number
+      </button>
+     </div>
 
      <p class="ts-signup">New to Trending? <button type="button" class="ts-text-btn" id="ts-mode">Create an account</button></p>
 

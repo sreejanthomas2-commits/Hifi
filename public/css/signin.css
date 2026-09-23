@@ -33,16 +33,29 @@
   --ts-edge:     #ffffff28;
   --ts-ink:      #1a1710;
   --ts-handle:   #e6d79a;
+  /* Each animal is three tones, not one: a highlight where the light
+     hits, its own colour, and a shadow away from it. The middle value
+     of each trio is the flat colour these used to be drawn in, so
+     nothing changed hue - they just gained a lit side and a dark one. */
   --ts-cat:      #ffb47a;
+  --ts-cat-hi:   #ffd9b6;
+  --ts-cat-lo:   #ec9355;
   --ts-cat-in:   #ff8fa8;
   --ts-nose:     #ff8fa8;
   --ts-duck:     #ffd868;
+  --ts-duck-hi:  #ffeda8;
+  --ts-duck-lo:  #edc140;
   --ts-duck-w:   #f3bf3e;
   --ts-beak:     #ff9b3d;
   --ts-fox:      #ff8a5c;
+  --ts-fox-hi:   #ffb191;
+  --ts-fox-lo:   #ec6a39;
   --ts-fox-w:    #fff0e6;
   --ts-owl:      #9db4ff;
+  --ts-owl-hi:   #c6d3ff;
+  --ts-owl-lo:   #7b94ec;
   --ts-owl-w:    #f2f4ff;
+  --ts-blush:    #ff7d9e;
   --ts-heart:    #ff7fa6;
   --ts-btc:      #f7931a;
   --ts-eth:      #8a92ff;
@@ -238,7 +251,7 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 .ts-prov:hover { background: var(--ts-brand-sf); border-color: #d9cdf3; }
 .ts-prov:active { translate: 0 1px; }
 .ts-prov-ico { font-size: 18px; line-height: 1; display: grid; place-items: center; width: 19px; }
-.ts-prov-ico.ts-g { font-size: 19px; font-weight: 800; color: #4285f4; }
+.ts-prov-ico svg { display: block; }
 
 .ts-divider { display: flex; align-items: center; gap: 12px; font-size: 10.5px; color: var(--ts-t3); margin: 18px 0; }
 .ts-divider span { height: 1px; flex: 1; background: var(--ts-line); }
