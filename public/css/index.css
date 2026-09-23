@@ -381,11 +381,6 @@ select.input { appearance: none; cursor: pointer; }
 .post-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .post-tag { color: var(--blue); font-size: 13px; font-weight: 500; cursor: pointer; }
 .post-tag:hover { text-decoration: underline; }
-.post-actions { display: flex; gap: 16px; align-items: center; border-top: 1px solid var(--border); padding-top: 16px; }
-.post-act-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--t2); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--tr); }
-.post-act-btn:hover { color: var(--t1); }
-.post-act-btn.liked { color: var(--pink); }
-.post-act-btn span { font-size: 16px; }
 .trend-sidebar { display: flex; flex-direction: column; gap: 16px; }
 .trend-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r3); padding: 16px; }
 .trend-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; }
@@ -947,18 +942,6 @@ select.input { appearance: none; cursor: pointer; }
 }
 
 /* Twitter Heart Like Bounce */
-@keyframes heart-bounce {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.48); }
-  60% { transform: scale(0.8); }
-  85% { transform: scale(1.16); }
-  100% { transform: scale(1); }
-}
-.post-act-btn.liked span {
-  display: inline-block !important;
-  animation: heart-bounce 0.48s cubic-bezier(0.175,0.885,0.32,1.275) both !important;
-  color: var(--pink) !important;
-}
 
 /* ðŸ’¬ Interactive Comments Section */
 .post-comments-section {
@@ -1772,7 +1755,6 @@ select.input { appearance: none; cursor: pointer; }
 .sf-tier-perks li { font-size:11.5px; color:var(--t2); line-height:1.7; }
 .sf-author-link { cursor:pointer; }
 .sf-author-link:hover { color:var(--blue); text-decoration:underline; }
-.sf-inline-follow { margin-left:8px; padding:2px 10px !important; height:auto !important; font-size:10.5px !important; }
 
 /* == WEB3 DISCOVERY ================================================ */
 .w3-intro { margin-bottom:12px; }
@@ -3003,15 +2985,6 @@ h1, h2, h3, .pane-title, .sf-title, .section-title, .msgr-title,
 .post-tags { margin-bottom: 12px; }
 .post-tag { color: var(--brand-hi); }
 
-/* Five actions, evenly weighted; share sits at the far end. */
-.post-actions { gap: 4px; padding-top: 10px; }
-.post-act-btn { gap: 6px; padding: 7px 10px; border-radius: 9px; color: var(--t2); font-size: 13px; }
-.post-act-btn:hover { background: rgba(255,255,255,0.05); color: var(--t1); }
-[data-theme="light"] .post-act-btn:hover { background: var(--card2); }
-.post-act-btn .material-symbols-rounded { font-size: 18px !important; margin: 0 !important; }
-.post-act-btn.liked, .post-act-btn.liked span { color: var(--red); }
-.post-tip:hover { color: var(--brand-hi); background: var(--brand-s); }
-.post-share { margin-left: auto; }
 
 /* ── SHORTY — hub, player, comments, upload ────────────────────────── */
 .sh-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
@@ -6236,11 +6209,6 @@ body.dx-open { overflow: hidden; }
   /* A safety net for anything that still pokes out: no sideways drag. */
   .pane { overflow-x: hidden; }
 }
-@media (max-width: 420px) {
-  /* Post actions ran 8px past a 375px screen; the same five buttons, spread instead of gapped. */
-  .post-actions { gap: 0; justify-content: space-between; }
-  .post-act-btn { padding-left: 8px; padding-right: 8px; }
-}
 
 /* ── Tap targets on touch screens ───────────────────────────────── */
 @media (pointer: coarse) {
@@ -9323,15 +9291,6 @@ html.tp-saver video[autoplay] { animation: none; }
 .section-link:hover,
 .post-tag:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-/* A Follow button in every post turned the feed into a column of
-   yellow. Inline, it is a link - the way it reads in any feed. */
-.sf-inline-follow,
-.sf-inline-follow.btn-primary {
-  background: none !important; box-shadow: none !important;
-  border: none !important; color: var(--link) !important;
-  padding-left: 4px; padding-right: 4px; font-weight: 700;
-}
-.sf-inline-follow:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ── Placeholder avatars: grey until there is a photo ──
    A photo still wins: it is set inline as background-image, which
@@ -9410,3 +9369,111 @@ html.tp-saver video[autoplay] { animation: none; }
    message list is a link. */
 .hub-h1 > .material-symbols-rounded { color: var(--t1); }
 .msgr-req { color: var(--link); }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   A POST'S ACTION ROW AND ITS FOLLOW BUTTON
+
+   Line icons at one weight, in ink, with the count beside each in the
+   same ink. Nothing sits behind them until you touch one. The heart
+   fills red and pops once, and only the heart you tapped. Repost has its
+   own "done" colour now instead of borrowing the heart's red. Share sits
+   with the other three, and Tip, the one money action, gets the end of
+   the row and a thin outline so people can find it without it standing
+   out too much.
+
+   Follow moved from the name line to the end of the header, as a quiet
+   filled pill. Following is the same shape as an outline, so the two
+   states are easy to tell apart at a glance.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --like: #FF3040;
+  --pill: rgba(255,255,255,0.10);
+  --pill-h: rgba(255,255,255,0.16);
+}
+[data-theme="light"] {
+  --pill: rgba(15,17,24,0.06);
+  --pill-h: rgba(15,17,24,0.10);
+}
+
+.post-actions {
+  display: flex; align-items: center; gap: 2px;
+  border-top: 0; padding-top: 0;
+  /* The hit areas hang past the text edge so the icons line up with it. */
+  margin: 0 -8px -8px;
+}
+.post-act-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 40px; padding: 0 8px;
+  border: 0; border-radius: 999px; background: none;
+  color: var(--t1); font-family: inherit;
+  font-size: 14px; font-weight: 600; line-height: 1;
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color .15s var(--ease), background-color .15s var(--ease), box-shadow .15s var(--ease);
+}
+.post-act-btn:hover { color: var(--t2); background: none; }
+.post-act-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+.post-ic {
+  display: block; flex-shrink: 0; width: 24px; height: 24px;
+  fill: none; stroke: currentColor; stroke-width: 1.9;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .18s cubic-bezier(.3,.7,.4,1.4), fill .15s, stroke .15s;
+}
+.post-act-btn:active .post-ic { transform: scale(.86); }
+
+/* Liked: the heart fills, the number stays ink. */
+.post-like.liked .post-ic { fill: var(--like); stroke: var(--like); }
+.post-like.pop .post-ic { animation: post-like-pop .45s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes post-like-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.24); }
+  50%  { transform: scale(.92); }
+  75%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* Reposted: the arrows turn green and a touch heavier. */
+.post-repost.reposted .post-ic { stroke: var(--green); stroke-width: 2.3; }
+
+/* Tip: last in the row, in a thin outline. */
+.post-tip {
+  /* Its outline is visible, so it lines up with the text edge rather
+     than hanging past it like the bare icons do. */
+  margin-left: auto; margin-right: 8px; height: 32px; padding: 0 12px 0 10px; gap: 5px;
+  font-size: 13px; box-shadow: inset 0 0 0 1px var(--border);
+}
+.post-tip .post-ic { width: 18px; height: 18px; stroke-width: 1.8; }
+.post-tip:hover { color: var(--t1); background: var(--brand-s); box-shadow: inset 0 0 0 1px var(--brand); }
+
+/* "Hide on other people's posts" still shows the counts on your own. */
+html.tp-no-likes:not(.tp-no-likes-all) .post-card.mine [data-count="likes"],
+html.tp-no-shares:not(.tp-no-shares-all) .post-card.mine [data-count="shares"] { visibility: visible; }
+
+/* Follow: a filled pill at the end of the header. */
+.post-header .sf-inline-follow {
+  flex-shrink: 0; align-self: center;
+  height: 32px; min-height: 32px; margin: 0; padding: 0 16px;
+  border: 0; border-radius: 10px;
+  background: var(--pill); color: var(--t1);
+  font-size: 13px; font-weight: 600; letter-spacing: -0.005em;
+  box-shadow: none; filter: none; transform: none;
+  transition: background-color .15s var(--ease), color .15s var(--ease), box-shadow .15s var(--ease), transform .12s var(--ease);
+}
+.post-header .sf-inline-follow:hover { background: var(--pill-h); color: var(--t1); box-shadow: none; transform: none; filter: none; }
+.post-header .sf-inline-follow:active { transform: scale(.96); }
+.post-header .sf-inline-follow:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Following: the same shape, outlined. */
+.post-header .sf-inline-follow.btn-ghost {
+  background: transparent; color: var(--t2);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.post-header .sf-inline-follow.btn-ghost:hover { background: var(--pill); color: var(--t1); box-shadow: inset 0 0 0 1px var(--border); }
+
+@media (max-width: 420px) {
+  .post-actions { gap: 0; }
+  .post-act-btn { padding: 0 7px; }
+  .post-header .sf-inline-follow { height: 30px; min-height: 30px; padding: 0 13px; }
+}
+

@@ -292,6 +292,9 @@ const TP = (() => {
       const lc = get('see.likeCounts'), sc = get('see.shareCounts');
       root.classList.toggle('tp-no-likes', lc === 'hideAll' || lc === 'hideOthers');
       root.classList.toggle('tp-no-shares', sc === 'hideAll' || sc === 'hideOthers');
+      // Tells "everywhere" apart from "other people's posts", which keeps your own.
+      root.classList.toggle('tp-no-likes-all', lc === 'hideAll');
+      root.classList.toggle('tp-no-shares-all', sc === 'hideAll');
     }
     if (!path || path.indexOf('crypto.hideBalances') === 0) {
       root.classList.toggle('tp-hide-bal', !!get('crypto.hideBalances'));

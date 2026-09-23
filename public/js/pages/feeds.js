@@ -429,6 +429,40 @@ function postInitials(name) {
   return String(name || '?').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
+/* The action row's icons: line drawings at one stroke weight, so the
+   row reads as a set. The icon font's comment bubble and send glyph are
+   squarer than a feed wants, so these are drawn here instead. Shapes
+   adapted from Lucide (ISC licence, (c) Lucide contributors). */
+const POST_IC = {
+  like: '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/>',
+  comment: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  repost: '<path d="m2 9 3-3 3 3"/><path d="M13 18H7a2 2 0 0 1-2-2V6"/><path d="m22 15-3 3-3-3"/><path d="M11 6h6a2 2 0 0 1 2 2v10"/>',
+  share: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+  tip: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>'
+};
+const postIc = k => `<svg class="post-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${POST_IC[k]}</svg>`;
+
+/* 1203 reads as "1,203"; 12,340 as "12.3K". Rounded down, so a count
+   never shows more than it is. Zero shows nothing - the icon is enough. */
+function compactCount(n) {
+  n = Math.max(0, Math.floor(Number(n) || 0));
+  if (!n) return '';
+  if (n < 10000) return n.toLocaleString('en-US');
+  const [d, s] = n < 1e6 ? [1e3, 'K'] : [1e6, 'M'];
+  const v = n / d;
+  return (v < 100 ? Math.floor(v * 10) / 10 : Math.floor(v)) + s;
+}
+/* data-count ties the number to the "Like and share counts" setting,
+   which hides it without removing it. */
+const postCount = (n, kind) => {
+  const v = compactCount(n);
+  return v ? `<span class="post-n" data-count="${kind}">${v}</span>` : '';
+};
+const postLabel = (verb, n, noun) => {
+  const v = compactCount(n);
+  return v ? `${verb}, ${v} ${noun}` : verb;
+};
+
 function renderPostCard(p) {
   const tags = p.tags.map(t => `<span class="post-tag">${escapeHTML(t)}</span>`).join('');
   
@@ -465,20 +499,21 @@ function renderPostCard(p) {
   const idStr = typeof p.id === 'string' ? `'${p.id}'` : p.id;
   const authorSafe = p.author ? p.author.replace(/'/g, "\\'") : '';
   const handleSafe = p.handle ? p.handle.replace(/'/g, "\\'") : '';
+  const reposted = typeof SF !== 'undefined' && SF.hasReposted(p.id);
 
   return `
-  <div class="post-card" id="post-${p.id}">
+  <div class="post-card${p.mine ? ' mine' : ''}" id="post-${p.id}">
     <div class="post-header">
       <div class="avatar av-sm post-av">${escapeHTML(postInitials(p.author))}</div>
       <div class="post-author" style="flex:1; min-width:0">
         <div class="post-author-name">
           <span class="sf-author-link" onclick="SF.openCreatorPage('${handleSafe}','${authorSafe}')" title="Open creator page">${escapeHTML(p.author)}</span>
           <span class="post-handle">${escapeHTML(p.handle)}</span>
-          ${p.mine ? '' : SF.followBtn(p.handle, p.author, 'sf-inline-follow')}
         </div>
         <div class="post-meta">${formatRelativeTime(p.time)}${
           p.repostOf ? ` · <span class="material-symbols-rounded post-meta-ic">sync</span> reposted from <b>${escapeHTML(p.repostOf.author)}</b>` : ''}</div>
       </div>
+      ${p.mine ? '' : SF.followBtn(p.handle, p.author, 'sf-inline-follow')}
     </div>
 
     <div class="post-body${p.bg ? ' post-body-bg' : ''}" id="post-body-${p.id}"${p.bg ? ` style="background:${escapeHTML(p.bg)}"` : ''}>${escapeHTML(p.body).replace(/\n/g,'<br>')}</div>
@@ -490,20 +525,23 @@ function renderPostCard(p) {
 
     ${tags ? `<div class="post-tags">${tags}</div>` : ''}
     <div class="post-actions">
-      <button class="post-act-btn${p.liked?' liked':''}" onclick="likePost(event, ${idStr})" title="Like">
-        <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' ${p.liked?1:0}">favorite</span> ${p.likes}
+      <button class="post-act-btn post-like${p.liked ? ' liked' : ''}" onclick="likePost(event, ${idStr})" title="Like"
+        aria-label="${postLabel(p.liked ? 'Unlike' : 'Like', p.likes, 'likes')}" aria-pressed="${p.liked ? 'true' : 'false'}">
+        ${postIc('like')}${postCount(p.likes, 'likes')}
       </button>
-      <button class="post-act-btn" onclick="toggleComments(${idStr})" title="Comment">
-        <span class="material-symbols-rounded">chat_bubble</span> ${p.comments}
+      <button class="post-act-btn post-comment" onclick="toggleComments(${idStr})" title="Comment"
+        aria-label="${postLabel('Comments', p.comments, 'comments')}">
+        ${postIc('comment')}${postCount(p.comments, 'comments')}
       </button>
-      <button class="post-act-btn${SF.hasReposted(p.id) ? ' liked' : ''}" onclick="SF.repost(${idStr})" title="Repost to your feed">
-        <span class="material-symbols-rounded">sync</span> ${p.shares}
+      <button class="post-act-btn post-repost${reposted ? ' reposted' : ''}" onclick="SF.repost(${idStr})" title="${reposted ? 'You reposted this' : 'Repost to your feed'}"
+        aria-label="${postLabel('Repost', p.shares, 'reposts')}" aria-pressed="${reposted ? 'true' : 'false'}">
+        ${postIc('repost')}${postCount(p.shares, 'shares')}
+      </button>
+      <button class="post-act-btn post-share" onclick="sharePost(${idStr})" title="Copy link" aria-label="Copy link">
+        ${postIc('share')}
       </button>
       <button class="post-act-btn post-tip" onclick="openTipModal('${authorSafe}', '${handleSafe}')" title="Tip in crypto">
-        <span class="material-symbols-rounded">toll</span> Tip
-      </button>
-      <button class="post-act-btn post-share" onclick="sharePost(${idStr})" title="Copy link">
-        <span class="material-symbols-rounded">ios_share</span>
+        ${postIc('tip')}<span>Tip</span>
       </button>
     </div>
   </div>`;
@@ -547,6 +585,10 @@ async function likePost(e, id) {
   
   // The heart turns now, not after the cloud answers - it may never.
   renderFeed();
+  if (p.liked) {
+    const btn = document.querySelector(`#post-${CSS.escape(String(id))} .post-like`);
+    if (btn) btn.classList.add('pop');
+  }
 
   // If it's a Firestore post (string ID), update the cloud database
   if (typeof id === 'string' && window.db && window.firebaseDoc && window.firebaseUpdateDoc) {
