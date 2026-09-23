@@ -46,6 +46,7 @@ import './utils/dom.js?v=s3';
 import './utils/engine.js?v=s3';
 import './features/uid.js?v=s3';
 import './features/money.js?v=sw2';
+import './features/prefs.js?v=st1';
 import './features/payflow.js?v=pf1';
 import './components/ui.js?v=s3';
 import './components/theme.js?v=s3';

@@ -1521,9 +1521,12 @@ const PG = (() => {
     else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
   }
 
+  /* Settings sits at the top, not the bottom. It used to be reachable
+     from the More grid on the bottom bar as well; now the ☰ here is
+     the one way in, so it is the first thing the sheet offers. */
   const menu = () => sheet('Menu', [
+    ['app-settings', 'Settings and activity', 'settings'],
     ...MENU,
-    ['app-settings', 'Settings and privacy', 'settings'],
     guest() ? ['signin', 'Sign in', 'login'] : ['signout', 'Sign out', 'logout', true]
   ]);
   const create = () => sheet('Create', [['compose', 'Post', 'edit_square'], ['shorty-new', 'Shorty', 'slow_motion_video']]);
