@@ -320,17 +320,23 @@ const SET = (() => {
   }
 
   function shellHTML() {
+    /* The title and the search field are one sticky block, not two
+       sticky siblings: stacked separately they each needed their own
+       offset, and the second one's offset had to know the first one's
+       height, which is a number that changes with the text size. */
     return `<div class="st" id="st-shell">
-      <header class="st-top">
-        <button type="button" class="st-ib" data-st="back" aria-label="Back">${ico('arrow_back')}</button>
-        <h1 class="st-title" id="st-title">Settings &amp; Activity</h1>
-      </header>
-      <div class="st-searchbar" id="st-searchbar">
-        <label class="st-q">
-          ${ico('search')}
-          <input id="st-q" type="search" placeholder="Search settings" autocomplete="off" aria-label="Search settings">
-          <button type="button" id="st-qx" class="st-qx" data-st="clearq" aria-label="Clear search" hidden>${ico('close')}</button>
-        </label>
+      <div class="st-head" id="st-head">
+        <header class="st-top">
+          <button type="button" class="st-ib" data-st="back" aria-label="Back">${ico('arrow_back')}</button>
+          <h1 class="st-title" id="st-title">Settings &amp; Activity</h1>
+        </header>
+        <div class="st-searchbar" id="st-searchbar">
+          <label class="st-q">
+            ${ico('search')}
+            <input id="st-q" type="search" placeholder="Search settings" autocomplete="off" aria-label="Search settings">
+            <button type="button" id="st-qx" class="st-qx" data-st="clearq" aria-label="Clear search" hidden>${ico('close')}</button>
+          </label>
+        </div>
       </div>
       <div class="st-body" id="st-body"></div>
     </div>`;

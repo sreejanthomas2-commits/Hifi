@@ -8815,17 +8815,26 @@ a.dep-btn { text-decoration: none; color: var(--t1); }
    clear it — otherwise the final setting is permanently half-covered. */
 @media (max-width: 1024px) { .st { padding-bottom: calc(104px + env(safe-area-inset-bottom)); } }
 
-/* The bar stays put while the list moves under it, because a settings
-   list is long and the way back should not be a scroll away. */
-.st-top {
+/* The title and the search field stay put while the list moves under
+   them, because a settings list is long and neither the way back nor
+   the way to search should be a scroll away.
+
+   The pane carries 24px of top padding, and a sticky child pins to the
+   content edge, not the padding edge — so at top:0 the bar came to
+   rest 24px down and rows scrolled visibly through the gap above it.
+   The padding is dropped here and the block owns its own spacing. */
+#pane-settings { padding-top: 0; }
+.st-head {
   position: sticky; top: 0; z-index: 8;
-  display: flex; align-items: center; gap: 4px;
-  min-height: 56px; padding: 8px 4px;
-  background: var(--bg); border-bottom: 1px solid transparent;
+  background: var(--bg);
 }
-.st-top::after {
+.st-head::after {
   content: ''; position: absolute; left: 16px; right: 16px; bottom: 0; height: 1px;
   background: var(--border);
+}
+.st-top {
+  display: flex; align-items: center; gap: 4px;
+  min-height: 56px; padding: 8px 4px;
 }
 .st-ib {
   display: grid; place-items: center; width: 40px; height: 40px; flex: none;
@@ -8840,7 +8849,7 @@ a.dep-btn { text-decoration: none; color: var(--t1); }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.st-searchbar { padding: 10px 16px 6px; }
+.st-searchbar { padding: 4px 16px 10px; }
 .st-q {
   display: flex; align-items: center; gap: 8px;
   height: 42px; padding: 0 10px;
