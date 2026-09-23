@@ -404,6 +404,7 @@ const STU = (() => {
   /* ── Project state ───────────────────────────────────────────────── */
 
   const blank = () => ({
+    id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
     clips: [],
     filter: 'none',
     adj: { bright: 100, contrast: 100, sat: 100, warm: 0, blur: 0, vig: 0 },
@@ -419,8 +420,158 @@ const STU = (() => {
     audience: 'everyone',
     allowComments: true,
     allowRemix: true,
-    tips: true
+    tips: true,
+    ai: false,            // made with AI, declared by the creator
+    savedAt: 0
   });
+
+  /* ── Drafts ────────────────────────────────────────────────────────
+     A draft is the project without its video. The edit is small and
+     goes in localStorage; the clips are large and go in the same
+     IndexedDB store the published reels use, under this draft's id.
+     Nothing is re-encoded to save a draft, so it is quick, and
+     reopening one gives back the clips exactly as they were.
+
+     Drafts are why the exit prompt can offer three answers instead of
+     "discard, yes or no". */
+
+  const DKEY = 'ts_stu_drafts_v1';
+  const MAX_DRAFTS = 8;
+
+  /* The blob store belongs to the Shorty page, and that page is
+     fetched on demand — so on a session that has never opened Reels,
+     window.SH does not exist yet. Everything that needs to read or
+     write a blob waits for it here rather than checking for it and
+     quietly doing nothing, which is how saving a draft used to fail
+     with no visible reason. Publishing goes through this too: it had
+     the same hole. */
+  async function needSH() {
+    if (window.SH && SH.store) return SH;
+    try {
+      if (globalThis.__lazy && globalThis.__lazy.ensurePane) await globalThis.__lazy.ensurePane('reels');
+    } catch (e) { /* fall through to the check below */ }
+    return (window.SH && SH.store) ? SH : null;
+  }
+
+  const draftList = () => {
+    try { const v = JSON.parse(localStorage.getItem(DKEY) || '[]'); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  };
+
+  const draftHasWork = () => !!(P.clips.length || (P.caption || '').trim());
+
+  async function saveDraft(quiet) {
+    if (!draftHasWork()) { if (!quiet) toast('Nothing to save yet.'); return false; }
+    if (!(await needSH())) { if (!quiet) toast('Drafts need this browser\'s storage.'); return false; }
+    try {
+      for (const c of P.clips) {
+        if (!c.blob) continue;
+        await SH.store.put(P.id + '_' + c.id, c.blob);
+      }
+      if (P.music && P.music.custom && P.music.blob) await SH.store.put(P.id + '_audio', P.music.blob);
+
+      /* The blob and its object URL belong to this session, so they are
+         left out of what is written down and rebuilt on the way back. */
+      const thin = JSON.parse(JSON.stringify({
+        ...P,
+        clips: P.clips.map(c => ({ id: c.id, in: c.in, out: c.out, dur: c.dur, speed: c.speed, mute: !!c.mute })),
+        music: P.music ? { ...P.music, blob: undefined, src: P.music.custom ? '' : P.music.src } : null
+      }));
+      thin.savedAt = Date.now();
+      thin.cover = P.cover ? { data: P.cover.data, t: P.cover.t } : null;
+
+      const list = draftList().filter(d => d.id !== P.id);
+      list.unshift(thin);
+      const keep = list.slice(0, MAX_DRAFTS);
+      localStorage.setItem(DKEY, JSON.stringify(keep));
+      list.slice(MAX_DRAFTS).forEach(dropDraftBlobs);
+      P.savedAt = thin.savedAt;
+      if (!quiet) toast('Saved to drafts');
+      return true;
+    } catch (e) {
+      if (!quiet) toast('Could not save — this device may be out of storage.');
+      return false;
+    }
+  }
+
+  function dropDraftBlobs(d) {
+    if (!(window.SH && SH.store && SH.store.del)) return;
+    (d.clips || []).forEach(c => { try { SH.store.del(d.id + '_' + c.id); } catch (e) {} });
+    try { SH.store.del(d.id + '_audio'); } catch (e) {}
+  }
+
+  function deleteDraft(id) {
+    const d = draftList().find(x => x.id === id);
+    if (d) dropDraftBlobs(d);
+    try { localStorage.setItem(DKEY, JSON.stringify(draftList().filter(x => x.id !== id))); } catch (e) {}
+    paint();
+  }
+
+  async function openDraft(id) {
+    const d = draftList().find(x => x.id === id);
+    if (!d) { toast('That draft is gone.'); return; }
+    if (!(await needSH())) { toast('Drafts need this browser\'s storage.'); return; }
+    toast('Opening draft…');
+    const clips = [];
+    for (const c of (d.clips || [])) {
+      try {
+        const blob = await SH.store.get(d.id + '_' + c.id);
+        if (!blob) continue;
+        clips.push({ ...c, blob, url: URL.createObjectURL(blob), tmp: true });
+      } catch (e) { /* one lost clip should not lose the draft */ }
+    }
+    if (!clips.length) {
+      toast('This draft\'s video is no longer on the device.');
+      deleteDraft(id);
+      return;
+    }
+    P = { ...blank(), ...d, clips };
+    if (P.music && P.music.custom) {
+      try {
+        const b = await SH.store.get(d.id + '_audio');
+        if (b) { P.music.blob = b; P.music.src = URL.createObjectURL(b); }
+        else P.music = null;
+      } catch (e) { P.music = null; }
+    }
+    sel = 0; selNode = null; thumbCache = {};
+    stopCam();
+    go('edit');
+  }
+
+  /* Leaving with work in progress. Three answers, because "are you
+     sure?" throws away the only two that are useful. */
+  function exitChoice() {
+    return new Promise(res => {
+      const el = document.createElement('div');
+      el.className = 'mob-dialog-scrim';
+      el.innerHTML = `<div class="mob-dialog" role="alertdialog" aria-modal="true">
+        <h3>Keep this reel?</h3>
+        <p>${P.clips.length} clip${P.clips.length === 1 ? '' : 's'} here. Drafts stay on this device.</p>
+        <div class="mob-dialog-a stu-exit-a">
+          <button type="button" class="btn btn-ghost" data-x="cancel">Keep editing</button>
+          <button type="button" class="btn mob-danger" data-x="discard">Discard</button>
+          <button type="button" class="btn btn-primary" data-x="save">Save draft</button>
+        </div>
+      </div>`;
+      el.addEventListener('click', e => {
+        const b = e.target.closest('button[data-x]');
+        if (!b) return;
+        el.remove();
+        res(b.dataset.x);
+      });
+      document.body.appendChild(el);
+      requestAnimationFrame(() => { const f = el.querySelector('[data-x="save"]'); if (f) f.focus(); });
+    });
+  }
+
+  /* Every way out of the studio goes through here. */
+  async function leave() {
+    if (!draftHasWork()) { close(); return; }
+    const out = await exitChoice();
+    if (out === 'cancel') return;
+    if (out === 'save') { await saveDraft(); }
+    close();
+  }
 
   let P = blank();
   let screen = 'capture';
@@ -483,12 +634,8 @@ const STU = (() => {
 
   async function back() {
     if (screen === 'share') { go('edit'); return; }
-    if (screen === 'edit') {
-      if (P.clips.length && !(await appConfirm('Discard this reel?', { ok: 'Discard', danger: true }))) return;
-      go('capture');
-      return;
-    }
-    close();
+    if (screen === 'edit') { leave(); return; }
+    leave();
   }
 
   function go(s) {
@@ -519,7 +666,7 @@ const STU = (() => {
         <div class="stu-segs" id="stu-segs">${segs}<i class="live" id="stu-seg-live" style="flex:0"></i></div>
 
         <div class="stu-cap-top">
-          <button class="stu-round" onclick="STU.close()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+          <button class="stu-round" onclick="STU.leave()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
           <div class="stu-len">
             ${LENGTHS.map(([s, l]) => `<button class="stu-len-b${cam.len === s ? ' on' : ''}" onclick="STU.setLen(${s})">${l}</button>`).join('')}
           </div>
@@ -566,6 +713,8 @@ const STU = (() => {
           </button>
         </div>
 
+        ${draftsBarHTML()}
+
         <div class="stu-cap-hint" id="stu-cap-hint">
           ${P.clips.length
             ? `${P.clips.length} clip${P.clips.length > 1 ? 's' : ''} · ${fmt(totalOut())} — <button class="stu-link" onclick="STU.undoClip()">delete last</button>`
@@ -574,6 +723,25 @@ const STU = (() => {
 
         <input type="file" id="stu-files" accept="video/*" multiple hidden>
       </div>`;
+  }
+
+  /* Only shown when there is something to come back to. */
+  function draftsBarHTML() {
+    const list = draftList();
+    if (!list.length || P.clips.length) return '';
+    return `<div class="stu-drafts" role="group" aria-label="Your drafts">
+      <b>${list.length} draft${list.length === 1 ? '' : 's'}</b>
+      ${list.slice(0, 6).map(d => `
+        <span class="stu-draft">
+          <button type="button" onclick="STU.openDraft('${esc(d.id)}')" title="${esc((d.caption || 'Untitled').slice(0, 60))}">
+            ${d.cover && d.cover.data ? `<img src="${esc(d.cover.data)}" alt="">` : '<span class="material-symbols-rounded">movie</span>'}
+            <em>${esc((d.caption || 'Untitled').slice(0, 18))}</em>
+          </button>
+          <button type="button" class="stu-draft-x" onclick="STU.deleteDraft('${esc(d.id)}')" aria-label="Delete draft">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </span>`).join('')}
+    </div>`;
   }
 
   function wireCapture() {
@@ -1627,12 +1795,19 @@ const STU = (() => {
 
           ${[['allowComments', 'Allow comments', 'mode_comment'],
              ['allowRemix', 'Allow remixing', 'auto_awesome_motion'],
-             ['tips', 'Accept crypto tips', 'toll']].map(([k, l, i]) => `
+             ['tips', 'Accept crypto tips', 'toll'],
+             ['ai', 'Label as made with AI', 'smart_toy']].map(([k, l, i]) => `
             <div class="stu-srow">
               <span class="material-symbols-rounded">${i}</span>
               <b>${l}</b>
               <button class="stu-toggle${P[k] ? ' on' : ''}" onclick="STU.toggle('${k}')" role="switch" aria-checked="${!!P[k]}"><i></i></button>
             </div>`).join('')}
+
+          <div class="stu-note stu-note-ai" id="stu-ai-note"${P.ai ? '' : ' hidden'}><span class="material-symbols-rounded">smart_toy</span>This reel will carry a "Made with AI" label.</div>
+
+          <button class="stu-draftbtn" onclick="STU.saveDraft()">
+            <span class="material-symbols-rounded">bookmark_add</span>Save as draft
+          </button>
 
           <div class="stu-note">Your video stays on this device — the clips go into this browser's storage, not to a server.</div>
         </div>
@@ -1650,6 +1825,10 @@ const STU = (() => {
     P[k] = !P[k];
     const btn = document.querySelector(`.stu-toggle[onclick*="${k}"]`);
     if (btn) { btn.classList.toggle('on', P[k]); btn.setAttribute('aria-checked', String(!!P[k])); }
+    /* No repaint here, deliberately — redrawing the share screen would
+       take the caret out of the caption someone is in the middle of
+       writing. Anything a switch affects updates itself instead. */
+    if (k === 'ai') { const n = $('stu-ai-note'); if (n) n.hidden = !P.ai; }
   }
   function togglePeople() {
     const el = $('stu-people');
@@ -1677,6 +1856,12 @@ const STU = (() => {
 
     const id = 'u' + Date.now();
     const clipIds = [];
+
+    if (!(await needSH())) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Share'; }
+      toast('Could not reach this device\'s storage. Your reel is still here — try again.');
+      return;
+    }
 
     try {
       for (const c of P.clips) {
@@ -1723,7 +1908,8 @@ const STU = (() => {
       },
       meta: {
         tagged: P.tagged.slice(), place: P.place, audience: P.audience,
-        allowComments: P.allowComments, allowRemix: P.allowRemix, tips: P.tips
+        allowComments: P.allowComments, allowRemix: P.allowRemix, tips: P.tips,
+        ai: !!P.ai
       }
     };
 
@@ -1734,6 +1920,9 @@ const STU = (() => {
     if (P.music && P.music.custom && P.music.src) urls[id + '_audio'] = P.music.src;
 
     P.clips.forEach(c => { c.tmp = false; });   // don't revoke on close
+    /* It is published now, so the draft copy and its duplicate blobs
+       are no longer earning their space. */
+    if (draftList().some(d => d.id === P.id)) deleteDraft(P.id);
     close();
     SH.addUpload(rec, urls);
   }
@@ -1751,6 +1940,8 @@ const STU = (() => {
     addSticker, setSticker, setFilter, setAdj, resetAdj, setCoverHere,
     // share
     togglePeople, tag, setPlace, setAudience, toggle, editCover, publish,
+    // drafts
+    saveDraft, openDraft, deleteDraft, leave, drafts: draftList,
     // shared with the player
     engine, filterCSS, overlayHTML, FILTERS, MUSIC,
     get project() { return P; }
