@@ -14,6 +14,11 @@
 
 'use strict';
 
+/* The coin catalogue would otherwise ask CoinGecko; these tests check the
+   API's own behaviour against the curated list, with no network. */
+process.env.CATALOG_LIVE = '0';
+process.env.CATALOG_FILE = require('path').join(require('os').tmpdir(), 'trending-test-catalog-none.json');
+
 const crypto = require('crypto');
 const C = require('../lib/crypto');
 const S = C.secp256k1;

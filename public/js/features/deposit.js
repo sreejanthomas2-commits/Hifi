@@ -329,15 +329,22 @@ const DEP = (() => {
              <p>Trending lists ${ASSETS.length} assets for deposit. If yours is missing, it has no supported network here yet — sending it anyway would lose it.</p></div>`;
     }
     const rec = recent().map(assetOf).filter(Boolean);
-    const popular = ASSETS.slice().sort((a, b) => a.rank - b.rank);
+    /* The market's order: the ten biggest first, then every coin that has
+       a network here. It was twenty coins, hard-coded, each a letter. */
+    const byRank = ASSETS.slice().sort((a, b) => a.rank - b.rank);
+    const popular = byRank.slice(0, 10), rest = byRank.slice(10);
     return `
       ${rec.length ? `<div class="dep-sec">Recent<button type="button" class="dep-ib sm" data-dep="clearrecent" aria-label="Clear recent">${ico('delete')}</button></div>
         <div class="dep-chips">${rec.map(a => `<button type="button" class="dep-chip" data-dep="asset" data-v="${esc(a.symbol)}">${dot(a)}${esc(a.symbol)}</button>`).join('')}</div>` : ''}
       <div class="dep-sec">Popular</div>
-      ${popular.map(assetRow).join('')}`;
+      ${popular.map(assetRow).join('')}
+      ${rest.length ? `<div class="dep-sec">All coins<span class="dep-sec-n">${ASSETS.length}</span></div>${rest.map(assetRow).join('')}` : ''}`;
   }
 
-  const dot = a => `<span class="dep-dot" style="--c:${esc(a.color)}">${esc(a.symbol.slice(0, 1))}</span>`;
+  /* The coin's own logo, with its first letter underneath for the moment
+     before it loads, or if it can't. */
+  const dot = (a, big) => `<span class="dep-dot${big ? ' big' : ''}" style="--c:${esc(a.color)}"><b>${esc(a.symbol.slice(0, 1))}</b>${
+    a.image ? `<img src="${esc(a.image)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>`;
   const assetRow = a => `<button type="button" class="dep-row" data-dep="asset" data-v="${esc(a.symbol)}">
       ${dot(a)}
       <span class="dep-row-t"><b>${esc(a.symbol)}</b><em>${esc(a.name)}</em></span>
@@ -356,7 +363,7 @@ const DEP = (() => {
     if (!data) return skeleton(4);
     const a = data.asset;
     return `
-      <div class="dep-asset"><span class="dep-dot big" style="--c:${esc(a.color)}">${esc(a.symbol.slice(0, 1))}</span>
+      <div class="dep-asset">${dot(assetOf(a.symbol) || a, true)}
         <div><b>${esc(a.symbol)}</b><em>${esc(a.name)}</em></div></div>
 
       <div class="dep-warn">${ico('warning')}<span><b>Pick the same network the sender will use</b>
@@ -396,6 +403,7 @@ const DEP = (() => {
       : pickAddress(mine);
 
     return `
+      <div class="dep-asset">${dot(a, true)}<div><b>${esc(a.symbol)}</b><em>${esc(a.name)}</em></div></div>
       <button type="button" class="dep-netcard" data-dep="back" aria-label="Change network">
         <span class="dep-netcard-l">Network</span>
         <span class="dep-netcard-v"><b>${esc(n.code)}</b><em>${esc(n.label)}${n.tag && n.tag !== n.label ? ' · ' + esc(n.tag) : ''}</em></span>
@@ -730,6 +738,17 @@ const DEP = (() => {
   const previewOf = () => 'Deposit record';
   function openRecord(id) { open('activity'); V.recId = id; paint(); }
 
+  /* Straight to one coin's networks, from a screen that already knows
+     which coin (Receive in chat or Pay, say). */
+  function openFor(sym) {
+    const s = String(sym || '').toUpperCase();
+    open('asset');
+    loadAssets().then(() => {
+      if (!V) return;
+      if (assetOf(s)) act('asset', s); else paint();
+    }).catch(() => { if (V) paint(); });
+  }
+
   /* CFI hands unknown kinds down a chain; wrapping keeps every existing
      card exactly where it was. */
   function installCards() {
@@ -750,7 +769,7 @@ const DEP = (() => {
   else setTimeout(installCards, 0);
 
   return {
-    open, close, act, back, cardHTML, previewOf, openRecord, records, clearRecent,
+    open, openFor, close, act, back, cardHTML, previewOf, openRecord, records, clearRecent,
     loadAssets, loadNets,
     get state() { return V; }
   };

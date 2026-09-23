@@ -106,6 +106,10 @@ app.get(/.*/, (req, res) => {
 
 // Port configuration for Vercel/Local
 const PORT = process.env.PORT || 3000;
+// Start building the coin catalogue now, so the first person to open
+// Deposit or Send gets the full list without waiting for it.
+require('./services/catalog').warm();
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });

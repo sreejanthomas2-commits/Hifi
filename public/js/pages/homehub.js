@@ -266,12 +266,16 @@ const HX = (() => {
 
   /* Add Funds lists the screens that already bring money in — nothing
      here takes payment details. */
+  /* "Receive crypto" was a second door to a screen listing your saved
+     addresses, which was empty until you had added one somewhere else.
+     Deposit crypto now does that job the way an exchange does — coin,
+     network, your address — so it is listed once. */
   const FUNDS = [
-    { icon: 'token', color: '#F0A23B', t: 'Deposit crypto', d: 'Receive coins from another exchange or wallet', go: () => { if (typeof DEP !== 'undefined') DEP.open('asset'); else receive(); } },
-    { icon: 'account_balance_wallet', color: '#FCD535', t: 'Deposit to Spot', d: 'Move paper USDT from your wallet into trading', go: () => navigateTo('portfolio') },
+    { icon: 'token', color: '#F0A23B', t: 'Deposit crypto', d: 'Receive on-chain from an exchange or wallet — pick coin and network', go: () => receive() },
+    { icon: 'qr_code_2', color: '#EC6CB9', t: 'Receive from a Trending user', d: 'Show your Trending code — free and instant', go: () => { if (typeof PAY !== 'undefined') PAY.openMyQR(); } },
+    { icon: 'request_quote', color: '#F0A23B', t: 'Request a payment', d: 'Ask a friend for a set amount', go: () => { if (typeof PAY !== 'undefined') PAY.openRequestFor(''); } },
     { icon: 'swap_horiz', color: '#26A69A', t: 'Buy with P2P', d: 'Pay a seller in local currency, off-platform', go: () => { if (typeof P2P !== 'undefined') P2P.setSide('buy'); navigateTo('p2p'); } },
-    { icon: 'qr_code_2', color: '#EC6CB9', t: 'Receive crypto', d: 'Show your wallet address and QR code', go: () => receive() },
-    { icon: 'request_quote', color: '#F0A23B', t: 'Request a payment', d: 'Your Trending pay code for friends', go: () => { if (typeof PAY !== 'undefined') PAY.openMyQR(); } },
+    { icon: 'account_balance_wallet', color: '#FCD535', t: 'Deposit to Spot', d: 'Move paper USDT from Funding into trading', go: () => navigateTo('portfolio').then(() => { if (typeof AS !== 'undefined' && AS.go) AS.go('transfer'); }) },
     { icon: 'sync_alt', color: '#42A5F5', t: 'Convert', d: 'Swap one coin for another', go: () => { if (typeof CT !== 'undefined') CT.open('convert'); else navigateTo('trade'); } }
   ];
   let lastFocus = null;
@@ -312,8 +316,11 @@ const HX = (() => {
   }
   function fundsKey(e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeFunds(); } }
 
+  /* Receive on-chain: the deposit screen, which shows your own address
+     for whichever coin and network you pick. */
   function receive() {
-    if (typeof WAD !== 'undefined' && WAD.openMine) WAD.openMine();
+    if (typeof DEP !== 'undefined' && DEP.open) DEP.open('asset');
+    else if (typeof WAD !== 'undefined' && WAD.openMine) WAD.openMine();
     else if (typeof PAY !== 'undefined') PAY.openMyQR();
   }
   function connect() {

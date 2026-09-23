@@ -189,15 +189,15 @@ const WD = (() => {
   /* ── 1 · method ──────────────────────────────────────────────────── */
   function methodHTML() {
     const rows = [
-      ['internal', 'send_to_mobile', 'Send to Trending users',
-        'Trending internal transfer — send by username, email, phone or Trending ID', typeof PAY !== 'undefined'],
-      ['chain', 'north_east', 'Withdraw crypto',
-        'Send from Trending to another exchange or wallet', true],
+      ['internal', 'send_to_mobile', 'Send to a Trending user',
+        'Free and instant — by name, @handle, Trending Tag or Pay ID', typeof PAY !== 'undefined'],
+      ['chain', 'north_east', 'Send via crypto network',
+        'To an exchange or wallet address, on its network — network fee applies', true],
       ['p2p', 'swap_horiz', 'P2P trading',
         'Sell directly to other people using local payment methods', typeof P2P !== 'undefined']
     ].filter(r => r[4]);
     return `<span class="wd-grab" aria-hidden="true"></span>
-      <h2 class="wd-sheet-t">Select withdraw method</h2>
+      <h2 class="wd-sheet-t">How do you want to send?</h2>
       ${rows.map(([k, i, t, d]) => `<button type="button" class="wd-row" data-wd="method" data-v="${k}">
         <span class="wd-row-i">${ico(i)}</span>
         <span class="wd-row-t"><b>${esc(t)}</b><em>${esc(d)}</em></span>
@@ -411,7 +411,8 @@ const WD = (() => {
         preflight(); return;
       case 'ownsend':
         close();
-        if (typeof WAD !== 'undefined' && WAD.open) WAD.open();
+        if (typeof SC !== 'undefined' && SC.open) SC.open({});
+        else if (typeof WAD !== 'undefined' && WAD.open) WAD.open();
         return;
       case 'net': go('network'); loadNetworks(); return;
       case 'renets': V.err = ''; paint(); loadNetworks(true); return;
@@ -447,7 +448,14 @@ const WD = (() => {
     if (!V) return;
     V.busy = false;
     const holds = r.ok && r.data && r.data.custody && r.data.custody !== 'none';
-    if (!holds) { V.screen = 'nocustody'; paint(); return; }
+    if (!holds) {
+      /* Nothing is held for anyone on this build, so a send is made from
+         the person's own wallet — which is what the crypto-network send
+         screen is built for. It used to stop here with "your crypto is
+         already in your own wallet" and two buttons. */
+      if (typeof SC !== 'undefined' && SC.open) { close(true); SC.open({}); return; }
+      V.screen = 'nocustody'; paint(); return;
+    }
     paint();
   }
 

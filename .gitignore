@@ -17,3 +17,6 @@ _removed/
 # A 1.3 MB single-file snapshot of the whole app - a second copy of
 # every file, which would diverge the moment either side changed.
 trending-standalone.html
+
+# Rebuilt from CoinGecko by services/catalog.js; a cache, not source.
+data/

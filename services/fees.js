@@ -144,14 +144,16 @@ const PUBLIC_RPC = {
   arbitrum: 'https://arbitrum-one-rpc.publicnode.com',
   optimism: 'https://optimism-rpc.publicnode.com',
   polygon: 'https://polygon-bor-rpc.publicnode.com',
-  bnb: 'https://bsc-rpc.publicnode.com'
+  bnb: 'https://bsc-rpc.publicnode.com',
+  avalanche: 'https://avalanche-c-chain-rpc.publicnode.com',
+  etc: 'https://etc.etcdesktop.com'
 };
 const rpcUrl = network => process.env['WATCHER_RPC_' + network.toUpperCase()] || PUBLIC_RPC[network] || '';
 
 /* The coin the fee is paid in. Not NETWORKS[].code: Base's code is BASE,
    but its gas is ETH. */
 const GAS_COIN = { ethereum: 'ETH', base: 'ETH', arbitrum: 'ETH', optimism: 'ETH', polygon: 'POL', bnb: 'BNB',
-                   bitcoin: 'BTC', solana: 'SOL', tron: 'TRX' };
+                   avalanche: 'AVAX', etc: 'ETC', bitcoin: 'BTC', solana: 'SOL', tron: 'TRX' };
 const ROLLUPS = { base: 1, arbitrum: 1, optimism: 1 };
 
 /* Solana charges a fixed 5,000 lamports per signature. A wallet receiving

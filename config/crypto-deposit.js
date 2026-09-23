@@ -101,6 +101,110 @@ const NETWORKS = {
     explorer: 'https://livenet.xrpl.org/transactions/', addressExplorer: 'https://livenet.xrpl.org/accounts/',
     tagField: { name: 'Destination tag', hint: 'Exchanges route XRP by destination tag. Your own wallet usually needs none — leave it empty unless the sender asks for one.', required: false },
     note: 'An XRP account must hold a small reserve before it can receive.'
+  },
+
+  /* ── More chains, so the coin list can be the market's, not twenty ──
+     Each one is here because a top-250 coin lives on it. Same kind of
+     entry as above: protocol facts and an operational switch.        */
+  avalanche: {
+    key: 'avalanche', code: 'AVAXC', label: 'Avalanche C-Chain', tag: 'C-Chain', family: 'evm', chainId: 43114,
+    status: 'open', blockSeconds: 2, color: '#E84142',
+    finality: 'Blocks every couple of seconds, final almost at once.',
+    explorer: 'https://snowtrace.io/tx/', addressExplorer: 'https://snowtrace.io/address/',
+    note: 'The C-Chain uses 0x addresses. Avalanche X-Chain addresses (X-avax…) are a different network.'
+  },
+  etc: {
+    key: 'etc', code: 'ETC', label: 'Ethereum Classic', tag: 'ETC', family: 'evm', chainId: 61,
+    status: 'open', blockSeconds: 13, color: '#328332',
+    finality: 'A new block about every 13 seconds. Wait for many confirmations on large amounts.',
+    explorer: 'https://etc.blockscout.com/tx/', addressExplorer: 'https://etc.blockscout.com/address/',
+    note: 'Ethereum Classic is not Ethereum. The address looks the same; the coins are not interchangeable.'
+  },
+  dogecoin: {
+    key: 'dogecoin', code: 'DOGE', label: 'Dogecoin', tag: 'Dogecoin network', family: 'dogecoin',
+    status: 'open', blockSeconds: 60, color: '#C2A633',
+    finality: 'A new block about every minute.',
+    explorer: 'https://blockchair.com/dogecoin/transaction/', addressExplorer: 'https://blockchair.com/dogecoin/address/'
+  },
+  litecoin: {
+    key: 'litecoin', code: 'LTC', label: 'Litecoin', tag: 'Litecoin network', family: 'litecoin',
+    status: 'open', blockSeconds: 150, color: '#345D9D',
+    finality: 'A new block about every two and a half minutes.',
+    explorer: 'https://blockchair.com/litecoin/transaction/', addressExplorer: 'https://blockchair.com/litecoin/address/'
+  },
+  bitcoincash: {
+    key: 'bitcoincash', code: 'BCH', label: 'Bitcoin Cash', tag: 'BCH network', family: 'bitcoincash',
+    status: 'open', blockSeconds: 600, color: '#8DC351',
+    finality: 'A new block about every 10 minutes.',
+    explorer: 'https://blockchair.com/bitcoin-cash/transaction/', addressExplorer: 'https://blockchair.com/bitcoin-cash/address/',
+    note: 'Bitcoin Cash is not Bitcoin. Sending BTC to a BCH address, or the reverse, loses it.'
+  },
+  cardano: {
+    key: 'cardano', code: 'ADA', label: 'Cardano', tag: 'Cardano', family: 'cardano',
+    status: 'open', blockSeconds: 20, color: '#0033AD',
+    finality: 'A new block about every 20 seconds.',
+    explorer: 'https://cardanoscan.io/transaction/', addressExplorer: 'https://cardanoscan.io/address/'
+  },
+  polkadot: {
+    key: 'polkadot', code: 'DOT', label: 'Polkadot', tag: 'Polkadot relay chain', family: 'polkadot',
+    status: 'open', blockSeconds: 6, color: '#E6007A',
+    finality: 'A new block every 6 seconds; final within about a minute.',
+    explorer: 'https://polkadot.subscan.io/extrinsic/', addressExplorer: 'https://polkadot.subscan.io/account/',
+    note: 'A Polkadot account must hold a small existential deposit to exist.'
+  },
+  ton: {
+    key: 'ton', code: 'TON', label: 'TON', tag: 'The Open Network', family: 'ton',
+    status: 'open', blockSeconds: 5, color: '#0098EA',
+    finality: 'Blocks every few seconds.',
+    explorer: 'https://tonviewer.com/transaction/', addressExplorer: 'https://tonviewer.com/',
+    tagField: { name: 'Comment', hint: 'Exchanges route TON by a comment. Your own wallet needs none — leave it empty unless the sender asks for one.', required: false }
+  },
+  stellar: {
+    key: 'stellar', code: 'XLM', label: 'Stellar', tag: 'Stellar network', family: 'stellar',
+    status: 'open', blockSeconds: 5, color: '#14B6E7',
+    finality: 'A ledger closes every five seconds, and a closed ledger is final.',
+    explorer: 'https://stellar.expert/explorer/public/tx/', addressExplorer: 'https://stellar.expert/explorer/public/account/',
+    tagField: { name: 'Memo', hint: 'Exchanges route XLM by memo. Your own wallet needs none — leave it empty unless the sender asks for one.', required: false },
+    note: 'A Stellar account needs a small XLM reserve, and a trustline before it can hold a token.'
+  },
+  near: {
+    key: 'near', code: 'NEAR', label: 'NEAR Protocol', tag: 'NEAR', family: 'near',
+    status: 'open', blockSeconds: 1, color: '#00C08B',
+    finality: 'About a second a block; final within a few seconds.',
+    explorer: 'https://nearblocks.io/txns/', addressExplorer: 'https://nearblocks.io/address/'
+  },
+  hedera: {
+    key: 'hedera', code: 'HBAR', label: 'Hedera', tag: 'Hedera', family: 'hedera',
+    status: 'open', blockSeconds: 3, color: '#3C3C3C',
+    finality: 'Final in a few seconds.',
+    explorer: 'https://hashscan.io/mainnet/transaction/', addressExplorer: 'https://hashscan.io/mainnet/account/',
+    tagField: { name: 'Memo', hint: 'Exchanges route HBAR by memo. Your own wallet needs none — leave it empty unless the sender asks for one.', required: false }
+  },
+  algorand: {
+    key: 'algorand', code: 'ALGO', label: 'Algorand', tag: 'Algorand', family: 'algorand',
+    status: 'open', blockSeconds: 3, color: '#4A4A4A',
+    finality: 'A block about every three seconds, final when it lands.',
+    explorer: 'https://allo.info/tx/', addressExplorer: 'https://allo.info/account/',
+    note: 'An Algorand account must opt in to a token before it can receive it.'
+  },
+  tezos: {
+    key: 'tezos', code: 'XTZ', label: 'Tezos', tag: 'Tezos', family: 'tezos',
+    status: 'open', blockSeconds: 10, color: '#2C7DF7',
+    finality: 'A block about every ten seconds.',
+    explorer: 'https://tzkt.io/', addressExplorer: 'https://tzkt.io/'
+  },
+  cosmos: {
+    key: 'cosmos', code: 'ATOM', label: 'Cosmos Hub', tag: 'Cosmos', family: 'cosmos',
+    status: 'open', blockSeconds: 6, color: '#2E3148',
+    finality: 'A block about every six seconds, final when it lands.',
+    explorer: 'https://www.mintscan.io/cosmos/tx/', addressExplorer: 'https://www.mintscan.io/cosmos/address/',
+    tagField: { name: 'Memo', hint: 'Exchanges route ATOM by memo. Your own wallet needs none — leave it empty unless the sender asks for one.', required: false }
+  },
+  kaspa: {
+    key: 'kaspa', code: 'KAS', label: 'Kaspa', tag: 'Kaspa', family: 'kaspa',
+    status: 'open', blockSeconds: 1, color: '#49EACB',
+    finality: 'Several blocks a second.',
+    explorer: 'https://explorer.kaspa.org/txs/', addressExplorer: 'https://explorer.kaspa.org/addresses/'
   }
 };
 

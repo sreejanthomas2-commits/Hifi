@@ -1120,8 +1120,16 @@ const PAY = (() => {
 
   /* The same step on-chain: a wallet address, a network and a fee. */
   function toWallet(kind) {
-    if (typeof WAD === 'undefined' || !WAD.openFor) { toast('Wallet addresses are still loading…'); return; }
     const o = V || {};
+    /* Not in a chat: the same screens the Assets page uses, with the coin
+       carried over — Deposit to show your address, Send via crypto
+       network to pay one. In a chat, the chat's wallet-address sheet. */
+    if (o.chatId == null && o.origin !== 'cfi') {
+      const coin = o.asset || 'USDT', amount = o.amount || '';
+      if (kind === 'request' && typeof DEP !== 'undefined' && DEP.openFor) { close(); DEP.openFor(coin); return; }
+      if (kind !== 'request' && typeof SC !== 'undefined' && SC.open) { close(); SC.open({ sym: coin, amount }); return; }
+    }
+    if (typeof WAD === 'undefined' || !WAD.openFor) { toast('Wallet addresses are still loading…'); return; }
     const opts = {
       chatId: o.chatId != null ? o.chatId : null,
       origin: o.origin === 'cfi' ? 'cfi' : 'pay', cfi: o.cfi || null,

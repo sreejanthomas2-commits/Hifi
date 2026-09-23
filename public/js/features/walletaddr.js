@@ -60,7 +60,41 @@ const WAD = (() => {
     tron:     { label: 'Tron',     tag: 'TRC-20', family: 'tron',   symbol: 'TRX', color: '#EF0027',
                 addr: 'https://tronscan.org/#/address/',           tx: 'https://tronscan.org/#/transaction/' },
     bitcoin:  { label: 'Bitcoin',  tag: 'BTC',    family: 'bitcoin', symbol: 'BTC', color: '#F7931A',
-                addr: 'https://mempool.space/address/',            tx: 'https://mempool.space/tx/' }
+                addr: 'https://mempool.space/address/',            tx: 'https://mempool.space/tx/' },
+    /* The rest of the chains a top-250 coin lives on — the same list the
+       server's deposit config has, so Deposit and Send agree. */
+    xrpl:     { label: 'XRP Ledger', tag: 'XRPL', family: 'xrpl', symbol: 'XRP', color: '#23292F',
+                addr: 'https://livenet.xrpl.org/accounts/',        tx: 'https://livenet.xrpl.org/transactions/' },
+    avalanche:{ label: 'Avalanche C-Chain', tag: 'C-Chain', family: 'evm', chainId: 43114, symbol: 'AVAX', color: '#E84142',
+                addr: 'https://snowtrace.io/address/',             tx: 'https://snowtrace.io/tx/' },
+    etc:      { label: 'Ethereum Classic', tag: 'ETC', family: 'evm', chainId: 61, symbol: 'ETC', color: '#328332',
+                addr: 'https://etc.blockscout.com/address/',       tx: 'https://etc.blockscout.com/tx/' },
+    dogecoin: { label: 'Dogecoin', tag: 'DOGE', family: 'dogecoin', symbol: 'DOGE', color: '#C2A633',
+                addr: 'https://blockchair.com/dogecoin/address/',  tx: 'https://blockchair.com/dogecoin/transaction/' },
+    litecoin: { label: 'Litecoin', tag: 'LTC', family: 'litecoin', symbol: 'LTC', color: '#345D9D',
+                addr: 'https://blockchair.com/litecoin/address/',  tx: 'https://blockchair.com/litecoin/transaction/' },
+    bitcoincash: { label: 'Bitcoin Cash', tag: 'BCH', family: 'bitcoincash', symbol: 'BCH', color: '#8DC351',
+                addr: 'https://blockchair.com/bitcoin-cash/address/', tx: 'https://blockchair.com/bitcoin-cash/transaction/' },
+    cardano:  { label: 'Cardano', tag: 'ADA', family: 'cardano', symbol: 'ADA', color: '#0033AD',
+                addr: 'https://cardanoscan.io/address/',           tx: 'https://cardanoscan.io/transaction/' },
+    polkadot: { label: 'Polkadot', tag: 'DOT', family: 'polkadot', symbol: 'DOT', color: '#E6007A',
+                addr: 'https://polkadot.subscan.io/account/',      tx: 'https://polkadot.subscan.io/extrinsic/' },
+    ton:      { label: 'TON', tag: 'The Open Network', family: 'ton', symbol: 'TON', color: '#0098EA',
+                addr: 'https://tonviewer.com/',                    tx: 'https://tonviewer.com/transaction/' },
+    stellar:  { label: 'Stellar', tag: 'XLM', family: 'stellar', symbol: 'XLM', color: '#14B6E7',
+                addr: 'https://stellar.expert/explorer/public/account/', tx: 'https://stellar.expert/explorer/public/tx/' },
+    near:     { label: 'NEAR Protocol', tag: 'NEAR', family: 'near', symbol: 'NEAR', color: '#00C08B',
+                addr: 'https://nearblocks.io/address/',            tx: 'https://nearblocks.io/txns/' },
+    hedera:   { label: 'Hedera', tag: 'HBAR', family: 'hedera', symbol: 'HBAR', color: '#3C3C3C',
+                addr: 'https://hashscan.io/mainnet/account/',      tx: 'https://hashscan.io/mainnet/transaction/' },
+    algorand: { label: 'Algorand', tag: 'ALGO', family: 'algorand', symbol: 'ALGO', color: '#4A4A4A',
+                addr: 'https://allo.info/account/',                tx: 'https://allo.info/tx/' },
+    tezos:    { label: 'Tezos', tag: 'XTZ', family: 'tezos', symbol: 'XTZ', color: '#2C7DF7',
+                addr: 'https://tzkt.io/',                          tx: 'https://tzkt.io/' },
+    cosmos:   { label: 'Cosmos Hub', tag: 'ATOM', family: 'cosmos', symbol: 'ATOM', color: '#2E3148',
+                addr: 'https://www.mintscan.io/cosmos/address/',   tx: 'https://www.mintscan.io/cosmos/tx/' },
+    kaspa:    { label: 'Kaspa', tag: 'KAS', family: 'kaspa', symbol: 'KAS', color: '#49EACB',
+                addr: 'https://explorer.kaspa.org/addresses/',     tx: 'https://explorer.kaspa.org/txs/' }
   };
 
   const NET_KEYS = Object.keys(NETS);
@@ -73,7 +107,12 @@ const WAD = (() => {
     evm:     ['USDT', 'USDC', 'ETH', 'DAI', 'WBTC'],
     solana:  ['SOL', 'USDC', 'USDT'],
     tron:    ['USDT', 'TRX'],
-    bitcoin: ['BTC']
+    bitcoin: ['BTC'],
+    ton:     ['USDT'],
+    near:    ['USDT', 'USDC'],
+    stellar: ['USDC'],
+    algorand:['USDC'],
+    hedera:  ['USDC']
   };
 
   function coinsFor(netKey) {
@@ -88,7 +127,23 @@ const WAD = (() => {
     evm:     /^0x[0-9a-fA-F]{40}$/,
     solana:  /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
     tron:    /^T[1-9A-HJ-NP-Za-km-z]{33}$/,
-    bitcoin: /^(bc1[a-z0-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,39})$/
+    bitcoin: /^(bc1[a-z0-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,39})$/,
+    xrpl:    /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/,
+    dogecoin:/^[DA9][1-9A-HJ-NP-Za-km-z]{25,34}$/,
+    litecoin:/^(ltc1[a-z0-9]{11,71}|[LM3][1-9A-HJ-NP-Za-km-z]{26,33})$/,
+    bitcoincash: /^((bitcoincash:)?[qp][02-9ac-hj-np-z]{41}|[13][1-9A-HJ-NP-Za-km-z]{25,33})$/,
+    cardano: /^(addr1[02-9ac-hj-np-z]{50,110}|Ae2[1-9A-HJ-NP-Za-km-z]{50,70}|DdzFF[1-9A-HJ-NP-Za-km-z]{80,120})$/,
+    polkadot:/^1[1-9A-HJ-NP-Za-km-z]{46,47}$/,
+    ton:     /^([EUk0]Q[A-Za-z0-9_-]{46}|-?[01]:[0-9a-fA-F]{64})$/,
+    stellar: /^G[A-Z2-7]{55}$/,
+    /* Named accounts only: an implicit NEAR account is 64 hex characters,
+       which is also what a raw private key looks like. */
+    near:    /^(([a-z0-9]+[-_])*[a-z0-9]+\.)+near$/,
+    hedera:  /^0\.0\.\d{1,10}(-[a-z]{5})?$/,
+    algorand:/^[A-Z2-7]{58}$/,
+    tezos:   /^(tz[1-4]|KT1)[1-9A-HJ-NP-Za-km-z]{33}$/,
+    cosmos:  /^cosmos1[02-9ac-hj-np-z]{38}$/,
+    kaspa:   /^kaspa:[02-9ac-hj-np-z]{61,63}$/
   };
 
   /* A recovery phrase or a private key must never reach this app. Detected
@@ -105,12 +160,16 @@ const WAD = (() => {
 
   /* Which networks a pasted address could belong to. EVM addresses are the
      same on every EVM chain, so this narrows the family, never the chain. */
+  /* Most specific shape first: a Dogecoin or XRP address would also pass
+     Solana's looser pattern, so Solana is asked last. */
+  const DETECT = ['evm', 'tron', 'bitcoin', 'litecoin', 'bitcoincash', 'cardano', 'cosmos', 'kaspa', 'ton',
+    'stellar', 'algorand', 'tezos', 'hedera', 'near', 'polkadot', 'xrpl', 'dogecoin', 'solana'];
   function detectNets(address) {
     const a = String(address || '').trim();
-    if (SHAPE.evm.test(a)) return NET_KEYS.filter(k => NETS[k].family === 'evm');
-    if (SHAPE.tron.test(a)) return ['tron'];
-    if (SHAPE.bitcoin.test(a)) return ['bitcoin'];
-    if (SHAPE.solana.test(a)) return ['solana'];
+    for (const fam of DETECT) {
+      if (!SHAPE[fam].test(a)) continue;
+      return NET_KEYS.filter(k => NETS[k].family === fam);
+    }
     return [];
   }
 
@@ -367,6 +426,8 @@ const WAD = (() => {
     if (n.family === 'evm') return `ethereum:${address}@${n.chainId}` + (native ? `?value=${amt}e18` : '');
     if (n.family === 'bitcoin') return `bitcoin:${address}` + (native ? `?amount=${amt}` : '');
     if (n.family === 'solana') return `solana:${address}` + (native ? `?amount=${amt}` : '');
+    if (n.family === 'dogecoin' || n.family === 'litecoin') return `${n.family}:${address}` + (native ? `?amount=${amt}` : '');
+    if (n.family === 'bitcoincash') return (address.indexOf(':') > -1 ? address : `bitcoincash:${address}`) + (native ? `?amount=${amt}` : '');
     return address;
   }
 

@@ -24,7 +24,7 @@
 'use strict';
 
 const express = require('express');
-const { NETWORKS, ASSETS, VERSION } = require('../config/crypto-deposit');
+const { NETWORKS, VERSION } = require('../config/crypto-deposit');
 
 const router = express.Router();
 
@@ -59,21 +59,24 @@ const netPublic = n => ({
 
 const NET_LIST = Object.keys(NETWORKS).map(k => netPublic(NETWORKS[k]));
 
-const ASSET_LIST = ASSETS.map(a => ({
-  symbol: a.symbol, name: a.name, color: a.color, rank: a.rank, token: !!a.token,
+/* The coin list is the market's, not a fixed twenty: services/catalog.js
+   builds it from CoinGecko's top coins and the chains each one lives on,
+   and falls back to the curated list in config when that isn't possible. */
+const catalog = require('../services/catalog');
+
+const assetPublic = a => ({
+  symbol: a.symbol, name: a.name, color: a.color, rank: a.rank, token: !!a.token, image: a.image || '',
   networks: a.networks.filter(n => NETWORKS[n.net]).map(n => n.net),
   // so the search box can match "USDT on tron" without a second request
   search: [a.symbol, a.name].concat(a.networks.map(n => NETWORKS[n.net] ? NETWORKS[n.net].label : ''))
     .join(' ').toLowerCase()
-}));
+});
 
-const bySymbol = {};
-ASSETS.forEach(a => { bySymbol[a.symbol] = a; });
-
-router.get('/assets', (req, res) => {
+router.get('/assets', async (req, res) => {
   if (limited(req, res)) return;
+  const cat = await catalog.assets();
   res.set('Cache-Control', 'public, max-age=300');
-  res.json({ version: VERSION, assets: ASSET_LIST });
+  res.json({ version: VERSION + ':' + (cat.at || 0), source: cat.source, assets: cat.assets.map(assetPublic) });
 });
 
 router.get('/networks', (req, res) => {
@@ -82,10 +85,11 @@ router.get('/networks', (req, res) => {
   res.json({ version: VERSION, networks: NET_LIST });
 });
 
-router.get('/assets/:symbol/networks', (req, res) => {
+router.get('/assets/:symbol/networks', async (req, res) => {
   if (limited(req, res)) return;
   const sym = String(req.params.symbol || '').toUpperCase().slice(0, 16);
-  const asset = bySymbol[sym];
+  await catalog.assets();
+  const asset = catalog.bySymbol(sym);
   if (!asset) {
     return res.status(404).json({ error: 'unsupported_asset', message: `Trending does not list ${sym} for deposit yet.` });
   }
@@ -95,23 +99,24 @@ router.get('/assets/:symbol/networks', (req, res) => {
       ...netPublic(NETWORKS[n.net]),
       // The asset-on-network facts, kept apart from the network's own.
       wrapped: !!n.wrapped,
-      token: !!asset.token,
+      token: !!asset.token || !!n.wrapped,
       // No contract address is published on purpose — see the config file.
-      verifyContract: !!asset.token
+      verifyContract: !!asset.token || !!n.wrapped
     }));
   res.set('Cache-Control', 'public, max-age=300');
   res.json({
     version: VERSION,
-    asset: { symbol: asset.symbol, name: asset.name, color: asset.color, token: !!asset.token },
+    asset: { symbol: asset.symbol, name: asset.name, color: asset.color, token: !!asset.token, image: asset.image || '' },
     networks: rows
   });
 });
 
-router.get('/config', (req, res) => {
+router.get('/config', async (req, res) => {
   if (limited(req, res)) return;
+  const cat = await catalog.assets();
   res.json({
     version: VERSION,
-    assets: ASSET_LIST.length,
+    assets: cat.assets.length,
     networks: NET_LIST.length,
     custody: 'none',
     custodyNote: 'Deposits go to an address the user controls. Trending holds no keys and credits no balance from a chain transfer.'
