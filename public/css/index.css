@@ -9034,6 +9034,20 @@ a.dep-btn { text-decoration: none; color: var(--t1); }
 .st-theme-p.light { color: #0F1118; }
 .st-theme-p.dark, .st-theme-p.system { color: #FFFFFF; }
 
+/* ── Accent colour ──────────────────────────────────────────────────── */
+.st-accents { display: flex; gap: 10px; padding: 4px 16px 10px; flex-wrap: wrap; }
+.st-accent {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 6px; min-width: 62px; cursor: pointer;
+  border: 1.5px solid transparent; border-radius: 14px; background: none;
+  font: inherit; color: var(--t3); transition: var(--tr);
+}
+.st-accent:hover { background: var(--card2); }
+.st-accent i { display: block; width: 30px; height: 30px; border-radius: 50%; background: var(--sw); }
+.st-accent span { font-size: 11.5px; font-weight: 600; }
+.st-accent.on { border-color: var(--sw); color: var(--t1); }
+.st-accent.on i { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--sw); }
+
 /* ── Text size ──────────────────────────────────────────────────────── */
 .st-slide { padding: 10px 16px 16px; }
 .st-slide-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }

@@ -169,7 +169,7 @@ function getProfileTemplate() {
           <h1 class="pg-top-u" id="pg-top-handle">profile</h1>
           <div class="pg-top-a">
             <button type="button" class="pg-ib" data-pg="create" aria-label="Create" title="Create">${ico('add_box')}</button>
-            <button type="button" class="pg-ib" data-pg="menu" aria-label="Menu" title="Menu" aria-haspopup="dialog">${ico('menu')}</button>
+            <button type="button" class="pg-ib" data-pg="menu" aria-label="Settings and activity" title="Settings and activity">${ico('menu')}</button>
           </div>
         </div>
 
@@ -1521,14 +1521,19 @@ const PG = (() => {
     else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
   }
 
-  /* Settings sits at the top, not the bottom. It used to be reachable
-     from the More grid on the bottom bar as well; now the ☰ here is
-     the one way in, so it is the first thing the sheet offers. */
-  const menu = () => sheet('Menu', [
-    ['app-settings', 'Settings and activity', 'settings'],
-    ...MENU,
-    guest() ? ['signin', 'Sign in', 'login'] : ['signout', 'Sign out', 'logout', true]
-  ]);
+  /* The ☰ opens Settings & Activity.
+
+     It used to open a sheet of its own - Saved, Liked, History,
+     Purchases, Analytics, the voice studio, profile settings, sign
+     out - and once Settings & Activity existed that sheet was a
+     second, shorter copy of it, one tap earlier. Every row it carried
+     is in Settings now, and the ones that draw a profile section
+     (Saved, Liked, History, Purchases, Analytics) open that same
+     section from there. So this is the door, not another room.
+
+     MENU itself stays: TITLES is built from it, and that is what
+     names each section when show() draws one. */
+  const menu = () => { if (typeof navigateTo === 'function') navigateTo('settings'); };
   const create = () => sheet('Create', [['compose', 'Post', 'edit_square'], ['shorty-new', 'Shorty', 'slow_motion_video']]);
 
   /* ── Share and discover ──────────────────────────────────────────── */

@@ -236,6 +236,13 @@ export default function register(SET) {
         sw('security.alerts', 'Security alerts', 'Password changes and new login methods', { icon: 'notification_important' }),
         sw('security.loginAlerts', 'New login alerts', 'A sign-in from a device the account has not seen', { icon: 'travel_explore' })
       ]),
+      /* Not switches. They are how the app is built, and a control
+         that cannot be turned off should say so rather than pretend
+         to be a choice. */
+      sec('Always on', [
+        row({ icon: 'lock', label: 'End-to-end encryption', sub: 'Messages are encrypted between you and the person you are talking to', value: 'On', good: true }),
+        row({ icon: 'key_off', label: 'Zero-knowledge storage', sub: 'Your recovery phrases and private keys are never sent to Trending', value: 'On', good: true })
+      ]),
       `<p class="st-note">Trending never asks for a recovery phrase or a private key, and nobody from support ever will. Anyone who does is not us.</p>`
     ].join('')
   });
@@ -358,16 +365,18 @@ export default function register(SET) {
       const savedPosts = nkeys(store('ts_note_interactions_v1', {}).saved);
       const watch = (typeof CT !== 'undefined' && CT.state && CT.state.watch) ? CT.state.watch.length : 0;
       const cols = P().get('saved.collections', []) || [];
-      if (!savedShorts && !savedPosts && !watch && !cols.length) {
-        return empty('bookmark_border', 'Nothing saved yet',
-          'Tap save on a post or a Shorty and it is kept here. Only you can see what you have saved.',
-          'pane:feeds', 'Browse the feed');
-      }
+      const nothing = !savedShorts && !savedPosts && !watch && !cols.length;
       return [
         `<p class="st-lead">Only you can see what you have saved.</p>`,
+        /* The rows stay even when the counts are zero: they are the way
+           into the drawers themselves, and a screen that hides its own
+           doors until it has something in them is a dead end. */
+        nothing ? empty('bookmark_border', 'Nothing saved yet',
+          'Tap save on a post or a Shorty and it is kept here.') : '',
         sec('', [
+          row({ icon: 'bookmark', label: 'Saved bookmarks', sub: 'Articles, posts and links you kept',
+            value: String(savedPosts), act: 'profsec', arg: 'saved', chev: true }),
           row({ icon: 'slow_motion_video', label: 'Saved Shorty', value: String(savedShorts), act: 'savedshorts', chev: true }),
-          row({ icon: 'article', label: 'Saved posts', value: String(savedPosts), act: 'pane:feeds', chev: true }),
           row({ icon: 'currency_bitcoin', label: 'Watchlist', sub: 'Coins you follow', value: String(watch), to: 'watchlist' })
         ]),
         sec('Collections', cols.map((c, i) => row({
@@ -440,17 +449,21 @@ export default function register(SET) {
       return [
         `<p class="st-lead">What you have done on Trending, and the controls to clear it.</p>`,
         sec('Interactions', [
-          row({ icon: 'favorite', label: 'Likes', value: String(nkeys(sh.liked) + nkeys(ni.liked)), act: 'savedshorts', chev: true }),
+          row({ icon: 'favorite', label: 'Likes', sub: 'Everything you have liked',
+            value: String(nkeys(sh.liked) + nkeys(ni.liked)), act: 'profsec', arg: 'liked', chev: true }),
           row({ icon: 'mode_comment', label: 'Comments and replies', value: String(nkeys(sh.comments)), act: 'pane:feeds', chev: true }),
           row({ icon: 'ios_share', label: 'Shares', act: 'pane:feeds', chev: true }),
           row({ icon: 'bookmark', label: 'Saved', to: 'saved' })
         ]),
         sec('History', [
+          row({ icon: 'history', label: 'Watch history', sub: 'What you have read and watched', act: 'profsec', arg: 'history', chev: true }),
           row({ icon: 'search', label: 'Search history', value: searches ? String(searches) : 'Empty', act: 'clearsearches', chev: true }),
           row({ icon: 'link', label: 'Link history', sub: 'External links you have opened', value: links ? String(links) : 'Empty', act: 'clearlinks', chev: true }),
           row({ icon: 'visibility', label: 'Recently viewed', sub: 'What Discover has seen you watch', act: 'tunediscover', chev: true })
         ]),
         sec('Account activity', [
+          row({ icon: 'insights', label: 'Analytics', sub: 'Views, reach and growth on what you post', act: 'profsec', arg: 'analytics', chev: true }),
+          row({ icon: 'shopping_cart', label: 'Purchases', sub: 'Your marketplace orders', act: 'profsec', arg: 'purchases', chev: true }),
           row({ icon: 'receipt_long', label: 'Payments and transfers', to: 'txhistory' }),
           row({ icon: 'devices', label: 'Where you are signed in', to: 'devices' })
         ]),

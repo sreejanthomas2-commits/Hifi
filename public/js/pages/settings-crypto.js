@@ -539,6 +539,8 @@ export default function register(SET) {
           row({ icon: 'currency_bitcoin', label: 'Crypto wallet', sub: 'On-chain, pays a network fee', to: 'wallets' })
         ]),
         sec('', [
+          row({ icon: 'shopping_cart', label: 'Marketplace orders', sub: 'What you have bought, and its delivery status',
+            act: 'profsec', arg: 'purchases', chev: true }),
           row({ icon: 'help', label: 'Ask about a payment', act: 'go:help', chev: true }),
           row({ icon: 'receipt_long', label: 'Full transaction history', to: 'txhistory' })
         ]),

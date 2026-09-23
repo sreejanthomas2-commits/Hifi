@@ -46,10 +46,26 @@ export default function register(SET) {
           sw('a11y.contrast', 'Increase contrast', 'Stronger borders and text', { icon: 'contrast' }),
           sw('a11y.motion', 'Reduce motion', 'Stop animations and transitions', { icon: 'animation' })
         ]),
+        sec('Accent colour', [], 'Colours the highlights, links and charts. The Trending yellow of buttons and the wordmark does not change.'),
+        `<div class="st-accents">${ACCENTS.map(([k, label, c]) => `
+          <button type="button" class="st-accent${P().get('a11y.accent') === k ? ' on' : ''}" data-st="accent" data-a="${k}"
+            style="--sw:${c}" data-label="${esc(label)} accent" aria-label="${esc(label)} accent" aria-pressed="${P().get('a11y.accent') === k}"><i></i><span>${esc(label)}</span></button>`).join('')}</div>`,
         sec('Text', [row({ icon: 'format_size', label: 'Text size', value: P().get('a11y.textScale') + '%', to: 'a11y' })])
       ].join('');
     }
   });
+
+  const ACCENTS = [
+    ['blue', 'Blue', 'hsl(217, 91%, 60%)'], ['green', 'Green', 'hsl(155, 60%, 44%)'],
+    ['orange', 'Orange', 'hsl(38, 95%, 55%)'], ['pink', 'Pink', 'hsl(330, 80%, 62%)'],
+    ['purple', 'Purple', 'hsl(260, 65%, 64%)']
+  ];
+
+  DO.accent = k => {
+    if (typeof changeThemeAccent === 'function') changeThemeAccent(k);
+    P().set('a11y.accent', k);
+    SET.repaint();
+  };
 
   DO.theme = k => {
     if (typeof setTheme === 'function') setTheme(k);
@@ -199,10 +215,85 @@ export default function register(SET) {
           sw('media.autoplaySound', 'Start videos with sound', 'Off means video starts muted until you tap', { icon: 'volume_up' }),
           sw('notif.sound', 'Notification sounds', '', { icon: 'notifications_active' }),
           sw('a11y.uiSound', 'Interface sounds', 'Small sounds on sending and confirming', { icon: 'music_note' })
+        ]),
+        sec('Speech', [
+          row({ icon: 'record_voice_over', label: 'Voice and narration', sub: 'The voice that reads things out, and captions', to: 'voice' })
         ])
       ].join('');
     }
   });
+
+  /* ── Voice and narration ─────────────────────────────────────────── */
+
+  /* This was the profile menu's "AI Assistant" page — a voice studio
+     rather than an assistant. It is speech, so it lives under Language
+     and sound, and it writes to the same S.voiceModel the narrator
+     reads. */
+  const VOICES = [
+    ['female-premium', 'Premium female', 'The default narrator'],
+    ['female-natural', 'Natural female', 'Plainer and faster'],
+    ['male-premium', 'Premium male', '']
+  ];
+
+  reg('voice', {
+    t: 'Voice and narration', i: 'record_voice_over', p: 'langsound',
+    k: 'voice narration speech tts read aloud captions subtitles speed model assistant',
+    html: () => {
+      const on = !!(typeof S !== 'undefined' && S.voiceEnabled);
+      const speed = (typeof S !== 'undefined' && S.voiceSpeed) || 1.05;
+      const model = (typeof S !== 'undefined' && S.voiceModel) || 'female-premium';
+      const can = typeof speechSynthesis !== 'undefined';
+      return [
+        `<p class="st-lead">The voice that reads replies and posts out loud. It runs on this device, using the voices your browser already has.</p>`,
+        sec('', [
+          sw('a11y.voice', 'Read things out', can ? '' : 'This browser has no speech engine',
+            { icon: 'campaign', value: on && can, act: 'tgvoice', off: !can })
+        ]),
+        sec('Voice', []),
+        pick('a11y.voiceModel', VOICES, { value: model, act: 'setvoice' }),
+        `<div class="st-slide" data-label="Speaking speed">
+          <div class="st-slide-h"><b>Speaking speed</b><span>${speed.toFixed(2)}×</span></div>
+          <input type="range" min="0.5" max="2" step="0.05" value="${speed}" data-st="voicespeed" aria-label="Speaking speed">
+        </div>`,
+        sec('', [row({ icon: 'volume_up', label: 'Test the voice', act: 'testvoice', chev: true })]),
+        sec('Captions', [
+          sw('a11y.captions', 'Captions on video', 'Shown whenever a video carries a caption track', { icon: 'closed_caption' })
+        ]),
+        pick('a11y.captionStyle', [
+          ['minimal', 'Minimal', 'White text, thin outline'],
+          ['neon', 'Highlight', 'Bright, one word at a time'],
+          ['karaoke', 'Karaoke', 'Filled in as it is spoken']
+        ])
+      ].join('');
+    }
+  });
+
+  DO.tgvoice = (a, b, el) => {
+    if (typeof S !== 'undefined') S.voiceEnabled = el.checked;
+    P().set('a11y.voice', el.checked);
+    if (!el.checked && typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+    toast(el.checked ? 'Trending will read things out' : 'Reading out is off');
+    SET.repaint();
+  };
+
+  DO.setvoice = (a, b) => {
+    if (typeof changeVoiceModel === 'function') changeVoiceModel(b);
+    else if (typeof S !== 'undefined') S.voiceModel = b;
+    P().set('a11y.voiceModel', b);
+    SET.repaint();
+  };
+
+  DO.voicespeed = (a, b, el) => {
+    if (typeof S !== 'undefined') S.voiceSpeed = parseFloat(el.value);
+    P().set('a11y.voiceSpeed', parseFloat(el.value));
+    SET.repaint();
+  };
+
+  DO.testvoice = () => {
+    if (typeof speechSynthesis === 'undefined') { toast('This browser has no speech engine.'); return; }
+    if (typeof speakText === 'function') speakText('This is the Trending narrator, reading at your chosen speed.');
+    else toast('The narrator is still loading…');
+  };
 
   DO.pickLang = () => {
     if (typeof LG === 'undefined' || !LG.listHTML) { toast('Languages are still loading…'); return; }
@@ -319,7 +410,7 @@ export default function register(SET) {
           <div class="st-stat"><b>${(me().level || 1)}</b><span>level</span></div>
         </div>`,
         sec('Insights', [
-          row({ icon: 'bar_chart', label: 'Account insights', sub: 'Reach, profile visits and follows', act: 'studio', chev: true }),
+          row({ icon: 'bar_chart', label: 'Account insights', sub: 'Views, reach and growth over time', act: 'profsec', arg: 'analytics', chev: true }),
           row({ icon: 'grid_on', label: 'Content analytics', sub: 'How each post performed', act: 'studio', chev: true }),
           row({ icon: 'groups', label: 'Audience', sub: 'Who is following you', act: 'pane:profile', chev: true })
         ]),

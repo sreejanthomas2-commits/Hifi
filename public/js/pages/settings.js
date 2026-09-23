@@ -61,13 +61,22 @@ const SET = (() => {
      ══════════════════════════════════════════════════════════════════ */
 
   /* A heading with a hairline above it, not a card. Cards around every
-     group made the list read as fifty separate things. */
-  const sec = (title, rows, note) => !rows || !rows.filter(Boolean).length ? '' : `
-    <section class="st-sec">
+     group made the list read as fifty separate things.
+
+     A section with a heading but no rows is legitimate and common: it
+     labels the radio list or the swatches that follow it. This used to
+     return nothing unless it had rows, which silently swallowed the
+     heading above every choice on every screen. It returns nothing
+     only when there is genuinely nothing to show. */
+  const sec = (title, rows, note) => {
+    const body = (rows || []).filter(Boolean).join('');
+    if (!body && !title && !note) return '';
+    return `<section class="st-sec">
       ${title ? `<h2 class="st-sec-h">${esc(title)}</h2>` : ''}
-      <div class="st-rows">${rows.filter(Boolean).join('')}</div>
+      ${body ? `<div class="st-rows">${body}</div>` : ''}
       ${note ? `<p class="st-note">${note}</p>` : ''}
     </section>`;
+  };
 
   /* The navigation row: icon, name, what it is set to now, chevron. */
   function row(o) {
@@ -467,6 +476,18 @@ const SET = (() => {
   const gate = text => guest() ? `<p class="st-note st-gate">${esc(text)} <button type="button" class="st-link" data-st="signin">Sign in</button></p>` : '';
 
   DO.signin = () => { if (typeof openAuthModal === 'function') openAuthModal(); else toast('Sign-in is still loading…'); };
+
+  /* Some of what Settings lists is drawn by the profile page — your
+     saved bookmarks, your likes, your watch history, your orders, your
+     analytics. Those screens are not copied here; Settings opens the
+     real one. The profile pane has to exist before PG can show a
+     section in it, hence the wait. */
+  DO.profsec = name => {
+    if (typeof navigateTo !== 'function') { toast('Still loading…'); return; }
+    Promise.resolve(navigateTo('profile')).then(() => {
+      if (window.PG && PG.show) PG.show(name);
+    });
+  };
 
   /* ══════════════════════════════════════════════════════════════════
      ROOT

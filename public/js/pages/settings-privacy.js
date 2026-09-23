@@ -111,6 +111,12 @@ export default function register(SET) {
           sw('privacy.readReceipts', 'Read receipts', 'People can see when you have read a message', { icon: 'done_all' })
         ]),
         priv ? `<p class="st-note">Your existing followers keep their access. New followers have to be approved.</p>` : '',
+        /* Ghost Mode lived on the old settings page. It is a privacy
+           control, so this is where it belongs. */
+        sec('Ghost Mode', [
+          sw('privacy.ghost', 'Browse as a Ghost', 'Your name and photo are hidden while you read, post and comment',
+            { icon: 'visibility_off', value: !!(typeof S !== 'undefined' && S.anonymousMode), act: 'tgghost' })
+        ], 'Ghost Mode hides who you are from other people. It does not hide anything from Trending itself, and it does not change who can see what you post.'),
         sec('Also worth checking', [
           row({ icon: 'auto_stories', label: 'Story, live and location', to: 'storylive' }),
           row({ icon: 'stars', label: 'Close friends', to: 'closefriends' }),
@@ -119,6 +125,12 @@ export default function register(SET) {
       ].join('');
     }
   });
+
+  DO.tgghost = (a, b, el) => {
+    if (typeof toggleAnonymousMode === 'function') toggleAnonymousMode(el.checked);
+    P().set('privacy.ghost', el.checked);
+    SET.repaint();
+  };
 
   /* ── Crossposting ────────────────────────────────────────────────── */
 
