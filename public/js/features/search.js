@@ -393,7 +393,7 @@ const SR = (() => {
 
   function avatarHTML(a) {
     if (a.kind === 'community') {
-      return `<div class="sr-av" style="background:${esc(a.color || 'var(--g-brand)')}">
+      return `<div class="sr-av" style="background:${esc(a.color || 'var(--g-avatar)')}">
         <span class="material-symbols-rounded ms-20">${esc(a.icon || 'hub')}</span></div>`;
     }
     return `<div class="sr-av">${esc(initials(a.name))}</div>`;

@@ -622,7 +622,7 @@ function renderWhoToFollow() {
     return `
     <div class="trend-item flex-between" style="padding:10px 0; border-bottom:1px solid var(--border)">
       <div class="flex gap8" style="align-items:center; flex:1; min-width:0">
-        <div class="avatar av-xs" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand); font-size:11px; font-weight:800">${escapeHTML(postInitials(f.name))}</div>
+        <div class="avatar av-xs" style="background:var(--g-avatar); display:grid; place-items:center; color:var(--on-avatar); font-size:11px; font-weight:800">${escapeHTML(postInitials(f.name))}</div>
         <div style="flex:1; min-width:0">
           <div class="fw8 tc-1" style="font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${f.name} <span class="badge badge-blue fs9" style="margin-left:4px; padding:2px 4px">${f.match} match</span></div>
           <div class="fs10 tc-3" style="margin-top:2px">Shared: ${f.shared.join(', ')}</div>
@@ -854,7 +854,7 @@ function openStoryComposer() {
       <div style="display:flex; gap:16px;">
         <!-- Your Story -->
         <button class="btn" style="background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.2); border-radius:30px; padding:8px 16px; display:flex; align-items:center; gap:8px; color:#fff; font-weight:600;" onclick="submitStory('Your Story')">
-          <div style="width:24px; height:24px; border-radius:50%; background:var(--g-brand); display:grid; place-items:center; font-size:10px;">AV</div>
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--g-avatar); color:var(--on-avatar); display:grid; place-items:center; font-size:10px;">AV</div>
           Your Story
         </button>
         <!-- Close Friends -->
@@ -886,11 +886,11 @@ function openStoryComposer() {
         console.warn("Camera access denied or unavailable: ", err);
         // Fallback gradient if camera fails (--g-brand is itself a gradient)
         videoEl.style.display = 'none';
-        modal.style.background = 'var(--g-brand)';
+        modal.style.background = 'linear-gradient(160deg, #1B1C23, #0A0B0E)';
       });
   } else {
     videoEl.style.display = 'none';
-    modal.style.background = 'var(--g-brand)';
+    modal.style.background = 'linear-gradient(160deg, #1B1C23, #0A0B0E)';
   }
 }
 
@@ -1166,7 +1166,7 @@ function renderExplore() {
       const initials = u.name.split(' ').map(n=>n[0]).join('');
       return `
       <div class="card" style="padding:14px;text-align:center;cursor:pointer;transition:var(--tr-spring)" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
-        <div class="avatar av-md" style="margin:0 auto 8px;background:var(--g-brand);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--on-brand)">${initials}</div>
+        <div class="avatar av-md" style="margin:0 auto 8px;background:var(--g-avatar);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--on-avatar)">${initials}</div>
         <div style="font-size:13px;font-weight:700">${u.name}</div>
         <div style="font-size:11px;color:var(--t3)">${u.handle}</div>
         <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="showToast('Following ${u.name}!')">Follow</button>

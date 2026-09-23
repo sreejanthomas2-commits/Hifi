@@ -51,7 +51,7 @@ const NT = (() => {
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   const ico = (n, cls) => `<span class="material-symbols-rounded${cls ? ' ' + cls : ''}" aria-hidden="true">${esc(n)}</span>`;
   // Colours can come from user-made communities; only plain colour values reach a style attribute.
-  const safeColor = (c, d) => (/^#[0-9a-f]{3,8}$/i.test(String(c || '')) || /^(rgb|hsl)a?\([\d\s.,%]+\)$/i.test(String(c || '')) ? String(c) : (d || '#FCD535'));
+  const safeColor = (c, d) => (/^#[0-9a-f]{3,8}$/i.test(String(c || '')) || /^(rgb|hsl)a?\([\d\s.,%]+\)$/i.test(String(c || '')) ? String(c) : (d || '#78909C'));
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
   const now = () => Date.now();
   const rid = p => `${p}_${now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -75,7 +75,7 @@ const NT = (() => {
     if (d < HOUR) return Math.max(1, Math.ceil(d / 60000)) + 'm left';
     return Math.ceil(d / HOUR) + 'h left';
   }
-  const COLORS = ['#FCD535', '#5C6BC0', '#26A69A', '#EF5350', '#AB47BC', '#FF7043', '#42A5F5', '#EC4899'];
+  const COLORS = ['#78909C', '#5C6BC0', '#26A69A', '#EF5350', '#AB47BC', '#FF7043', '#42A5F5', '#EC4899'];
   const colorOf = s => COLORS[Math.abs([...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7)) % COLORS.length];
   const initials = n => String(n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 

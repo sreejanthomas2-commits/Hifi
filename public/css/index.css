@@ -50,11 +50,30 @@
   --brand-fill: #FCD535;
   --on-brand: #181A20;
 
-  --blue: #FCD535;
-  --blue-d: #E3BD1E;
-  --blue-s: rgba(252,213,53,0.16);
-  --purple: #FFE267;
-  --purple-s: rgba(255,226,103,0.14);
+  /* --blue and --purple are the app's old decoration colours. When the
+     brand went yellow they were pointed at the yellow instead of being
+     retired, so every icon, badge, hashtag and hover border that had
+     ever been blue or purple turned yellow with it - some 290 places.
+     That is where the "yellow everywhere" came from.
+
+     They are neutral ink now. Yellow belongs to --brand and --brand-fill,
+     and is used for what the person can act on: the primary button, the
+     active tab, the switch that is on, the focused field. Links get
+     their own colour, and placeholder avatars are grey rather than
+     seventeen different yellow discs. */
+  --blue: var(--t2);
+  --blue-d: var(--t1);
+  --blue-s: rgba(255,255,255,0.07);
+  --purple: var(--t2);
+  --purple-s: rgba(255,255,255,0.07);
+
+  /* A link in running text - a hashtag, "See all", a verified mark.
+     Muted, so it reads as tappable without competing with the button. */
+  --link: #8AB4F8;
+
+  /* Placeholder avatars, before anyone has a photo. */
+  --g-avatar: linear-gradient(180deg, #2C2E37 0%, #20222A 100%);
+  --on-avatar: rgba(255,255,255,0.86);
   --pink: hsl(330,72%,64%);
   --pink-s: hsla(330,72%,64%,0.12);
 
@@ -4783,8 +4802,8 @@ body.stu-open { overflow: hidden; }
   --alina-glass: rgba(15,17,24,0.04);
   --alina-glass-border: rgba(15,17,24,0.10);
   --brand-s: rgba(252,213,53,0.10);
-  --blue-s: rgba(252,213,53,0.12);
-  --purple-s: rgba(255,226,103,0.12);
+  --blue-s: rgba(15,17,24,0.05);
+  --purple-s: rgba(15,17,24,0.05);
   --pink-s: hsla(330,72%,52%,0.10);
   --pink: hsl(330,72%,52%);
   --green-s: rgba(18,133,92,0.12);
@@ -4802,9 +4821,12 @@ body.stu-open { overflow: hidden; }
   --brand: #8A6400;
   --brand-hi: #6F5000;
   --brand-lo: #5A4000;
-  --blue: #8A6400;
-  --blue-d: #6F5000;
-  --purple: #8A6400;
+  --blue: var(--t2);
+  --blue-d: var(--t1);
+  --purple: var(--t2);
+  --link: #1A56A6;
+  --g-avatar: linear-gradient(180deg, #ECEEF2 0%, #DCDFE5 100%);
+  --on-avatar: #3A3F4B;
   --green: #12855C;
   --red: #D32F45;
   --brand-fill: #FCD535;
@@ -9228,3 +9250,163 @@ html.tp-saver video[autoplay] { animation: none; }
   .st-title { font-size: 17.5px; }
   .st-row-v { max-width: 36%; }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   YELLOW IS FOR ACTING, NOT DECORATING
+
+   Measured before this block: 276 yellow elements across eleven pages in
+   the light theme, 99 of them on the home feed alone - fourteen yellow
+   Follow buttons in a column of posts, forty-one yellow hashtags,
+   fourteen yellow avatar discs. When everything is the accent, nothing
+   is, and the button that matters stops standing out.
+
+   The rule from here on: yellow marks what you can act on right now.
+     · the primary button on a screen
+     · the tab, chip or mode that is selected
+     · a switch that is on, a field that has focus
+     · the brand mark
+   Everything else is neutral ink, links are link-coloured, and gains and
+   losses stay green and red.
+
+   The --blue and --purple tokens went neutral above, which takes care of
+   most of it at the source. This block does two things that change
+   could not: it puts the states that SHOULD be yellow back on --brand,
+   because they had been borrowing --blue to get it; and it takes the
+   placeholder avatars and the repeated per-card buttons off the brand
+   gradient, which they used directly.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── States: these were yellow through --blue / --purple, and should be ── */
+.nav-item.active,
+.m-nav-btn.active,
+.channel-link.active { color: var(--brand); }
+.nav-item.active,
+.channel-link.active { background: var(--brand-s); }
+.m-nav-btn.active .material-symbols-rounded { filter: drop-shadow(0 0 8px var(--brand-s)); }
+
+.header-search:focus-within,
+.explore-search:focus-within,
+.input:focus,
+.comment-input-field:focus,
+.cfi-input:focus { border-color: var(--brand); }
+.header-search:focus-within,
+.explore-search:focus-within,
+.input:focus { box-shadow: 0 0 0 3px var(--brand-s); }
+
+.tr-pair.active,
+.tr-type.active,
+.ct-tab.active,
+.wl-tab.active,
+.sf-tier.active { background: var(--brand-s); border-color: var(--brand); color: var(--t1); }
+.cfi-segbtn.active,
+.wl-acct.primary { border-color: var(--brand); }
+.msgr-convo.active { box-shadow: inset 3px 0 0 var(--brand); }
+
+/* The primary button keeps its glow, which it had been taking from --blue-s. */
+.btn-primary { box-shadow: 0 6px 18px -8px rgba(252,213,53,0.55); }
+.btn-primary:hover { box-shadow: 0 8px 22px -8px rgba(252,213,53,0.7); }
+.msgr-send { box-shadow: 0 4px 14px -6px rgba(252,213,53,0.6); }
+
+/* Progress is a fill, and fills are allowed to be the brand. */
+.sf-bar-fill { background: var(--brand-fill); }
+
+/* ── Links: tappable text, in a colour that says so ── */
+.post-tag,
+.section-link,
+.w3-link b,
+.cc-src,
+.w3-verified,
+.p2p-verified { color: var(--link); }
+.sf-author-link:hover,
+.wl-addr:hover { color: var(--link); }
+.section-link:hover,
+.post-tag:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* A Follow button in every post turned the feed into a column of
+   yellow. Inline, it is a link - the way it reads in any feed. */
+.sf-inline-follow,
+.sf-inline-follow.btn-primary {
+  background: none !important; box-shadow: none !important;
+  border: none !important; color: var(--link) !important;
+  padding-left: 4px; padding-right: 4px; font-weight: 700;
+}
+.sf-inline-follow:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── Placeholder avatars: grey until there is a photo ──
+   A photo still wins: it is set inline as background-image, which
+   outranks this. */
+.avatar, .sidebar-av, .header-av, .notif-item-avatar, .call-self-avatar,
+.post-av, .sh-av, .tip-av, .pay-av, .sr-av, .p2p-av, .en-av, .ch-proj-sym,
+.pme-av, .pme-pav, .pme-setav, .mob-account-av, .st-me-av, .story-popup-avatar,
+.msgr-av, .nt-av {
+  background: var(--g-avatar);
+  color: var(--on-avatar);
+}
+
+/* Gradient-clipped page titles were yellow text. Titles are ink. */
+.pane-title span {
+  background: none;
+  -webkit-background-clip: initial; background-clip: initial;
+  -webkit-text-fill-color: currentColor; color: var(--t1);
+}
+
+/* ── Per-card actions ──
+   Nineteen communities, nineteen yellow "Join" buttons: when every card
+   shouts, none of them does. On a card the action is secondary; the
+   page's own primary (Create) stays yellow. */
+.hub-card-foot .hub-btn.primary {
+  background: var(--card2); color: var(--t1);
+  border-color: var(--border);
+}
+.hub-card-foot .hub-btn.primary:hover { background: var(--brand-fill); color: var(--on-brand); border-color: transparent; }
+.hub-card-bar > i { background: var(--t3) !important; }
+
+/* ── Decoration that was using the brand directly ── */
+.cmp-card-i { color: var(--t2) !important; }
+.hc-apy { color: var(--green); }
+
+/* ── Leftovers the census found after the tokens changed ──
+   Each of these set a brand colour directly rather than through a
+   token, so they needed naming one by one. */
+
+/* Profile: the link under your bio is a link; the chips and the crypto
+   card labels are labels. */
+.pg-linkrow a { color: var(--link); }
+.pg-chip .material-symbols-rounded,
+.pg-cx-l .material-symbols-rounded { color: var(--t2); }
+
+/* The small camera on your own avatar edits the photo. It is a tool,
+   not the page's action. */
+.pme-avcam { background: var(--card); color: var(--t1); box-shadow: 0 1px 4px rgba(15,17,24,.18); }
+
+/* Trading desk: a text link, and an open-orders count that read as an
+   alarm in yellow even when it said 0. */
+.tr-link { color: var(--link); }
+.tr-tool-badge { background: var(--card2); color: var(--t1); }
+
+/* Communities: the page title was gradient text; the newer tabs wore an
+   amber icon to say they were new. Only the selected tab is accented. */
+.hub-h1-b {
+  background: none;
+  -webkit-background-clip: initial; background-clip: initial;
+  -webkit-text-fill-color: currentColor; color: var(--t1);
+}
+.hub-tab.plus .material-symbols-rounded { color: inherit; }
+.hub-tab.on .material-symbols-rounded { color: var(--brand); }
+
+/* A note's song title is information, not an action. */
+.nt-bubble-m { color: var(--t2); }
+
+/* Earn: six copy-trading cards, six yellow "Copy" buttons. Same rule as
+   the community cards - secondary until you point at one. */
+.en-copy-form .btn.btn-primary {
+  background: var(--card2); color: var(--t1);
+  border: 1px solid var(--border); box-shadow: none;
+}
+.en-copy-form .btn.btn-primary:hover { background: var(--brand-fill); color: var(--on-brand); border-color: transparent; }
+
+/* The icon beside a page title is part of the title. "Requests" in the
+   message list is a link. */
+.hub-h1 > .material-symbols-rounded { color: var(--t1); }
+.msgr-req { color: var(--link); }

@@ -332,7 +332,7 @@ function profileSectionHTML(tab) {
           </button>
         </div>
         <div class="card product-card text-center p12" style="background:var(--card2)">
-          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand)">
+          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-avatar); display:grid; place-items:center; color:var(--on-avatar)">
             <span class="material-symbols-rounded" style="font-size:24px">bolt</span>
           </div>
           <div class="fw8 fs13 tc-1 mt8">5AM Cardio Hustle</div>
@@ -352,7 +352,7 @@ function profileSectionHTML(tab) {
           </button>
         </div>
         <div class="card product-card text-center p12" style="background:var(--card2)">
-          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand)">
+          <div class="avatar av-lg mx-auto flex-center" style="background:var(--g-avatar); display:grid; place-items:center; color:var(--on-avatar)">
             <span class="material-symbols-rounded" style="font-size:24px">terminal</span>
           </div>
           <div class="fw8 fs13 tc-1 mt8">CSS Glassmorphism in 15s</div>
@@ -462,7 +462,7 @@ function profileSectionHTML(tab) {
         <span class="badge badge-green">Active Listening</span>
       </div>
       <div class="card p20 mb16 flex gap16" style="align-items:center; background:linear-gradient(135deg, var(--card), var(--card2))">
-        <div class="avatar av-xl flex-center" style="background:var(--g-brand); font-size:32px; display:grid; place-items:center; color:var(--on-brand)">
+        <div class="avatar av-xl flex-center" style="background:var(--g-avatar); font-size:32px; display:grid; place-items:center; color:var(--on-avatar)">
           <span class="material-symbols-rounded" style="font-size:32px">mic</span>
         </div>
         <div style="flex:1">
@@ -950,7 +950,7 @@ function profileSectionHTML(tab) {
             <span class="badge badge-purple">Level 14</span>
           </div>
           <div class="flex gap12 mt12" style="align-items:center">
-            <div class="avatar av-lg flex-center" style="background:var(--g-brand); display:grid; place-items:center; color:var(--on-brand)">
+            <div class="avatar av-lg flex-center" style="background:var(--g-avatar); display:grid; place-items:center; color:var(--on-avatar)">
               <span class="material-symbols-rounded emoji-3d" style="font-size:24px; color:var(--orange)">bolt</span>
             </div>
             <div style="flex:1">

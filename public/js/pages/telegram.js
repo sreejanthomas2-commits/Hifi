@@ -56,7 +56,7 @@ const TG = (() => {
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
   const hasCH = () => typeof CH !== 'undefined';
 
-  const AV_COLORS = ['var(--g-brand)', '#5C6BC0', '#26A69A', '#EF5350', '#AB47BC', '#FF7043', '#42A5F5'];
+  const AV_COLORS = ['#78909C', '#5C6BC0', '#26A69A', '#EF5350', '#AB47BC', '#FF7043', '#42A5F5'];
   const initials = n => String(n || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const hashColor = s => AV_COLORS[Math.abs(String(s).split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % AV_COLORS.length];
   const timeOf = ts => new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });

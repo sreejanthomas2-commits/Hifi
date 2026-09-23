@@ -545,7 +545,7 @@ const CH = (() => {
 
     const stream = msgs.map(m => `
       <div class="ch-msg${m.me ? ' me' : ''}">
-        <div class="ch-av" style="background:${m.me ? 'var(--g-brand)' : c.color + '33'}; color:${m.me ? '#fff' : c.color}">
+        <div class="ch-av" style="background:${m.me ? 'var(--g-avatar)' : c.color + '33'}; color:${m.me ? 'var(--on-avatar)' : c.color}">
           ${esc(initials(m.name))}</div>
         <div class="ch-msg-body">
           <div class="ch-msg-head">
