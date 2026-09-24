@@ -44,7 +44,7 @@
 
 /* pane name (as navigateTo receives it) → the module that draws it. */
 const PAGES = {
-  reels:        './pages/reels.js?v=rl1',
+  reels:        './pages/reels.js?v=cm1',
   cryptomarket: './pages/cryptomarket.js?v=8m8',
   settings:     './pages/settings.js?v=st1'
 };

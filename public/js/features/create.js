@@ -626,7 +626,7 @@ const CR = (() => {
         <textarea id="cr-caption" data-crf="caption" rows="${bgOn ? 4 : 3}" placeholder="What's trending with you today?" aria-label="Caption">${esc(D.caption)}</textarea>
       </div>
       <div class="cr-hints">
-        <button type="button" class="cr-chip" data-cr="ins" data-v="#">#hashtag</button>
+        <button type="button" class="cr-chip" data-cr="tags">${ico('tag')}Hashtags</button>
         <button type="button" class="cr-chip" data-cr="ins" data-v="@">@mention</button>
         <button type="button" class="cr-chip" data-cr="ins" data-v="🔥">🔥</button>
         <button type="button" class="cr-chip" data-cr="ins" data-v="🚀">🚀</button>
@@ -874,6 +874,15 @@ const CR = (() => {
       case 'bg': D.bg = D.bg >= 0 ? -1 : 0; if (view === 'camera') { stopCamera(); view = 'compose'; } paint(); return;
       case 'setbg': D.bg = +v; paint(); return;
       case 'ins': insert(v); return;
+      case 'tags': {
+        const box = document.querySelector('#cr-sheet [data-crf="caption"]');
+        if (!box || !window.HT) { insert('#'); return; }
+        HT.open({
+          text: () => box.value,
+          insert: str => { HT.insertAt(box, str); D.caption = box.value; }
+        });
+        return;
+      }
       case 'place': place(); return;
       case 'audience': audience(); return;
       case 'toggle': D[v] = !D[v]; paint(); return;

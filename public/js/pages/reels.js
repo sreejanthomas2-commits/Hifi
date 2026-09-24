@@ -211,6 +211,7 @@ const SH = (() => {
           adj: e.adj || {},
           texts: e.texts || [],
           stickers: e.stickers || [],
+          captions: e.captions || null,
           origVol: e.origVol == null ? 1 : e.origVol,
           music: music && music.src ? music : null
         }
