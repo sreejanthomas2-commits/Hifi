@@ -93,7 +93,11 @@ function openChatCrypto(kind) {
   CFI.open(kind || 'send');
 }
 
+/* The timer button in the chat header. It used to flip a flag that no
+   code ever read, while promising messages would vanish after 5s. It now
+   opens the per-chat timer on the details page, which does what it says. */
 function toggleDisappearingMessages() {
+  if (window.CI && CI.openVanish) { CI.openVanish(); return; }
   S.disappearingMessages = !S.disappearingMessages;
   showToast(S.disappearingMessages
     ? '⏳ Disappearing messages on — your messages vanish after 5s'

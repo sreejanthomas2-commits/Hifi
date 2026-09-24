@@ -119,13 +119,16 @@ const TG = (() => {
   const isArchived = k => T.archived.includes(k);
 
   /* ── Filtering ───────────────────────────────────────────────────── */
+  const isRequest = c => !!(c.raw && c.raw.request) || !!(window.CI && CI.inRequests(c));
+
   function visibleChats() {
     const q = (T.search || '').toLowerCase();
     return chats().filter(c => {
       const archived = isArchived(c.key);
+      const request = isRequest(c);
       // Requests: messages from people you don't follow wait here first.
-      if (T.folder === 'requests') return !archived && !!(c.raw && c.raw.request) && (!q || c.name.toLowerCase().includes(q));
-      if (c.raw && c.raw.request) return false;
+      if (T.folder === 'requests') return !archived && request && (!q || c.name.toLowerCase().includes(q));
+      if (request) return false;
       if (T.folder === 'archived') { if (!archived) return false; }
       else if (archived) return false;
 
@@ -156,7 +159,7 @@ const TG = (() => {
     const hist = (typeof DATA !== 'undefined' && DATA.chatHistory) ? (DATA.chatHistory[c.raw.id] || []) : [];
     return hist.map((m, i) => ({
       id: m.fi ? m.fi.id : 'h' + i, name: m.me ? 'You' : c.name,
-      text: m.text, me: !!m.me, fi: m.fi,
+      text: m.text, me: !!m.me, fi: m.fi, stamped: !!m.ts,
       ts: m.ts || (Date.now() - (hist.length - i) * 60000)
     }));
   }
@@ -409,6 +412,7 @@ const TG = (() => {
     }
 
     if (c.kind === 'channels') { toast('This is a channel — only admins can post.'); return; }
+    if (window.CI && !CI.canSend(c)) return;
     if (c.src === 'com' && hasCH()) {
       const topic = CH.topicsFor(c.com).find(x => x.id === T.activeTopic);
       if (topic && topic.readOnly) { toast('Announcements is read-only — post in General.'); return; }
@@ -461,7 +465,7 @@ const TG = (() => {
     if (secT) secT.textContent = req ? 'Message requests' : 'Messages';
     const reqBtn = document.getElementById('msgr-req-btn');
     if (reqBtn) {
-      const n = chats().filter(c => c.raw && c.raw.request && !isArchived(c.key)).length;
+      const n = chats().filter(c => isRequest(c) && !isArchived(c.key)).length;
       reqBtn.textContent = req ? 'Back to messages' : (n ? `Requests (${n})` : 'Requests');
     }
 
@@ -480,8 +484,8 @@ const TG = (() => {
       const preview = draft ? `<span class="tg-draft">Draft:</span> ${esc(draft)}` : esc(c.preview);
       return `<div class="msgr-convo${c.key === T.activeKey ? ' active' : ''}${c.unread ? ' unread' : ''}"
                    onclick="TG.open('${c.key}')">
-        <div class="msgr-av" style="background:${c.color}">
-          ${c.icon ? `<span class="material-symbols-rounded ms-18">${c.icon}</span>` : esc(initials(c.name))}
+        <div class="msgr-av${pic(c) ? ' has-pic' : ''}" style="background:${c.color}${pic(c) ? `;background-image:url('${pic(c)}')` : ''}">
+          ${pic(c) ? '' : c.icon ? `<span class="material-symbols-rounded ms-18">${c.icon}</span>` : esc(initials(c.name))}
           ${c.online ? '<span class="msgr-dot"></span>' : ''}
         </div>
         <div class="msgr-convo-main">
@@ -501,16 +505,22 @@ const TG = (() => {
     if (typeof updateUnreadBadge === 'function') updateUnreadBadge();
   }
 
+  const pic = c => (window.CI ? CI.photoOf(c.key) : '');
+
   function paintHeader() {
     const c = activeChat();
     if (!c) return;
     const av = document.getElementById('chat-header-av');
     if (av) {
-      av.innerHTML = c.icon ? `<span class="material-symbols-rounded ms-20">${c.icon}</span>` : esc(initials(c.name));
+      const p = pic(c);
+      av.innerHTML = p ? '' : c.icon ? `<span class="material-symbols-rounded ms-20">${c.icon}</span>` : esc(initials(c.name));
       av.style.background = c.color;
+      av.style.backgroundImage = p ? `url('${p}')` : '';
+      av.classList.toggle('has-pic', !!p);
     }
     const n = document.getElementById('chat-header-name');
-    if (n) n.textContent = c.name;
+    if (n) n.textContent = window.CI ? CI.headerName(c) : c.name;
+    if (window.CI) CI.dress(c);
     const s = document.getElementById('chat-header-status');
     if (s) {
       s.textContent = c.src === 'com'
@@ -545,7 +555,7 @@ const TG = (() => {
     const c = activeChat();
     if (!c) { host.innerHTML = `<div class="msgr-empty tc-3 fs12">Pick a conversation.</div>`; return; }
 
-    const all = messages().filter(m => !isDeleted(m.id));
+    const all = messages().filter(m => !isDeleted(m.id) && !(window.CI && CI.gone(T.activeKey, m)));
     const q = (T.search || '').toLowerCase();
     const pinnedId = T.pinned[T.activeKey];
     const pinned = pinnedId ? all.find(m => String(m.id) === String(pinnedId)) : null;
@@ -571,13 +581,13 @@ const TG = (() => {
         `<button class="tg-react${rk[e].includes('You') ? ' mine' : ''}" onclick="TG.react('${m.id}','${e}')">${e} ${rk[e].length}</button>`).join('');
 
       if (m.fi && typeof CFI !== 'undefined') {
-        return `<div class="msgr-row${m.me ? ' me' : ''} msgr-row-fi">${CFI.cardHTML(m.fi)}</div>`;
+        return `<div class="msgr-row${m.me ? ' me' : ''} msgr-row-fi" data-mid="${esc(m.id)}">${CFI.cardHTML(m.fi)}</div>`;
       }
 
       const hit = q && String(txt).toLowerCase().includes(q);
       const body = typeof CFI !== 'undefined' ? CFI.linkify(esc(txt)) : esc(txt);
 
-      return `<div class="msgr-row tg-row${m.me ? ' me' : ''}${hit ? ' hit' : ''}">
+      return `<div class="msgr-row tg-row${m.me ? ' me' : ''}${hit ? ' hit' : ''}" data-mid="${esc(m.id)}">
         <div class="tg-msg-wrap">
           ${c.src === 'com' && !m.me ? `<div class="tg-sender">${esc(m.name)}${
             m.role && m.role !== 'Member' ? `<span class="tg-role">${esc(m.role)}</span>` : ''}</div>` : ''}
@@ -631,6 +641,7 @@ const TG = (() => {
   /* ── Boot ────────────────────────────────────────────────────────── */
   function setup() {
     if (!document.getElementById('chat-list')) return;
+    if (window.CI) CI.sync();
     if (typeof CFI !== 'undefined') { CFI.installBot(); CFI.rehydrate(); }
 
     const inp = document.getElementById('chat-input');
@@ -665,7 +676,7 @@ const TG = (() => {
     react, setReply, clearReply, pin, startEdit, commitEdit, cancelEdit, del,
     openForward, closeForward, doForward, saveMessage,
     toggleMute, toggleArchive, inviteLink,
-    paintAll, paintList, paintThread, chats, visibleChats, activeChat,
+    paintAll, paintList, paintThread, chats, visibleChats, activeChat, messages,
     isMuted, isArchived, FOLDERS, REACTIONS,
     get state() { return T; }
   };

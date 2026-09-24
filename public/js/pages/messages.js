@@ -1012,11 +1012,13 @@ function getMessagesTemplate() {
           <button class="icon-btn msgr-back" onclick="msgrBack()" title="Back">
             <span class="material-symbols-rounded ms-20">arrow_back</span>
           </button>
-          <div class="msgr-av" id="chat-header-av">S</div>
-          <div class="msgr-head-info">
-            <div class="msgr-name fs14" id="chat-header-name">Sarah Chen</div>
-            <div class="msgr-status" id="chat-header-status">Online</div>
-          </div>
+          <button type="button" class="msgr-head-who" onclick="CI.open()" aria-label="Chat details" title="Chat details">
+            <span class="msgr-av" id="chat-header-av">S</span>
+            <span class="msgr-head-info">
+              <span class="msgr-name fs14" id="chat-header-name">Sarah Chen</span>
+              <span class="msgr-status" id="chat-header-status">Online</span>
+            </span>
+          </button>
           <div class="msgr-actions">
             <button class="icon-btn tg-secondary" onclick="TG.toggleMute()" title="Mute / unmute">
               <span class="material-symbols-rounded ms-20">notifications_off</span>
