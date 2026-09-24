@@ -9694,3 +9694,65 @@ html.tp-no-shares:not(.tp-no-shares-all) .post-card.mine [data-count="shares"] {
   .ci-act { width: 70px; }
   .ci-tile { font-size: 11.5px; }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SHORTY: A SLIMMER ACTION RAIL
+
+   Eight buttons in 46px discs stacked 592px up the video - past the
+   mute button, which sat on top of Like. Now: bare icons with a shadow
+   for legibility on any picture, tighter spacing, and five actions plus
+   More (Dislike, Remix and Delete moved there). About 360px tall.
+   Tip keeps a small gold coin: it is the one money action.
+   ══════════════════════════════════════════════════════════════════════ */
+.sh-rail { right: 6px; bottom: 28px; gap: 14px; }
+.sh-act { min-width: 50px; gap: 1px; }
+.sh-act .material-symbols-rounded {
+  width: 40px; height: 36px; border-radius: 0;
+  font-size: 29px; background: none;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.55)) drop-shadow(0 0 6px rgba(0,0,0,.25));
+}
+.sh-act:hover .material-symbols-rounded { background: none; transform: scale(1.08); }
+.sh-act:active .material-symbols-rounded { transform: scale(.88); }
+.sh-act:focus-visible { outline: none; }
+.sh-act:focus-visible .material-symbols-rounded { outline: 2px solid #fff; outline-offset: 2px; border-radius: 8px; }
+.sh-act b { font-size: 11px; }
+.sh-act.on .material-symbols-rounded { background: none; }
+.sh-like.on .material-symbols-rounded { color: #FF3B5C; }
+.sh-save.on .material-symbols-rounded { color: #fff; }
+
+.sh-tip .material-symbols-rounded {
+  width: 36px; height: 36px; margin: 0 0 2px; border-radius: 50%;
+  font-size: 21px; background: var(--g-brand); color: var(--on-brand); filter: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+.sh-tip:hover .material-symbols-rounded { background: var(--g-brand); filter: brightness(1.1); }
+
+/* A small mark on More while you have disliked this short, so the
+   choice you made there is visible from the rail. */
+.sh-more-btn { position: relative; }
+.sh-more-btn.dot::after { content: ''; position: absolute; top: 5px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: #FF3B5C; box-shadow: 0 0 0 2px rgba(0,0,0,.35); }
+
+/* Captions get the width the old rail took. */
+.sh-meta { padding-right: 72px; }
+
+/* Short windows: tighter still, so the rail never reaches the top bar. */
+@media (max-height: 640px) {
+  .sh-rail { gap: 8px; bottom: 22px; }
+  .sh-act .material-symbols-rounded { height: 30px; font-size: 26px; }
+  .sh-tip .material-symbols-rounded { width: 32px; height: 32px; font-size: 19px; }
+}
+
+/* The More sheet */
+.sh-opts { display: flex; flex-direction: column; padding: 6px 8px 10px; }
+.sh-opt { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 10px; border: 0; border-radius: 12px; background: none; color: var(--t1); font: inherit; text-align: left; cursor: pointer; }
+.sh-opt:hover { background: var(--card2); }
+.sh-opt:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.sh-opt > .material-symbols-rounded { font-size: 23px; width: 26px; text-align: center; }
+.sh-opt > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.sh-opt b { font-size: 14.5px; font-weight: 600; }
+.sh-opt em { font-style: normal; font-size: 12px; color: var(--t3); margin-top: 1px; }
+.sh-opt.on > .material-symbols-rounded { color: #FF3B5C; }
+.sh-opt.danger, .sh-opt.danger > .material-symbols-rounded { color: var(--red); }
+

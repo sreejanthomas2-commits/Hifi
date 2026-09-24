@@ -4,7 +4,7 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-import { ensurePane } from './lazy.js?v=1790000000';
+import { ensurePane } from './lazy.js?v=rl1';
 
 /* Through window, not the module-local binding a few lines down.
    components/mobile.js and features/discover.js both decorate

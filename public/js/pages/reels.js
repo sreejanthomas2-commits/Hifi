@@ -383,13 +383,9 @@ const SH = (() => {
           </div>
 
           <div class="sh-rail">
-            <button class="sh-act${liked ? ' on' : ''}" onclick="SH.like(${i})" aria-label="Like">
+            <button class="sh-act sh-like${liked ? ' on' : ''}" onclick="SH.like(${i})" aria-label="Like">
               <span class="material-symbols-rounded"${liked ? ' style="font-variation-settings:\'FILL\' 1"' : ''}>favorite</span>
               <b data-like="${i}">${compact(likeCount(s))}</b>
-            </button>
-            <button class="sh-act${disliked ? ' on' : ''}" onclick="SH.dislike(${i})" aria-label="Dislike">
-              <span class="material-symbols-rounded"${disliked ? ' style="font-variation-settings:\'FILL\' 1"' : ''}>thumb_down</span>
-              <b>Dislike</b>
             </button>
             ${s.meta && s.meta.allowComments === false ? '' : `
             <button class="sh-act" onclick="SH.openComments(${i})" aria-label="Comments">
@@ -399,20 +395,15 @@ const SH = (() => {
             <button class="sh-act" onclick="SH.share(${i})" aria-label="Share">
               <span class="material-symbols-rounded">send</span><b>Share</b>
             </button>
-            <button class="sh-act${saved ? ' on' : ''}" onclick="SH.toggleSave(${i})" aria-label="Save">
+            <button class="sh-act sh-save${saved ? ' on' : ''}" onclick="SH.toggleSave(${i})" aria-label="${saved ? 'Saved' : 'Save'}">
               <span class="material-symbols-rounded"${saved ? ' style="font-variation-settings:\'FILL\' 1"' : ''}>bookmark</span>
               <b>${saved ? 'Saved' : 'Save'}</b>
             </button>
-            ${s.meta && s.meta.allowRemix === false ? '' : `
-            <button class="sh-act" onclick="SH.remix(${i})" aria-label="Remix">
-              <span class="material-symbols-rounded">auto_awesome_motion</span><b>Remix</b>
-            </button>`}
-            ${s.mine ? `<button class="sh-act" onclick="SH.removeUpload('${s.id}')" aria-label="Delete">
-                <span class="material-symbols-rounded">delete</span><b>Delete</b></button>`
-              : `<button class="sh-act sh-tip" onclick="SH.tip(${i})" aria-label="Tip in crypto">
+            ${s.mine ? '' : `<button class="sh-act sh-tip" onclick="SH.tip(${i})" aria-label="Tip in crypto">
                 <span class="material-symbols-rounded">toll</span><b>Tip</b></button>`}
-            ${window.DX && !s.mine ? `<button class="sh-act" onclick="DX.menu('short:' + SH.feed[${i}].id, true)" aria-label="More options">
-                <span class="material-symbols-rounded">more_horiz</span><b>More</b></button>` : ''}
+            <button class="sh-act sh-more-btn${disliked ? ' dot' : ''}" onclick="SH.more(${i})" aria-label="More: dislike, remix${s.mine ? ', delete' : ', feedback'}" aria-haspopup="dialog">
+              <span class="material-symbols-rounded">more_horiz</span><b>More</b>
+            </button>
           </div>
 
           <div class="sh-progress" data-i="${i}"><i></i></div>
@@ -738,7 +729,8 @@ const SH = (() => {
     else if (k === 'm') toggleMute();
     else if (k === 'l') like(active);
     else if (k === 'escape') {
-      if (document.getElementById('sh-comments')) closeComments(); else close();
+      if (document.getElementById('sh-more')) closeMore();
+      else if (document.getElementById('sh-comments')) closeComments(); else close();
     }
   }
 
@@ -833,6 +825,57 @@ const SH = (() => {
   function closeComments() {
     const sheet = document.getElementById('sh-comments');
     if (sheet) { sheet.classList.remove('open'); setTimeout(() => sheet.remove(), 220); }
+  }
+
+  /* ── More ─────────────────────────────────────────────────────────
+     The rail keeps the five actions people reach for on every short.
+     The rest live here, one tap away: dislike, remix, delete on your
+     own, and Discover's feedback (not interested, hide, report). */
+  function more(i) {
+    const s = feed[i];
+    if (!s) return;
+    closeComments(); closeMore(true);
+    const sheet = document.createElement('div');
+    sheet.id = 'sh-more';
+    sheet.className = 'sh-sheet sh-more';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-label', 'More options');
+    sheet.innerHTML = moreHTML(s, i);
+    document.getElementById('sh-viewer').appendChild(sheet);
+    requestAnimationFrame(() => sheet.classList.add('open'));
+    const first = sheet.querySelector('.sh-opt');
+    if (first) first.focus({ preventScroll: true });
+  }
+
+  function moreHTML(s, i) {
+    const disliked = !!D.disliked[s.id];
+    const opt = (icon, label, sub, act, o) => `
+      <button type="button" class="sh-opt${o && o.danger ? ' danger' : ''}${o && o.on ? ' on' : ''}" onclick="${act}">
+        <span class="material-symbols-rounded"${o && o.on ? ' style="font-variation-settings:\'FILL\' 1"' : ''}>${icon}</span>
+        <span><b>${label}</b>${sub ? `<em>${sub}</em>` : ''}</span>
+      </button>`;
+    return `
+      <div class="sh-sheet-head">
+        <b>More</b>
+        <button class="sh-round sm" onclick="SH.closeMore()" aria-label="Close"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="sh-opts">
+        ${opt('thumb_down', disliked ? 'Disliked' : 'Dislike', disliked ? 'Tap to take it back' : 'Show fewer shorts like this',
+              `SH.dislike(${i}); SH.more(${i})`, { on: disliked })}
+        ${s.meta && s.meta.allowRemix === false ? '' :
+          opt('auto_awesome_motion', 'Remix', 'Make your own short from this one', `SH.closeMore(true); SH.remix(${i})`)}
+        ${!s.mine && window.DX ? opt('tune', 'Not interested, hide or report', 'And why you’re seeing this',
+              `SH.closeMore(true); DX.menu('short:' + SH.feed[${i}].id, true)`) : ''}
+        ${s.mine ? opt('delete', 'Delete', 'Remove this short from this device', `SH.closeMore(true); SH.removeUpload('${s.id}')`, { danger: true }) : ''}
+      </div>`;
+  }
+
+  function closeMore(now) {
+    const sheet = document.getElementById('sh-more');
+    if (!sheet) return;
+    if (now) { sheet.remove(); return; }
+    sheet.classList.remove('open');
+    setTimeout(() => sheet.remove(), 220);
   }
 
   /* ── Create / upload ─────────────────────────────────────────────── */
@@ -985,7 +1028,7 @@ const SH = (() => {
     paintHub, setTab, openAt, close, openCreate, closeCreate, publish, removeUpload, addUpload,
     store: { put: putBlob, get: getBlob, del: delBlob },
     like, dislike, toggleSave, subscribe, share, tip, remix, toggleMute, pip,
-    openComments, closeComments, postComment, likeComment, go,
+    openComments, closeComments, postComment, likeComment, go, more, closeMore,
     listFor, all, CATALOG, byId,
     // Your uploads, ready to play (their video files load from this device first).
     mine: async () => { await hydrateUploads(); return listFor('mine'); },
