@@ -499,7 +499,11 @@ function renderPostCard(p) {
   const idStr = typeof p.id === 'string' ? `'${p.id}'` : p.id;
   const authorSafe = p.author ? p.author.replace(/'/g, "\\'") : '';
   const handleSafe = p.handle ? p.handle.replace(/'/g, "\\'") : '';
-  const reposted = typeof SF !== 'undefined' && SF.hasReposted(p.id);
+  // Your own repost entry stands for the repost, so its button undoes it.
+  const ownRepost = !!(p.mine && p.repostOf);
+  const reposted = ownRepost || (typeof SF !== 'undefined' && SF.hasReposted(p.id));
+  // Your repost counts once on the original, whatever number was stored.
+  const shareCount = (Number(p.shares) || 0) + (reposted && !ownRepost ? 1 : 0);
 
   return `
   <div class="post-card${p.mine ? ' mine' : ''}" id="post-${p.id}">
@@ -533,9 +537,9 @@ function renderPostCard(p) {
         aria-label="${postLabel('Comments', p.comments, 'comments')}">
         ${postIc('comment')}${postCount(p.comments, 'comments')}
       </button>
-      <button class="post-act-btn post-repost${reposted ? ' reposted' : ''}" onclick="SF.repost(${idStr})" title="${reposted ? 'You reposted this' : 'Repost to your feed'}"
-        aria-label="${postLabel('Repost', p.shares, 'reposts')}" aria-pressed="${reposted ? 'true' : 'false'}">
-        ${postIc('repost')}${postCount(p.shares, 'shares')}
+      <button class="post-act-btn post-repost${reposted ? ' reposted' : ''}" onclick="SF.repost(${idStr})" title="${reposted ? 'Undo repost' : 'Repost to your feed'}"
+        aria-label="${postLabel(reposted ? 'Undo repost' : 'Repost', shareCount, 'reposts')}" aria-pressed="${reposted ? 'true' : 'false'}">
+        ${postIc('repost')}${postCount(shareCount, 'shares')}
       </button>
       <button class="post-act-btn post-share" onclick="sharePost(${idStr})" title="Copy link" aria-label="Copy link">
         ${postIc('share')}

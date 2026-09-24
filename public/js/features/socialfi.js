@@ -72,6 +72,10 @@ const SF = (() => {
   };
 
   let S_SF = load();
+  /* Posts whose repost has already paid creator rewards. Reposts made
+     before this list existed count as paid, so undoing and reposting
+     one of them does not pay a second time. */
+  if (!Array.isArray(S_SF.repostPaid)) S_SF.repostPaid = (S_SF.reposts || []).slice();
 
   function load() {
     try {
@@ -238,12 +242,21 @@ const SF = (() => {
   }
 
   /* ── Reposts ────────────────────────────────────────────────────── */
+  /* A toggle: tap once to repost, again to take it back. Your repost
+     entry in the feed works the same way - its button undoes the repost
+     it stands for. */
+  const allPosts = () => (typeof DATA !== 'undefined' && Array.isArray(DATA.posts)) ? DATA.posts : [];
+
   function repost(postId) {
     const id = String(postId);
-    if (S_SF.reposts.includes(id)) { toast('You already reposted this.'); return; }
+    const self = allPosts().find(p => String(p.id) === id);
+    if (self && self.mine && self.repostOf) { undoRepost(sourceOf(self), self.id); return; }
+    if (S_SF.reposts.includes(id)) { undoRepost(id); return; }
     S_SF.reposts.push(id);
     rep('repost');
-    accrueEngagement('repost');
+    // Rewards once per post. Otherwise repost, undo, repost would be a
+    // way to mint TREND.
+    if (!S_SF.repostPaid.includes(id)) { S_SF.repostPaid.push(id); accrueEngagement('repost'); }
     save();
 
     // Surface it in the feed as a real entry, credited to the original author.
@@ -263,13 +276,44 @@ const SF = (() => {
           likes: 0, comments: 0, shares: 0, liked: false, mine: true,
           category: src.category,
           options: src.options ? src.options.map(o => ({ ...o })) : undefined,
-          repostOf: { author: src.author, handle: src.handle }
+          repostOf: { id: src.id, author: src.author, handle: src.handle }
         });
         if (typeof savePostsToLocal === 'function') savePostsToLocal();
         if (typeof renderFeed === 'function') renderFeed();
       }
     }
-    toast('Reposted to your feed 🔁');
+    toast('Reposted to your feed · tap again to undo');
+  }
+
+  /* The post a repost entry points at. Entries made before they carried
+     the id are matched on author and text. */
+  function sourceOf(entry) {
+    const r = entry && entry.repostOf;
+    if (!r) return null;
+    if (r.id != null) return String(r.id);
+    const src = allPosts().find(p => !(p.mine && p.repostOf) && p.handle === r.handle && p.body === entry.body);
+    return src ? String(src.id) : null;
+  }
+
+  function undoRepost(id, entryId) {
+    const posts = allPosts();
+    const src = id ? posts.find(p => String(p.id) === id) : null;
+    const isEntry = p => p.mine && p.repostOf && (
+      (entryId != null && String(p.id) === String(entryId)) ||
+      (id && String(p.repostOf.id) === id) ||
+      (id && p.repostOf.id == null && src && p.repostOf.handle === src.handle && p.body === src.body));
+    for (let i = posts.length - 1; i >= 0; i--) if (isEntry(posts[i])) posts.splice(i, 1);
+
+    if (id) S_SF.reposts = S_SF.reposts.filter(x => x !== id);
+    // The reputation point the repost earned goes with it.
+    for (let i = S_SF.repEvents.length - 1; i >= 0; i--) {
+      if (S_SF.repEvents[i].type === 'repost') { S_SF.repEvents.splice(i, 1); break; }
+    }
+    save();
+    if (typeof savePostsToLocal === 'function') savePostsToLocal();
+    if (typeof renderFeed === 'function') renderFeed();
+    refreshOpenPanel();
+    toast('Repost removed');
   }
 
   const hasReposted = id => S_SF.reposts.includes(String(id));
@@ -577,7 +621,7 @@ const SF = (() => {
     // follow
     toggleFollow, isFollowing, followBtn, paintFollowButtons,
     // reposts
-    repost, hasReposted,
+    repost, undoRepost, hasReposted,
     // subscriptions
     subscribe, cancelSubscription, isSubscribed, subscriptionFor, TIERS,
     // communities
