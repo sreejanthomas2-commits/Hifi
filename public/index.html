@@ -944,7 +944,12 @@
 
     try {
       const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
+      /* This project's database has the ID "default" - a named database,
+         not the unnamed "(default)" one getFirestore(app) looks for, which
+         is why every call answered "database (default) does not exist".
+         A project gets exactly one free database, and this is it, so the
+         app points at it by name rather than creating a second one. */
+      const db = getFirestore(app, 'default');
       const auth = getAuth(app);
       
       // Expose Firestore to window

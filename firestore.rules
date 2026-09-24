@@ -1,0 +1,74 @@
+rules_version = '2';
+
+/* ════════════════════════════════════════════════════════════════════
+   Firestore security rules for Trending (project trending-app-db).
+
+   These are the only thing standing between the database and anyone
+   on the internet who reads the Firebase config out of index.html -
+   which anyone can, because a web app's Firebase config is public by
+   design. So everything is closed unless a rule below opens it, and
+   each rule opens exactly what the app does today:
+
+     users/{uid}   your profile and synced settings - only you
+     posts/{id}    the public feed - anyone reads, signed-in people
+                   post as themselves, likes move by one
+
+   Paste into Firebase console -> Firestore -> Rules -> Publish, or
+   deploy with the Firebase CLI. Keep this file and the console in step.
+   ════════════════════════════════════════════════════════════════════ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function str(v, n) { return v is string && v.size() <= n; }
+
+    /* A person's own profile and settings. It holds their email
+       address, so nobody else can read it. */
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+             'displayName', 'email', 'photoURL', 'xp', 'level',
+             'joinedAt', 'followers', 'following', 'prefs', 'prefsAt'])
+        && (!('displayName' in request.resource.data) || str(request.resource.data.displayName, 80));
+    }
+
+    /* The public feed. */
+    match /posts/{postId} {
+      allow read: if true;
+
+      // You can only post as yourself, with the counters at zero and the
+      // server's clock on it - not a backdated or pre-liked post.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'author', 'handle', 'uid', 'time', 'body', 'tags',
+             'likes', 'comments', 'shares', 'type', 'category'])
+        && request.resource.data.uid == request.auth.uid
+        && str(request.resource.data.author, 80)
+        && str(request.resource.data.handle, 40)
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 5000
+        && request.resource.data.tags is list
+        && request.resource.data.tags.size() <= 6
+        && request.resource.data.likes == 0
+        && request.resource.data.comments == 0
+        && request.resource.data.shares == 0
+        && request.resource.data.time == request.time;
+
+      // A like moves the count by one, up or down, and touches nothing
+      // else. (One like per person needs a likes sub-collection - the
+      // app does not keep one yet.)
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+        && request.resource.data.likes >= 0
+        && (request.resource.data.likes == resource.data.likes + 1
+            || request.resource.data.likes == resource.data.likes - 1);
+
+      // Only the author can delete their post.
+      allow delete: if isOwner(resource.data.uid);
+    }
+  }
+}
