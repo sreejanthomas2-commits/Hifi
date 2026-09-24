@@ -19,4 +19,6 @@ _removed/
 trending-standalone.html
 
 # Rebuilt from CoinGecko by services/catalog.js; a cache, not source.
-data/
+# Anchored to the root: a bare data/ also matched public/js/data/, where
+# the translations and language list live, and refused to stage them.
+/data/

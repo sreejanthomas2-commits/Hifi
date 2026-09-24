@@ -39,7 +39,7 @@
 import './state.js?v=s3';
 import './data/mockDb.js?v=11m9';
 import './data/languages.js?v=s3';
-import './data/i18n.js?v=1m8';
+import './data/i18n.js?v=ch1';
 import './utils/api.js?v=s3';
 import './utils/firebase-auth.js?v=sw1';
 import './utils/dom.js?v=s3';
