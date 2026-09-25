@@ -36,10 +36,10 @@
    list itself is grouped. Each exports a register(SET) that declares
    its screens — imports are hoisted, so every one of these is defined
    by the time SET exists and they are called below. */
-import registerAccount from './settings-account.js?v=st1';
+import registerAccount from './settings-account.js?v=sec0';
 import registerPrivacy from './settings-privacy.js?v=st1';
 import registerApp from './settings-app.js?v=st1';
-import registerCrypto from './settings-crypto.js?v=st1';
+import registerCrypto from './settings-crypto.js?v=sec0';
 
 const SET = (() => {
 
@@ -501,8 +501,9 @@ const SET = (() => {
 
       sec('Your account', [
         row({ icon: 'account_circle', label: 'Account Centre', sub: 'Personal details, password, login and security', to: 'account' }),
-        row({ icon: 'shield', label: 'Security', sub: 'Two-factor, passkeys, devices and alerts', to: 'security',
-          value: P().get('security.twoFactor') ? 'Protected' : 'Basic', good: !!P().get('security.twoFactor') }),
+        // No "Protected" badge: it read the two-factor switch, which never
+        // protected anything and is now shown as not available yet.
+        row({ icon: 'shield', label: 'Security', sub: 'Password, devices and alerts', to: 'security' }),
         row({ icon: 'lock', label: 'Crypto and wallet security', sub: 'Confirmations, whitelist and connected wallets', to: 'cryptosec' })
       ]),
 

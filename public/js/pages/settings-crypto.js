@@ -469,8 +469,9 @@ export default function register(SET) {
         ]),
         sec('Eligibility', [
           row({ icon: eligible ? 'check_circle' : 'radio_button_unchecked', label: 'Signed in with a confirmed email', value: eligible ? 'Met' : 'Not met', good: eligible }),
-          row({ icon: P().get('security.twoFactor') ? 'check_circle' : 'radio_button_unchecked', label: 'Two-factor authentication on',
-            value: P().get('security.twoFactor') ? 'Met' : 'Not met', good: !!P().get('security.twoFactor'),
+          // Two-factor is not built yet, so it cannot be met - the old
+          // "Met" came from a switch that protected nothing.
+          row({ icon: 'radio_button_unchecked', label: 'Two-factor authentication on', value: 'Not available yet',
             act: 'go:security', chev: true }),
           row({ icon: 'badge', label: 'A complete profile', sub: 'Name, photo and bio', act: 'edit', chev: true })
         ]),
@@ -576,7 +577,7 @@ export default function register(SET) {
     send: ['How sending crypto works',
       'You choose the coin, the amount, the network and the destination. Trending checks the address against that network, shows the live network fee, and then hands the prepared payment to your own wallet app.\n\n<b>Trending never signs or broadcasts a transaction.</b> Your wallet asks you to approve it, and if you do not, nothing moves. Your recovery phrase and private keys never leave that wallet, and Trending will never ask for them.'],
     safety: ['Keeping your account safe',
-      'Turn on two-factor authentication, and add a passkey if your device offers one. Check <b>Devices and sessions</b> now and then and end anything you do not recognise.\n\nFor crypto: keep “Confirm every send” on, and consider limiting sends to saved addresses.\n\nNobody from Trending will ever ask for your password, your recovery phrase or a private key. Anyone who does is not us.'],
+      'Use a strong password you use nowhere else, or sign in with Google. Two-factor authentication and passkeys are not built yet. If anything looks wrong, reset your password from <b>Security</b>.\n\nFor crypto: keep “Confirm every send” on, and consider limiting sends to saved addresses.\n\nNobody from Trending will ever ask for your password, your recovery phrase or a private key. Anyone who does is not us.'],
     paper: ['What “paper trading” means',
       'The trading desk, Earn and P2P run on a simulated balance. Orders are matched against real live prices so the experience is honest, but no money is involved: nothing is bought, sold, deposited or charged, and the balance cannot be withdrawn.\n\nA price that has gone stale cannot be traded on — Trending refuses rather than filling your order at a remembered number.']
   };

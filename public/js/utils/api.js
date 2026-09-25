@@ -519,56 +519,19 @@ function updateWalletUI() {
   }
 }
 
-// ── ALISON AI ENGINE (GEMINI) ─────────────────────────────────────
-/* The key is read at runtime and is deliberately NOT in the source.
-   A key shipped in client-side JavaScript is readable by anyone who
-   opens the page, so it is compromised the moment it is deployed —
-   putting it in git as well only adds a copy nobody can delete.
-
-   To use one locally:  localStorage.setItem('ts_gemini_key', '...')
-   With none set, askAlison below falls back to Simulation Mode, which
-   is a path this file already handled. */
-window.GEMINI_API_KEY = window.GEMINI_API_KEY || (() => {
-  try { return localStorage.getItem('ts_gemini_key') || ''; } catch (e) { return ''; }
-})();
-
-window.askAlison = async function(promptText, context = "general") {
-  if (!window.GEMINI_API_KEY || window.GEMINI_API_KEY.trim() === "") {
-    return "Hi! I am Alison, your new AI Copilot! 🌟 I'm currently in 'Simulation Mode' because I don't have my Google API Key yet. Once you paste my key into the system, I'll be fully awake and ready to help you analyze crypto, write posts, and multitask!";
-  }
-
-  // This is where we "train" Alison using a System Prompt
-  const systemInstruction = `You are Alison, the highly advanced AI Copilot for the 'Trending' platform. 
-Your goal is to assist users with multitasking, reasoning, content creation, and data analysis.
-Your personality: Brilliant, enthusiastic, helpful, and slightly witty. Use emojis naturally.
-Current Context: The user is asking you something related to '${context}'.
-Always provide concise, highly actionable, and accurate responses.`;
-
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.GEMINI_API_KEY}`;
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: systemInstruction }]
-        },
-        contents: [
-          { parts: [{ text: promptText }] }
-        ]
-      })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    
-    return data.candidates[0].content.parts[0].text;
-  } catch (err) {
-    console.error("Alison AI Error:", err);
-    return "Oops! I ran into a bit of a glitch while thinking. Could you try asking me that again? 😅";
-  }
-};
+// ── NO AI PROVIDER KEYS ──────────────────────────────────────────
+/* There used to be a slot here that read a Gemini key from this
+   browser's storage and called Google straight from the page, and
+   messages.js had the same for an NVIDIA key. Both keys were exposed
+   and have been revoked, AI replies are not part of this version, and a
+   key that sits in the browser is one any injected script can read. So
+   the slots are gone, and any copy a browser still holds is deleted the
+   next time the app opens. AI, if it comes back, goes through a server
+   that keeps the key out of the page. */
+try {
+  localStorage.removeItem('ts_gemini_key');
+  localStorage.removeItem('ts_nvidia_key');
+} catch (e) { /* storage unavailable - nothing to clear */ }
 
 /* ── Global bridge ───────────────────────────────────────────────────
    This file is an ES module now, so its top-level names are private

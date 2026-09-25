@@ -1061,6 +1061,10 @@ function profileSectionHTML(tab) {
       </div>
     `;
   }
+  /* The security card here used to hold a switch that said "Biometrics
+     mockup enforced!" and a button that said "2FA credentials verified
+     via security key!". Neither checked anything. They now say what is
+     true until the real versions exist. */
   else if (tab === 'settings') {
     html = `
       <div class="grid-2 gap16">
@@ -1081,8 +1085,8 @@ function profileSectionHTML(tab) {
           <button class="btn btn-primary mt12" onclick="saveProfileBioEditor()">Save Settings</button>
         </div>
         <div class="card p20">
-          <h3 class="fw8 mb12 tc-1 flex-center" style="justify-content:flex-start; gap:8px"><span class="material-symbols-rounded" style="color:var(--pink)">security</span> Anti-Hack Security Core</h3>
-          <p class="tc-3 fs12 mb12">Trigger system defenses and manage security settings:</p>
+          <h3 class="fw8 mb12 tc-1 flex-center" style="justify-content:flex-start; gap:8px"><span class="material-symbols-rounded" style="color:var(--pink)">security</span> Privacy and security</h3>
+          <p class="tc-3 fs12 mb12">What is switched on for this device:</p>
           <div class="flex-between py8" style="border-bottom:1px solid var(--border)">
             <div>
               <div class="fw7 fs12 tc-1">Ghost Privacy Mode</div>
@@ -1092,12 +1096,12 @@ function profileSectionHTML(tab) {
           </div>
           <div class="flex-between py8" style="border-bottom:1px solid var(--border)">
             <div>
-              <div class="fw7 fs12 tc-1">System Anti-Lock Firewall</div>
-              <div class="fs10 tc-3">Require biometric fingerprint mockup before withdrawals.</div>
+              <div class="fw7 fs12 tc-1">Fingerprint check before withdrawals</div>
+              <div class="fs10 tc-3">Not available yet — nothing is checked today.</div>
             </div>
-            <input type="checkbox" checked onchange="showToast('Biometrics mockup enforced!')">
+            <input type="checkbox" disabled aria-label="Fingerprint check before withdrawals, not available yet">
           </div>
-          <button class="btn btn-primary mt12" style="width:100%" onclick="showToast('2FA credentials verified via security key!')">Configure 2FA Token</button>
+          <p class="fs11 tc-3 mt12">Two-factor authentication is not available yet. Your password or Google account is the only sign-in step today.</p>
         </div>
       </div>
     `;

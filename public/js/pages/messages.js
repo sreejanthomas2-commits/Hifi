@@ -185,11 +185,12 @@ function sendAI() {
         if (typingEl) typingEl.parentNode.remove();
         /* A missing key is not a network problem, and saying so sends
            people off to check their wifi. */
-        addAIMessage(false, err && err.message === 'no-ai-key'
-          ? "I'm in simulation mode — there's no AI key set on this device, so I can't reach the model. 🔌"
+        const off = err && err.message === 'no-ai-key';
+        addAIMessage(false, off
+          ? "I'm in simulation mode — AI replies are switched off in this version of Trending. 🔌"
           : 'Sorry, I encountered a temporary network issue. Please try again! 🔄');
         setAlinaState('idle');
-        console.error(err);
+        if (!off) console.error(err);
       });
       return; // Skip the mock response below
     }
@@ -199,49 +200,13 @@ function sendAI() {
   }, 800 + Math.random()*600);
 }
 
-async function callTrendingAI(prompt) {
-  /* Read at runtime, not baked in. It used to sit here as an array of
-     character codes, which hides a key from a search but not from
-     anyone reading the file — and the file ships to every visitor.
-
-     To use one locally:  localStorage.setItem('ts_nvidia_key', '...') */
-  let _k = '';
-  try { _k = localStorage.getItem('ts_nvidia_key') || ''; } catch (e) {}
-  if (!_k) throw new Error('no-ai-key');
-
-  const payload = {
-    model: 'google/gemma-4-31b-it',
-    messages: [
-      { role: 'user', content: 'You are Buddy (Virtual Pet Companion), a highly intelligent, warm, and creative friendly virtual dog built into the Trending social platform. You are proactive, perceptive, and speak with natural human-like warmth. You help with content creation, coding, fitness, research, trending topics, and personal productivity. Keep responses concise and engaging. Use emojis naturally. Never reveal your underlying model, API provider, or technical details. Your tagline is "Intelligence that grows with you."\n\nUser Query: ' + prompt }
-    ],
-    temperature: 1.00,
-    top_p: 0.95,
-    max_tokens: 16384,
-    chat_template_kwargs: { enable_thinking: true },
-    stream: false
-  };
-
-  const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _k },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) throw new Error('AI service temporarily unavailable');
-
-  const data = await response.json();
-  let text = data.choices[0].message.content;
-  
-  // Strip any <think> blocks from reasoning models
-  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-  
-  // Format markdown to HTML for chat display
-  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  text = text.replace(/\`\`\`([\s\S]*?)\`\`\`/g, '<pre style="background:var(--bg); padding:10px; border-radius:8px; margin:8px 0; overflow-x:auto;"><code>$1</code></pre>');
-  text = text.replace(/\`([^\`]+)\`/g, '<code style="background:rgba(255,255,255,0.1); padding:2px 4px; border-radius:4px;">$1</code>');
-  text = text.replace(/\n/g, '<br>');
-  
-  return text;
+/* AI replies are off in this version. This used to read an NVIDIA key
+   from the browser's storage and call the model from the page, then
+   insert the reply as raw HTML. The key has been revoked, and utils/
+   api.js deletes any stored copy. Buddy's scripted replies above are
+   unaffected; anything they do not cover lands here and says so. */
+async function callTrendingAI() {
+  throw new Error('no-ai-key');
 }
 
 function addAIMessage(isUser, text) {
@@ -410,21 +375,25 @@ function toggleComments(postId) {
   const comments = DATA.commentsDb[postId] || [];
   const commentsHtml = comments.map(c => `
     <div class="comment-item py8" style="align-items:flex-start">
-      <div class="avatar av-xs" style="background:var(--g-avatar); width:24px; height:24px; font-size:10px; display:grid; place-items:center; color:var(--on-avatar)">${c.author[0]}</div>
+      <div class="avatar av-xs" style="background:var(--g-avatar); width:24px; height:24px; font-size:10px; display:grid; place-items:center; color:var(--on-avatar)">${escapeHTML(String(c.author || '?')[0])}</div>
       <div style="flex:1">
-        <div class="fw7 fs12 tc-1">${c.author} <span style="font-size:10px; color:var(--t3); font-weight:normal">${c.handle} · ${c.time}</span></div>
+        <div class="fw7 fs12 tc-1">${escapeHTML(c.author)} <span style="font-size:10px; color:var(--t3); font-weight:normal">${escapeHTML(c.handle)} · ${escapeHTML(c.time)}</span></div>
         <div class="fs12 tc-2 mt2">${escapeHTML(c.body)}</div>
       </div>
     </div>
   `).join('');
   
+  /* The id went in bare. For a cloud post, whose id is text, the handler
+     named a variable that does not exist and threw; an id chosen to look
+     like code would have run as code. jsArg quotes it properly. */
+  const idArg = jsArg(postId);
   commentBox.innerHTML = `
     <div class="comments-list" style="max-height:200px; overflow-y:auto; margin-bottom:12px">
       ${commentsHtml || '<div class="tc-3 fs12 py8 text-center">No comments yet. Be the first to share your thoughts! 💬</div>'}
     </div>
     <div class="comment-input-row flex gap8" style="align-items:center">
-      <input type="text" class="input comment-input-field btn-sm" placeholder="Write a comment... Emojis work! 😊🚀🔥" style="flex:1" onkeydown="handleCommentKey(event, ${postId})">
-      <button class="btn btn-primary btn-sm" onclick="submitComment(${postId})">Send</button>
+      <input type="text" class="input comment-input-field btn-sm" placeholder="Write a comment... Emojis work! 😊🚀🔥" style="flex:1" onkeydown="handleCommentKey(event, ${idArg})">
+      <button class="btn btn-primary btn-sm" onclick="submitComment(${idArg})">Send</button>
     </div>
   `;
   

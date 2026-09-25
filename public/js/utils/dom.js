@@ -5,9 +5,13 @@
 'use strict';
 
 function $id(id) { return document.getElementById(id); }
+/* Everything comes back as escaped text. Non-strings used to be passed
+   through untouched, so an array or object reached the page through
+   its own toString() without any escaping at all - and a post's fields
+   now arrive from other people's accounts, where the type is theirs. */
 function escapeHTML(str) {
-  if (typeof str !== 'string') return str;
-  return str.replace(/[&<>'"]/g, 
+  str = str == null ? '' : String(str);
+  return str.replace(/[&<>'"]/g,
     tag => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -16,6 +20,16 @@ function escapeHTML(str) {
       '"': '&quot;'
     }[tag] || tag)
   );
+}
+/* A value passed as an argument to a function called from a quoted
+   inline handler attribute. Two readers see it: the HTML parser decodes
+   the attribute first - turning &#39; back into an apostrophe - and then
+   JS parses what is left. So it is encoded for JS first (JSON: quotes,
+   backslashes, and numbers stay numbers) and then escaped for HTML, which
+   the attribute decoding undoes exactly. escapeHTML alone inside '...' is
+   not enough: the decoded apostrophe closes the string. */
+function jsArg(v) {
+  return escapeHTML(JSON.stringify(v === undefined ? null : v));
 }
 /* Accepts a function OR a global's name. Passing a bare identifier that
    does not exist throws a ReferenceError while the argument is being
@@ -131,6 +145,6 @@ function get3DIconForEmoji(emoji) {
    dead module graph. */
 import { publish } from '../globals.js?v=3';
 publish('utils/dom.js', {
-  $id: () => $id, escapeHTML: () => escapeHTML, _safe: () => _safe,
+  $id: () => $id, escapeHTML: () => escapeHTML, jsArg: () => jsArg, _safe: () => _safe,
   get3DIconForEmoji: () => get3DIconForEmoji
 });

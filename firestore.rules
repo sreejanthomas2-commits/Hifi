@@ -24,6 +24,27 @@ service cloud.firestore {
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function str(v, n) { return v is string && v.size() <= n; }
 
+    /* Text other people will see, checked for shape as well as length.
+       The app escapes everything it shows, and these keep out the
+       characters that markup and attribute injection are made of, so a
+       mistake in some renderer is not enough on its own. Regexes are RE2
+       and written without backslashes, so nothing depends on how a rules
+       string treats escapes. */
+    function safeName(v) { return v is string && v.matches('^[^<>"`&]{1,80}$'); }
+    function safeHandle(v) { return v is string && v.matches('^@[A-Za-z0-9._+-]{1,39}$'); }
+    // Rules have no loops, so each of the (at most six) tags is checked
+    // by position. && and || short-circuit, so a missing index is never read.
+    function safeTag(s) { return s is string && s.matches('^#[^ <>"`&#]{1,40}$'); }
+    function safeTags(t) {
+      return t is list && t.size() <= 6
+        && (t.size() < 1 || safeTag(t[0]))
+        && (t.size() < 2 || safeTag(t[1]))
+        && (t.size() < 3 || safeTag(t[2]))
+        && (t.size() < 4 || safeTag(t[3]))
+        && (t.size() < 5 || safeTag(t[4]))
+        && (t.size() < 6 || safeTag(t[5]));
+    }
+
     /* A person's own profile and settings. It holds their email
        address, so nobody else can read it. */
     match /users/{uid} {
@@ -41,18 +62,26 @@ service cloud.firestore {
 
       // You can only post as yourself, with the counters at zero and the
       // server's clock on it - not a backdated or pre-liked post.
+      //
+      // The id must be one Firestore generated (addDoc: 20 letters and
+      // digits). A client could otherwise pick its own with setDoc, and
+      // an id is text that ends up inside the page.
       allow create: if signedIn()
+        && postId.matches('^[A-Za-z0-9]{20}$')
         && request.resource.data.keys().hasOnly([
              'author', 'handle', 'uid', 'time', 'body', 'tags',
              'likes', 'comments', 'shares', 'type', 'category'])
         && request.resource.data.uid == request.auth.uid
-        && str(request.resource.data.author, 80)
-        && str(request.resource.data.handle, 40)
+        && safeName(request.resource.data.author)
+        && safeHandle(request.resource.data.handle)
         && request.resource.data.body is string
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 5000
-        && request.resource.data.tags is list
-        && request.resource.data.tags.size() <= 6
+        && safeTags(request.resource.data.tags)
+        && request.resource.data.type is string
+        && request.resource.data.type.matches('^[a-z]{1,16}$')
+        && request.resource.data.category is string
+        && request.resource.data.category.matches('^[a-z0-9_-]{1,30}$')
         && request.resource.data.likes == 0
         && request.resource.data.comments == 0
         && request.resource.data.shares == 0

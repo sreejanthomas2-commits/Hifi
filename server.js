@@ -7,6 +7,27 @@ require('dotenv').config();
 
 const app = express();
 
+/* Custody stays off until three known flaws are fixed:
+     - the watcher credits any token sent to a deposit address as the
+       asset that address was issued for, because no contract allow-list
+       exists yet
+     - a withdrawal's funds hold is keyed on the client's idempotency key
+       across all users, and is a read-then-write with no transaction, so
+       it can be skipped or raced
+     - the withdrawal second factor is never looked up (req.walletUser is
+       never set), and nothing stores a TOTP secret
+   Until those land, CUSTODY_ENABLED=true is refused here rather than
+   trusted. Forcing it off - instead of exiting - keeps the rest of the
+   app up: every custodial route already answers 503 "custody_disabled"
+   when it is off, and the chain watcher below does not start. Remove this
+   block in the change that fixes all three, not before. The services read
+   the flag at call time, so overriding it here covers them too. */
+if (String(process.env.CUSTODY_ENABLED || '').toLowerCase() === 'true') {
+  console.error('CUSTODY_ENABLED=true refused: custody is not safe to run until the token allow-list, ' +
+    'atomic withdrawal holds and withdrawal two-factor are built. Running with custody off.');
+  process.env.CUSTODY_ENABLED = 'false';
+}
+
 // Middleware
 app.use(compression());
 app.use(cors());

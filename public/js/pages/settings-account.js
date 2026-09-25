@@ -114,7 +114,7 @@ export default function register(SET) {
   };
 
   DO.deleteacct = async () => {
-    if (!(await ask('This erases every Trending post, message, setting and paper balance stored on this device. It cannot be undone.',
+    if (!(await ask('This erases every Trending post, message, setting and paper balance stored on this device. It cannot be undone. Your sign-in account and anything you posted to the shared feed are not deleted by this — that part is not built yet.',
       { title: 'Delete account', ok: 'Delete everything', danger: true }))) return;
     const typed = await askText('Type DELETE to confirm.', '', { title: 'Are you certain?', ok: 'Delete' });
     if (String(typed || '').trim().toUpperCase() !== 'DELETE') { toast('Not deleted.'); return; }
@@ -147,7 +147,7 @@ export default function register(SET) {
           r('email', 'Email and password', 'mail', 'A reset link is always available'),
           r('phone', 'Phone number', 'sms', 'A code by text message')
         ]),
-        sec('', [row({ icon: 'key', label: 'Passkeys', sub: 'Your face, fingerprint or device PIN instead of a password', to: 'passkeys' })])
+        sec('', [row({ icon: 'key', label: 'Passkeys', sub: 'Your face, fingerprint or device PIN instead of a password', value: 'Not available yet', to: 'passkeys' })])
       ].join('');
     }
   });
@@ -179,42 +179,22 @@ export default function register(SET) {
     }
   });
 
+  /* Said plainly rather than switched on. This page used to check that
+     the device had a screen lock, store "on", and promise a passkey at
+     the next sign-in - but no key was ever created and sign-in never
+     asked for one. A passkey needs a server that registers the public
+     key and checks each signature, and Trending does not have that part
+     yet. Until it does, the page says so and offers nothing to press. */
   reg('passkeys', {
     t: 'Passkeys', i: 'key', p: 'loginmethods', k: 'passkey face fingerprint biometric webauthn screen lock',
-    html: () => {
-      const can = !!window.PublicKeyCredential;
-      return [
-        `<p class="st-lead">A passkey replaces the password with the way you already unlock this device.</p>`,
-        sec('', [
-          row({ icon: 'key', label: 'Passkey on this device',
-            value: can ? (P().get('security.passkeys') ? 'On' : 'Available') : 'Not supported',
-            good: can && !!P().get('security.passkeys'),
-            act: can ? 'passkey' : '', chev: can, disabled: !can })
-        ]),
-        `<p class="st-note">${can
-          ? 'Setting one up asks your device to create a key. The private half never leaves the device and Trending only ever sees the public half.'
-          : 'This browser does not offer passkeys. Try a recent version of Chrome, Safari or Edge.'}</p>`
-      ].join('');
-    }
+    html: () => [
+      `<p class="st-lead">A passkey replaces the password with the way you already unlock this device.</p>`,
+      sec('', [
+        row({ icon: 'key', label: 'Passkey on this device', value: 'Not available yet', disabled: true })
+      ]),
+      `<p class="st-note">Passkeys are not built yet: they need Trending's servers to register your key and check it each time you sign in. Until then, sign in with Google or with your email and password.</p>`
+    ].join('')
   });
-
-  DO.passkey = async () => {
-    if (!window.PublicKeyCredential) { toast('This browser does not support passkeys.'); return; }
-    if (P().get('security.passkeys')) {
-      if (!(await ask('Stop using a passkey for this account?', { ok: 'Turn off', danger: true }))) return;
-      P().set('security.passkeys', false);
-      toast('Passkey turned off');
-      SET.repaint();
-      return;
-    }
-    try {
-      const ok = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if (!ok) { toast('This device has no screen lock set up.'); return; }
-      P().set('security.passkeys', true);
-      toast('Passkey ready — you will be asked for it next time you sign in');
-      SET.repaint();
-    } catch (e) { toast('The passkey could not be set up.'); }
-  };
 
   /* ── Security ────────────────────────────────────────────────────── */
 
@@ -223,10 +203,13 @@ export default function register(SET) {
     k: 'security two factor 2fa authentication passkey login activity sessions devices alerts password protect',
     html: () => [
       `<p class="st-lead">What protects the account, and what is signed in to it.</p>`,
+      /* Two-factor was a switch that stored "on" and changed nothing:
+         no sign-in ever asked for a second step. It stays visible so
+         people know it is coming, but as a statement, not a control. */
       sec('Sign-in protection', [
         row({ icon: 'password', label: 'Change password', sub: 'A reset link goes to your email', act: 'password', chev: true }),
-        sw('security.twoFactor', 'Two-factor authentication', 'Ask for a second step when signing in somewhere new', { icon: 'phonelink_lock', act: 'tg2fa' }),
-        row({ icon: 'key', label: 'Passkeys', to: 'passkeys', value: P().get('security.passkeys') ? 'On' : 'Off' })
+        row({ icon: 'phonelink_lock', label: 'Two-factor authentication', sub: 'A second step when signing in. Not built yet — today your password or Google account is the only step.', value: 'Not available yet', disabled: true }),
+        row({ icon: 'key', label: 'Passkeys', to: 'passkeys', value: 'Not available yet' })
       ]),
       sec('Activity', [
         row({ icon: 'devices', label: 'Devices and sessions', to: 'devices', value: String(P().devices().length) }),
@@ -239,53 +222,51 @@ export default function register(SET) {
       /* Not switches. They are how the app is built, and a control
          that cannot be turned off should say so rather than pretend
          to be a choice. */
+      /* This row used to say "End-to-end encryption: On". Nothing in the
+         app encrypts messages; they are plain text in this browser's
+         storage and are never sent anywhere. That is the true statement,
+         so it is the one made. */
       sec('Always on', [
-        row({ icon: 'lock', label: 'End-to-end encryption', sub: 'Messages are encrypted between you and the person you are talking to', value: 'On', good: true }),
+        row({ icon: 'smartphone', label: 'Where your chats are kept', sub: 'In this browser only. They are not sent to Trending servers, and they are not end-to-end encrypted.', value: 'This device' }),
         row({ icon: 'key_off', label: 'Zero-knowledge storage', sub: 'Your recovery phrases and private keys are never sent to Trending', value: 'On', good: true })
       ]),
       `<p class="st-note">Trending never asks for a recovery phrase or a private key, and nobody from support ever will. Anyone who does is not us.</p>`
     ].join('')
   });
 
-  DO.tg2fa = async (path, b, el) => {
-    const on = el.checked;
-    if (!(await P().verify(on ? 'Turning on two-factor authentication' : 'Turning off two-factor authentication'))) { SET.repaint(); return; }
-    if (on && guest()) { toast('Sign in first — a second step needs an account.'); SET.repaint(); return DO.signin(); }
-    P().set('security.twoFactor', on);
-    toast(on ? 'Two-factor authentication on' : 'Two-factor authentication off');
-    SET.repaint();
-  };
-
   reg('devices', {
     t: 'Devices and sessions', i: 'devices', p: 'security', k: 'devices sessions active trusted sign out remote logout everywhere',
     html: () => {
+      /* Ending another device's session used to be offered here, but all
+         it did was delete that device's line from this browser's list -
+         the device itself stayed signed in. Signing a device out from
+         somewhere else needs the server to revoke its session, which is
+         not built yet. So the list is a record, removing a line says
+         that is all it does, and the one real sign-out is this one. */
       const list = P().devices();
       return [
-        `<p class="st-lead">Everywhere this account is open. Ending a session signs that device out.</p>`,
+        `<p class="st-lead">Devices this browser has recorded for your account. Signing another device out from here is not built yet — it stays signed in until it signs out itself.</p>`,
         sec('', list.map(d => row({
           icon: d.here ? 'smartphone' : 'computer',
           label: d.name + (d.here ? ' · this device' : ''),
           sub: 'First seen ' + when(d.first) + ' · last used ' + when(d.seen),
-          value: d.here ? 'Active' : 'End session', good: d.here,
+          value: d.here ? 'Active' : 'Remove from list', good: d.here,
           act: d.here ? '' : 'enddevice', arg: d.id, chev: !d.here
         }))),
-        sec('', [row({ icon: 'logout', label: 'Sign out of every device', act: 'endall', danger: true, chev: true })])
+        sec('', [row({ icon: 'logout', label: 'Sign out on this device', sub: 'Other devices stay signed in', act: 'endall', danger: true, chev: true })])
       ].join('');
     }
   });
 
   DO.enddevice = async id => {
-    if (!(await ask('End this session? That device will have to sign in again.', { ok: 'End session', danger: true }))) return;
+    if (!(await ask('Remove this device from the list? This does not sign it out — it stays signed in until it signs out itself.', { ok: 'Remove', danger: true }))) return;
     P().endDevice(id);
-    toast('Session ended');
+    toast('Removed from the list');
     SET.repaint();
   };
 
-  DO.endall = async () => {
-    if (!(await ask('Sign out everywhere, including here?', { ok: 'Sign out everywhere', danger: true }))) return;
-    if (!(await P().verify('Signing out of every device'))) return;
-    P().devices().forEach(d => P().endDevice(d.id));
-    toast('Signed out everywhere');
+  /* signOut() asks for its own confirmation. */
+  DO.endall = () => {
     if (typeof signOut === 'function') signOut();
   };
 

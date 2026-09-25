@@ -470,8 +470,9 @@ function renderPostCard(p) {
   if (p.type === 'poll' && p.options) {
     const totalVotes = p.options.reduce((sum, opt) => sum + (opt.votes || 0), 0);
     const maxVotes = Math.max(...p.options.map(o => o.votes || 0));
-    // String ids (mock/Firestore posts) must stay quoted in the onclick.
-    const pollId = typeof p.id === 'string' ? `'${p.id}'` : p.id;
+    // String ids (mock/Firestore posts) must stay quoted in the onclick,
+    // number ids must stay numbers; jsArg does both.
+    const pollId = jsArg(p.id);
     // votedIdx remembers which option you picked; hasVoted covers older stored polls.
     const votedIdx = typeof p.votedIdx === 'number' ? p.votedIdx : -1;
     const hasVoted = votedIdx > -1 || !!p.hasVoted;
@@ -496,9 +497,15 @@ function renderPostCard(p) {
     pollHTML += `<div class="fs11 tc-3 mt4">${totalVotes} vote${totalVotes === 1 ? '' : 's'}${hasVoted ? ' · you voted' : ''}</div></div>`;
   }
 
-  const idStr = typeof p.id === 'string' ? `'${p.id}'` : p.id;
-  const authorSafe = p.author ? p.author.replace(/'/g, "\\'") : '';
-  const handleSafe = p.handle ? p.handle.replace(/'/g, "\\'") : '';
+  /* Cloud posts are written by other people's accounts, so the id, the
+     author and the handle are theirs to choose. They reach the handlers
+     below only through jsArg: escaping the apostrophe alone left the
+     double quote free to end the attribute, and an &#39; that the HTML
+     parser turns back into an apostrophe free to end the string. */
+  const idStr = jsArg(p.id);
+  const authorArg = jsArg(p.author || '');
+  const handleArg = jsArg(p.handle || '');
+  const idAttr = escapeHTML(p.id);
   // Your own repost entry stands for the repost, so its button undoes it.
   const ownRepost = !!(p.mine && p.repostOf);
   const reposted = ownRepost || (typeof SF !== 'undefined' && SF.hasReposted(p.id));
@@ -506,12 +513,12 @@ function renderPostCard(p) {
   const shareCount = (Number(p.shares) || 0) + (reposted && !ownRepost ? 1 : 0);
 
   return `
-  <div class="post-card${p.mine ? ' mine' : ''}" id="post-${p.id}">
+  <div class="post-card${p.mine ? ' mine' : ''}" id="post-${idAttr}">
     <div class="post-header">
       <div class="avatar av-sm post-av">${escapeHTML(postInitials(p.author))}</div>
       <div class="post-author" style="flex:1; min-width:0">
         <div class="post-author-name">
-          <span class="sf-author-link" onclick="SF.openCreatorPage('${handleSafe}','${authorSafe}')" title="Open creator page">${escapeHTML(p.author)}</span>
+          <span class="sf-author-link" onclick="SF.openCreatorPage(${handleArg},${authorArg})" title="Open creator page">${escapeHTML(p.author)}</span>
           <span class="post-handle">${escapeHTML(p.handle)}</span>
         </div>
         <div class="post-meta">${formatRelativeTime(p.time)}${
@@ -520,7 +527,7 @@ function renderPostCard(p) {
       ${p.mine ? '' : SF.followBtn(p.handle, p.author, 'sf-inline-follow')}
     </div>
 
-    <div class="post-body${p.bg ? ' post-body-bg' : ''}" id="post-body-${p.id}"${p.bg ? ` style="background:${escapeHTML(p.bg)}"` : ''}>${escapeHTML(p.body).replace(/\n/g,'<br>')}</div>
+    <div class="post-body${p.bg ? ' post-body-bg' : ''}" id="post-body-${idAttr}"${p.bg ? ` style="background:${escapeHTML(p.bg)}"` : ''}>${escapeHTML(p.body).replace(/\n/g,'<br>')}</div>
     ${Array.isArray(p.media) && p.media.length ? `<div class="post-media${p.media.length > 1 ? ' many' : ''}">${p.media.map(m => m.kind === 'video'
         ? `<video src="${escapeHTML(m.src)}" controls playsinline preload="metadata"></video>`
         : `<img src="${escapeHTML(m.src)}" alt="" loading="lazy">`).join('')}</div>` : ''}
@@ -544,7 +551,7 @@ function renderPostCard(p) {
       <button class="post-act-btn post-share" onclick="sharePost(${idStr})" title="Copy link" aria-label="Copy link">
         ${postIc('share')}
       </button>
-      <button class="post-act-btn post-tip" onclick="openTipModal('${authorSafe}', '${handleSafe}')" title="Tip in crypto">
+      <button class="post-act-btn post-tip" onclick="openTipModal(${authorArg}, ${handleArg})" title="Tip in crypto">
         ${postIc('tip')}<span>Tip</span>
       </button>
     </div>
@@ -797,14 +804,16 @@ function listenToGlobalFeed() {
     const cloudPosts = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
+      // Written by other accounts: shapes are checked here as well as in
+      // firestore.rules, so one malformed post cannot take the feed down.
       cloudPosts.push({
         id: doc.id,
-        author: data.author,
-        handle: data.handle,
+        author: String(data.author || ''),
+        handle: String(data.handle || ''),
         emoji: data.emoji || '✨',
         time: data.time ? (data.time.toMillis ? data.time.toMillis() : data.time) : Date.now(),
-        body: data.body,
-        tags: data.tags || [],
+        body: String(data.body || ''),
+        tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
         likes: data.likes || 0,
         comments: data.comments || 0,
         shares: data.shares || 0,
@@ -863,7 +872,9 @@ const STORY_CONTENTS = {
 /* A value going into a quoted inline handler has to survive two readers.
    The HTML parser sees the attribute first, so a double quote would end
    it; then JS sees the argument, so an apostrophe would end that. Both
-   are handled, backslashes first or the escaping escapes itself.
+   are handled, backslashes first or the escaping escapes itself. The
+   ampersand too: the HTML parser decodes character references before
+   JS runs, so a typed &#39; would otherwise arrive as an apostrophe.
 
    Written without an example: a comment containing handler markup is
    indistinguishable from the real thing to anything reading this file
@@ -872,6 +883,7 @@ const STORY_CONTENTS = {
 const escAttr = s => String(s == null ? '' : s)
   .replace(/\\/g, '\\\\')
   .replace(/'/g, "\\'")
+  .replace(/&/g, '&amp;')
   .replace(/"/g, '&quot;');
 
 /* Tapping who posted a story opens their profile: the account page the

@@ -78,7 +78,8 @@ function acceptMockCall() {
   const remoteFeed = $id('call-remote-feed');
   const remoteAvatar = $id('call-remote-avatar');
 
-  if (statEl) { statEl.textContent = 'Connected · End-to-End Encrypted'; statEl.classList.add('connected'); }
+  // A demo call: nothing is transmitted, so nothing is encrypted either.
+  if (statEl) { statEl.textContent = 'Connected · Demo call'; statEl.classList.add('connected'); }
   if (timerEl) timerEl.style.display = '';
   if (qualityBar) qualityBar.style.display = '';
   if (acceptBtn) acceptBtn.style.display = 'none';

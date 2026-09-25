@@ -7,9 +7,14 @@ import sys
 PORT = 8000
 Handler = http.server.SimpleHTTPRequestHandler
 
-# Change working directory to the directory of this script
+# Serve public/ only, and only to this computer. This used to serve the
+# project folder itself on every network interface, which let anyone on
+# the same Wi-Fi download .git (the whole history), the server code and
+# any .env file sitting next to it. The app lives in public/; nothing
+# outside it needs to be reachable from a browser.
 script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
+os.chdir(os.path.join(script_dir, "public"))
+HOST = "127.0.0.1"
 
 # Override log_message to reduce terminal clutter
 class QuietHandler(Handler):
@@ -26,15 +31,15 @@ socketserver.TCPServer.allow_reuse_address = True
 
 print("==================================================================")
 print("🚀 TRENDING LIGHTWEIGHT SECURE SERVER INITIALIZING...")
-print(f"Serving files locally from: {script_dir}")
-print(f"Opening browser at: http://localhost:{PORT}")
+print(f"Serving files locally from: {os.getcwd()}")
+print(f"Opening browser at: http://{HOST}:{PORT}/index.html")
 print("Press CTRL+C in this terminal window to stop the server.")
 print("==================================================================")
 
 try:
-    with socketserver.TCPServer(("", PORT), QuietHandler) as httpd:
+    with socketserver.TCPServer((HOST, PORT), QuietHandler) as httpd:
         # Open default browser automatically
-        webbrowser.open(f"http://localhost:{PORT}/public/index.html")
+        webbrowser.open(f"http://{HOST}:{PORT}/index.html")
         httpd.serve_forever()
 except Exception as e:
     print(f"\nError starting local server: {e}")

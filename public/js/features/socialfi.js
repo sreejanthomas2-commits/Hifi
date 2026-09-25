@@ -93,6 +93,12 @@ const SF = (() => {
   const fmt = n => (Math.round(n * 10000) / 10000).toLocaleString('en-US', { maximumFractionDigits: 4 });
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
   const esc = s => (typeof escapeHTML === 'function' ? escapeHTML(String(s)) : String(s));
+  /* A value dropped into an onclick="" attribute: JSON first so the JS
+     parser is happy, HTML-escaped second so the attribute is. esc() alone
+     inside '...' is not enough - the attribute decodes &#39; back into an
+     apostrophe before the JS runs, and a creator's name and handle come
+     from posts other accounts wrote. */
+  const A = v => esc(JSON.stringify(v === undefined ? null : v));
   const wallet = () => (typeof DATA !== 'undefined' && DATA.wallet ? DATA.wallet.balances : null);
 
   /* Rewards and spends go through MNY, so they land in the same account
@@ -238,7 +244,7 @@ const SF = (() => {
     const on = isFollowing(handle);
     return `<button class="btn btn-sm ${on ? 'btn-ghost' : 'btn-primary'} ${cls || ''}"
       data-follow-handle="${esc(handle)}"
-      onclick="SF.toggleFollow('${esc(handle)}', '${esc(name || handle)}')">${on ? '✓ Following' : 'Follow'}</button>`;
+      onclick="SF.toggleFollow(${A(String(handle))}, ${A(String(name || handle))})">${on ? '✓ Following' : 'Follow'}</button>`;
   }
 
   /* ── Reposts ────────────────────────────────────────────────────── */
@@ -411,8 +417,8 @@ const SF = (() => {
         </div>
         <ul class="sf-tier-perks">${t.perks.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
         ${sub && sub.tier === key
-          ? `<button class="btn btn-ghost btn-sm w100" onclick="SF.cancelSubscription('${esc(handle)}'); SF.closeCreatorPage()">Cancel</button>`
-          : `<button class="btn btn-primary btn-sm w100" onclick="SF.subscribe('${esc(handle)}','${esc(name)}','${key}')">Subscribe</button>`}
+          ? `<button class="btn btn-ghost btn-sm w100" onclick="SF.cancelSubscription(${A(String(handle))}); SF.closeCreatorPage()">Cancel</button>`
+          : `<button class="btn btn-primary btn-sm w100" onclick="SF.subscribe(${A(String(handle))},${A(String(name))},${A(key)})">Subscribe</button>`}
       </div>`).join('');
 
     const el = document.createElement('div');
@@ -432,10 +438,10 @@ const SF = (() => {
         </div>
 
         <div class="sf-pay-row">
-          <button class="btn btn-primary" onclick="SF.closeCreatorPage(); openTipModal('${esc(name)}','${esc(handle)}')">
+          <button class="btn btn-primary" onclick="SF.closeCreatorPage(); openTipModal(${A(String(name))},${A(String(handle))})">
             <span class="material-symbols-rounded ms-16">volunteer_activism</span> Tip
           </button>
-          <button class="btn btn-ghost" onclick="SF.support('${esc(handle)}','${esc(name)}')">
+          <button class="btn btn-ghost" onclick="SF.support(${A(String(handle))},${A(String(name))})">
             <span class="material-symbols-rounded ms-16">favorite</span> Support
           </button>
           ${followBtn(handle, name)}
@@ -508,7 +514,7 @@ const SF = (() => {
     const subRows = S_SF.subscriptions.map(s => `
       <div class="sf-row">
         <span>${esc(s.name)} <b class="tc-3">· ${TIERS[s.tier].label}</b></span>
-        <span><b>$${s.price}</b>/mo <button class="sf-x" onclick="SF.cancelSubscription('${esc(s.handle)}')" title="Cancel">✕</button></span>
+        <span><b>$${s.price}</b>/mo <button class="sf-x" onclick="SF.cancelSubscription(${A(String(s.handle))})" title="Cancel">✕</button></span>
       </div>`).join('') || '<div class="sf-empty">No active subscriptions.</div>';
 
     const followRows = S_SF.following.slice(0, 6).map(f => `

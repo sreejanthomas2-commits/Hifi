@@ -330,7 +330,11 @@ const TP = (() => {
      answer lasts a few minutes rather than for the session — long
      enough to do several things, short enough that a borrowed phone
      is not an open wallet. Nothing is stored: the clock is in memory
-     and resets when the tab closes. */
+     and resets when the tab closes.
+
+     It is a confirmation, not a check of who you are - anyone holding
+     the unlocked device can answer yes - so it is titled as one. Asking
+     the sign-in provider to re-authenticate is the real version. */
   let verifiedAt = 0;
   const verifiedFor = () => Math.max(1, +get('crypto.verifyMins') || 5) * 60000;
   const isVerified = () => Date.now() - verifiedAt < verifiedFor();
@@ -340,7 +344,7 @@ const TP = (() => {
     const ask = window.appConfirm;
     if (typeof ask !== 'function') { verifiedAt = Date.now(); return true; }
     const ok = await ask(`${what || 'This change'} affects your money or your account security. Continue?`,
-      { title: 'Confirm it is you', ok: 'Yes, continue' });
+      { title: 'Confirm this change', ok: 'Yes, continue' });
     if (ok) verifiedAt = Date.now();
     return !!ok;
   }
