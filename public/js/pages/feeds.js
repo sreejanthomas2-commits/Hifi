@@ -834,14 +834,87 @@ async function shareToCloud(newPost, localPost) {
       return;
     }
   }
+  let me = null;
+  try { me = await publicIdentity(); } catch (e) { me = null; }
+  if (!me) {
+    showToast('Posted on this device only. Pick a handle to share posts with everyone.');
+    return;
+  }
+  // Shared as your claimed identity - the only one the rules accept.
+  const shared = { ...newPost, author: me.displayName, handle: '@' + me.name };
+  localPost.author = shared.author;
+  localPost.handle = shared.handle;
   const giveUp = new Promise((_, reject) => setTimeout(() => reject(new Error('no answer from Firestore')), 8000));
   try {
-    await Promise.race([window.firebaseAddDoc(window.firebaseCollection(window.db, 'posts'), newPost), giveUp]);
+    await Promise.race([window.firebaseAddDoc(window.firebaseCollection(window.db, 'posts'), shared), giveUp]);
     localPost.synced = true;
     savePostsToLocal();
+    renderFeed();
   } catch (err) {
     console.warn('Post kept on this device; the cloud copy was not saved.', err && err.message);
   }
+}
+
+/* ── Your public identity ─────────────────────────────────────────
+   A shared post carries a name and a handle other people see, and the
+   rules accept only the ones in profiles/{uid}: a handle claimed once,
+   by one account, in handles/{name}. That is what stops anyone posting
+   as someone else. The first time an account shares a post it picks
+   its handle - never made from the email address, part of which used
+   to appear on every post. */
+const FIRESTORE_SDK = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+const RESERVED_HANDLES = ['anonymous', 'trending', 'admin', 'administrator', 'support', 'help', 'official',
+  'system', 'security', 'moderator', 'mod', 'staff', 'team', 'root'];
+const handleOk = h => /^[a-z0-9_.]{3,30}$/.test(h) && !/^\.|\.$|\.\./.test(h) && RESERVED_HANDLES.indexOf(h) < 0;
+
+async function publicIdentity() {
+  if (S.user.publicProfile) return S.user.publicProfile;
+  const m = await import(FIRESTORE_SDK);
+  const snap = await m.getDoc(m.doc(window.db, 'profiles', S.user.uid));
+  if (snap.exists()) {
+    const d = snap.data();
+    S.user.publicProfile = { name: d.name, displayName: d.displayName };
+    return S.user.publicProfile;
+  }
+  return claimHandle(m);
+}
+
+async function claimHandle(m) {
+  if (typeof appPrompt !== 'function') return null;
+  const displayName = `${S.user.fname || ''} ${S.user.lname || ''}`.replace(/[<>"`&]/g, '').trim().slice(0, 80) || 'Trending member';
+  let suggestion = displayName.toLowerCase().replace(/[^a-z0-9_.]/g, '').replace(/^\.+|\.+$/g, '').slice(0, 30);
+  if (!handleOk(suggestion)) suggestion = '';
+  let message = 'Choose your public handle. It shows on every post you share, and no one else can use it. 3–30 letters, numbers, _ or .';
+  for (let tries = 0; tries < 6; tries++) {
+    const typed = await appPrompt(message, suggestion ? '@' + suggestion : '', { title: 'Pick your handle', ok: 'Use this handle' });
+    if (typed == null) return null;
+    const name = String(typed).trim().replace(/^@/, '').toLowerCase();
+    if (!handleOk(name)) {
+      message = 'Use 3–30 letters, numbers, _ or . — not at the start or end, not two dots in a row, and not a reserved word. Try another.';
+      suggestion = name;
+      continue;
+    }
+    // The handle and the profile that points at it land together or not at all.
+    const batch = m.writeBatch(window.db);
+    batch.set(m.doc(window.db, 'handles', name), { uid: S.user.uid, at: m.serverTimestamp() });
+    batch.set(m.doc(window.db, 'profiles', S.user.uid), { name, displayName, at: m.serverTimestamp() });
+    try {
+      await batch.commit();
+    } catch (e) {
+      if (e && e.code === 'permission-denied') {
+        message = `@${name} is taken. Choose another.`;
+        suggestion = name.slice(0, 27) + Math.floor(10 + Math.random() * 90);
+        continue;
+      }
+      throw e;
+    }
+    S.user.publicProfile = { name, displayName };
+    // The app's own copy follows, so your profile page and your posts agree.
+    if (window.PME && typeof PME.useHandle === 'function') PME.useHandle('@' + name);
+    showToast(`You are @${name} in the shared feed`);
+    return S.user.publicProfile;
+  }
+  return null;
 }
 
 // ── REAL-TIME FIRESTORE LISTENER ──

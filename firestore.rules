@@ -11,8 +11,10 @@ rules_version = '2';
 
      users/{uid}     your profile and synced settings - only you
      sessions/{uid}  when you last signed out of every device - only you
-     posts/{id}      the public feed - anyone reads; verified accounts
-                     post as themselves, likes move by one
+     handles/{name}  who holds each public handle - claimed once
+     profiles/{uid}  the public name and handle you post as
+     posts/{id}      the public feed - anyone reads; confirmed accounts
+                     post as their own handle; one like each
 
    Paste into Firebase console -> Firestore -> Rules -> Publish, or
    deploy with the Firebase CLI. Keep this file and the console in step.
@@ -104,6 +106,51 @@ service cloud.firestore {
       allow delete: if isOwner(uid) && sessionOk();
     }
 
+    /* Public identity: the name and handle other people see on shared
+       posts. A handle is claimed once, by one account (handles/{name});
+       the account's profile says which handle and name it uses; and a
+       post must carry exactly those. So nobody can post as someone else,
+       and no handle is ever made from an email address. */
+    function reserved(name) {
+      return name in ['anonymous', 'trending', 'admin', 'administrator', 'support', 'help', 'official',
+                      'system', 'security', 'moderator', 'mod', 'staff', 'team', 'root'];
+    }
+    function handleShape(name) {
+      return name is string && name.matches('^[a-z0-9_.]{3,30}$')
+        && !name.matches('^[.].*') && !name.matches('.*[.]$') && !name.matches('.*[.][.].*');
+    }
+    function profileOf(uid) { return /databases/$(database)/documents/profiles/$(uid); }
+    function handleDoc(name) { return /databases/$(database)/documents/handles/$(name); }
+
+    match /handles/{name} {
+      allow read: if true;
+      // Claimed together with the profile that points at it, in one batch.
+      allow create: if signedIn() && verified() && sessionOk()
+        && handleShape(name) && !reserved(name)
+        && request.resource.data.keys().hasOnly(['uid', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.at == request.time
+        && getAfter(profileOf(request.auth.uid)).data.name == name;
+      // Given up only by its owner, and only once the profile stops using it.
+      allow delete: if signedIn() && sessionOk() && resource.data.uid == request.auth.uid
+        && (!existsAfter(profileOf(request.auth.uid)) || getAfter(profileOf(request.auth.uid)).data.name != name);
+    }
+
+    match /profiles/{uid} {
+      allow read: if true;
+      allow create, update: if isOwner(uid) && verified() && sessionOk()
+        && request.resource.data.keys().hasOnly(['name', 'displayName', 'at'])
+        && handleShape(request.resource.data.name)
+        && safeName(request.resource.data.displayName)
+        && request.resource.data.at == request.time
+        && getAfter(handleDoc(request.resource.data.name)).data.uid == request.auth.uid
+        // Moving to a new handle gives the old one up in the same batch,
+        // so one account cannot sit on a row of handles.
+        && (resource == null || resource.data.name == request.resource.data.name
+            || !existsAfter(handleDoc(resource.data.name)));
+      allow delete: if isOwner(uid) && sessionOk();
+    }
+
     /* The public feed. */
     match /posts/{postId} {
       allow read: if true;
@@ -125,6 +172,9 @@ service cloud.firestore {
         // Anonymous posts stay on the device: every post carries its
         // account id, so a shared one would not be anonymous.
         && request.resource.data.handle != '@anonymous'
+        // Posted as yourself: exactly your claimed handle and public name.
+        && request.resource.data.handle == '@' + get(profileOf(request.auth.uid)).data.name
+        && request.resource.data.author == get(profileOf(request.auth.uid)).data.displayName
         && request.resource.data.body is string
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 5000

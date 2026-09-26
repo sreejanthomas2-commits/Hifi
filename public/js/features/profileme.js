@@ -585,7 +585,13 @@ const PME = (() => {
     const h = d.handle.trim();
     if (!h) e.handle = 'Add a username.';
     else if (h !== P.baseHandle) {
-      if (!/^[A-Za-z0-9_.]{3,30}$/.test(h)) e.handle = 'Use 3–30 letters, numbers, underscores or periods.';
+      /* Once claimed in the shared feed, a handle is what other people
+         know this account by, and the feed only accepts posts under it.
+         Changing it means releasing one claim and taking another - not
+         built yet - so it is said rather than silently split in two. */
+      const pub = typeof S !== 'undefined' && S.user && S.user.publicProfile;
+      if (pub) e.handle = `Your handle in the shared feed is @${pub.name}. Changing it is not available yet.`;
+      else if (!/^[A-Za-z0-9_.]{3,30}$/.test(h)) e.handle = 'Use 3–30 letters, numbers, underscores or periods.';
       else if (/^\.|\.$|\.\./.test(h)) e.handle = 'A username can’t start or end with a period, or have two in a row.';
     }
     if (d.bio.length > 160) e.bio = 'Keep your bio to 160 characters.';
@@ -686,9 +692,13 @@ const PME = (() => {
     refresh();
   });
 
+  /* Called when the account claims its public handle in the shared
+     feed, so the handle here matches the one on its posts. */
+  const useHandle = h => commit({ handle: String(h) });
+
   return {
     open, close, save, set, preset, pick, dob, clearDob, useProvider, quick, signIn,
-    settingsCardHTML, paintProfile,
+    settingsCardHTML, paintProfile, useHandle,
     age, isMe, photo, parseDob, ageOn
   };
 })();

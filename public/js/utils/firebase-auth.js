@@ -62,6 +62,7 @@
 
       // Save user profile to Firestore
       saveUserProfile(user);
+      loadPublicProfile(user);
       watchSessions(user);
       
       updateUserUI();
@@ -207,6 +208,21 @@
     } catch (err) {
       console.warn('⚠️ Could not save user profile to Firestore:', err);
     }
+  }
+
+  /* The handle and name this account posts under in the shared feed, if
+     it has claimed one (profiles/{uid}). Known up front, the feed shares
+     under it without asking and Edit profile can say it is fixed. */
+  async function loadPublicProfile(user) {
+    if (!window.db) return;
+    try {
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+      const snap = await getDoc(doc(window.db, 'profiles', user.uid));
+      if (snap.exists() && S.user && S.user.uid === user.uid) {
+        const d = snap.data();
+        S.user.publicProfile = { name: d.name, displayName: d.displayName };
+      }
+    } catch (e) { /* offline: the feed asks again when it needs to */ }
   }
 
   // ── UPDATE AVATAR WITH REAL PHOTO ──

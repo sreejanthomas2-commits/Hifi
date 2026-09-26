@@ -172,6 +172,14 @@ export default function register(SET) {
           mine.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
           await batch.commit();
         }
+        // The public handle is released with the profile that used it.
+        const pub = await m.getDoc(m.doc(window.db, 'profiles', user.uid));
+        if (pub.exists()) {
+          const b = m.writeBatch(window.db);
+          if (pub.data().name) b.delete(m.doc(window.db, 'handles', pub.data().name));
+          b.delete(m.doc(window.db, 'profiles', user.uid));
+          await b.commit();
+        }
         await m.deleteDoc(m.doc(window.db, 'users', user.uid));
         await m.deleteDoc(m.doc(window.db, 'sessions', user.uid));
       } catch (e) {
