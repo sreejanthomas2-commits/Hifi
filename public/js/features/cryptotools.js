@@ -1,10 +1,15 @@
 /* ╔══════════════════════════════════════════════════════════════════╗
    ║  CRYPTO TOOLS                                                    ║
    ║                                                                  ║
-   ║   1. Convert       — instant swap between any two listed coins   ║
-   ║   2. Price Alerts  — fire when a coin crosses your target        ║
-   ║   3. Watchlist     — star coins, filter the desk down to them    ║
-   ║   4. Recurring Buy — scheduled DCA executed at market            ║
+   ║   1. Price Alerts  — fire when a coin crosses your target        ║
+   ║   2. Watchlist     — star coins, filter the desk down to them    ║
+   ║   3. Recurring Buy — scheduled DCA executed at market            ║
+   ║                                                                  ║
+   ║  Convert used to be a fourth tab: a second converter with its    ║
+   ║  own fee (0.1%) and its own account (Spot), beside the app's     ║
+   ║  Convert (1%, Funding, with a review step and quote timer). Two  ║
+   ║  prices for one action, so it is gone: open('convert') opens     ║
+   ║  features/convert.js instead.                                    ║
    ║                                                                  ║
    ║  All four hang off the existing 60s CoinGecko poll and settle    ║
    ║  through the TR ledger, so nothing here keeps its own idea of    ║
@@ -16,7 +21,6 @@
 const CT = (() => {
 
   const KEY = 'ts_cryptotools';
-  const CONVERT_FEE = 0.001;                 // 0.1%, charged on the value converted
 
   const INTERVALS = {
     hourly:  { label: 'Every hour',  ms: 60 * 60 * 1000 },
@@ -25,7 +29,7 @@ const CT = (() => {
     monthly: { label: 'Every month', ms: 30 * 24 * 60 * 60 * 1000 }
   };
 
-  const DEFAULT = { watchlist: ['BTC', 'ETH', 'SOL'], alerts: [], plans: [], convertFrom: 'USDT', convertTo: 'BTC' };
+  const DEFAULT = { watchlist: ['BTC', 'ETH', 'SOL'], alerts: [], plans: [] };
 
   let C = load();
 
@@ -71,42 +75,7 @@ const CT = (() => {
     return v.toLocaleString('en-US', { maximumFractionDigits: 8 });
   }
 
-  /* ── 1. Convert ─────────────────────────────────────────────────── */
-  /* Straight swap at mid: no order book, no slippage — the point is
-     speed, so the only cost is the flat fee. */
-  function convertRate(from, to) {
-    const pf = priceOf(from), pt = priceOf(to);
-    if (!pf || !pt) return 0;
-    return pf / pt;
-  }
-
-  function convert(from, to, amount) {
-    const amt = parseFloat(amount);
-    if (!from || !to) return { ok: false, msg: 'Pick both coins.' };
-    if (from === to) return { ok: false, msg: 'Pick two different coins.' };
-    if (!amt || amt <= 0) return { ok: false, msg: 'Enter an amount.' };
-    if (typeof TR === 'undefined') return { ok: false, msg: 'Trading account unavailable.' };
-
-    const rate = convertRate(from, to);
-    if (!rate) return { ok: false, msg: 'No live price for that pair.' };
-    if (isStale(from) || isStale(to)) {
-      return { ok: false, msg: `${isStale(from) ? from : to} is showing its last known price — converting resumes when a live quote arrives.` };
-    }
-
-    const have = TR.availableOf(from);
-    if (amt > have + 1e-12) {
-      const held = TR.lockedOf ? TR.lockedOf(from) : 0;
-      return { ok: false, msg: `Insufficient ${from} — you hold ${qty(have)}${held > 1e-12 ? ` free, ${qty(held)} in open orders` : ''}.` };
-    }
-
-    const received = amt * rate * (1 - CONVERT_FEE);
-    if (!TR.debitAsset(from, amt)) return { ok: false, msg: 'Debit failed.' };
-    TR.creditAsset(to, received, priceOf(to));
-
-    return { ok: true, received, msg: `Converted ${qty(amt)} ${from} → ${qty(received)} ${to}` };
-  }
-
-  /* ── 2. Price alerts ────────────────────────────────────────────── */
+  /* ── 1. Price alerts ────────────────────────────────────────────── */
   function addAlert(coin, direction, target) {
     const t = parseFloat(target);
     if (!coin || !priceOf(coin)) return toast('Pick a coin with a live price.');
@@ -254,12 +223,16 @@ const CT = (() => {
   }
 
   /* ── Panel UI ───────────────────────────────────────────────────── */
-  let tab = 'convert';
+  let tab = 'alerts';
 
   const isOpen = () => !!document.getElementById('ct-panel');
   function repaint() { if (isOpen()) paint(); }
 
   function open(which) {
+    if (which === 'convert') {                 // the app has one converter
+      if (typeof CVT !== 'undefined') CVT.open('');
+      return;
+    }
     if (which) tab = which;
     if (isOpen()) { paint(); return; }
     const p = document.createElement('div');
@@ -286,7 +259,7 @@ const CT = (() => {
   function paint() {
     const p = document.getElementById('ct-panel');
     if (!p) return;
-    const tabs = [['convert', 'Convert'], ['alerts', `Alerts${activeAlertCount() ? ' ' + activeAlertCount() : ''}`], ['watch', 'Watchlist'], ['dca', 'Recurring']];
+    const tabs = [['alerts', `Alerts${activeAlertCount() ? ' ' + activeAlertCount() : ''}`], ['watch', 'Watchlist'], ['dca', 'Recurring']];
     p.innerHTML = `
       <div class="sf-head">
         <div><div class="sf-kicker">CRYPTO TOOLS</div><h3 class="sf-title">${tabs.find(t => t[0] === tab)[1]}</h3></div>
@@ -295,65 +268,11 @@ const CT = (() => {
       <div class="ct-tabs">
         ${tabs.map(([k, l]) => `<button class="ct-tab${tab === k ? ' active' : ''}" onclick="CT.setTab('${k}')">${l}</button>`).join('')}
       </div>
-      <div id="ct-body">${tab === 'convert' ? convertHTML() : tab === 'alerts' ? alertsHTML() : tab === 'watch' ? watchHTML() : dcaHTML()}</div>`;
-    if (tab === 'convert') previewConvert();
+      <div id="ct-body">${tab === 'alerts' ? alertsHTML() : tab === 'watch' ? watchHTML() : dcaHTML()}</div>`;
   }
 
   function coinOptions(sel) {
     return coinList().map(c => `<option value="${c}"${c === sel ? ' selected' : ''}>${c}</option>`).join('');
-  }
-
-  function convertHTML() {
-    const bal = typeof TR !== 'undefined' ? TR.availableOf(C.convertFrom) : 0;
-    return `
-      <div class="sf-sec-sub">Swap straight between any two listed coins at the mid price. No order book, ${(CONVERT_FEE * 100).toFixed(1)}% fee.</div>
-      <label class="form-label">From</label>
-      <div class="ct-row">
-        <select class="input" id="ct-from" onchange="CT.setConvert('from', this.value)">${coinOptions(C.convertFrom)}</select>
-        <input class="input" id="ct-amt" type="number" step="any" placeholder="0.00" oninput="CT.previewConvert()">
-      </div>
-      <div class="ct-bal">Available <b>${qty(bal)} ${esc(C.convertFrom)}</b>
-        <button class="ct-max" onclick="document.getElementById('ct-amt').value=${bal}; CT.previewConvert()">MAX</button></div>
-
-      <button class="ct-swap" onclick="CT.flipConvert()" title="Flip"><span class="material-symbols-rounded ms-18">swap_vert</span></button>
-
-      <label class="form-label">To</label>
-      <select class="input" id="ct-to" onchange="CT.setConvert('to', this.value)">${coinOptions(C.convertTo)}</select>
-
-      <div class="ct-preview" id="ct-preview"></div>
-      <button class="btn btn-primary w100" onclick="CT.doConvert()">Convert</button>`;
-  }
-
-  function setConvert(side, val) {
-    if (side === 'from') C.convertFrom = val; else C.convertTo = val;
-    save(); paint();
-  }
-
-  function flipConvert() {
-    const a = C.convertFrom;
-    C.convertFrom = C.convertTo;
-    C.convertTo = a;
-    save(); paint();
-  }
-
-  function previewConvert() {
-    const box = document.getElementById('ct-preview');
-    const el = document.getElementById('ct-amt');
-    if (!box) return;
-    const amt = el ? parseFloat(el.value) || 0 : 0;
-    const rate = convertRate(C.convertFrom, C.convertTo);
-    const out = amt * rate * (1 - CONVERT_FEE);
-    box.innerHTML = `
-      <div class="tr-kv"><span>Rate</span><b>1 ${esc(C.convertFrom)} = ${qty(rate)} ${esc(C.convertTo)}</b></div>
-      <div class="tr-kv"><span>Fee</span><b>${usd(amt * priceOf(C.convertFrom) * CONVERT_FEE)}</b></div>
-      <div class="tr-kv"><span>You receive</span><b>${qty(out)} ${esc(C.convertTo)}</b></div>`;
-  }
-
-  function doConvert() {
-    const el = document.getElementById('ct-amt');
-    const r = convert(C.convertFrom, C.convertTo, el ? el.value : 0);
-    toast(r.msg);
-    if (r.ok) { if (el) el.value = ''; paint(); if (typeof TR !== 'undefined') TR.repaint(); }
   }
 
   function alertsHTML() {
@@ -446,7 +365,6 @@ const CT = (() => {
 
   return {
     open, close, setTab, repaint,
-    convert, convertRate, doConvert, previewConvert, setConvert, flipConvert,
     addAlert, removeAlert, clearTriggered, checkAlerts, activeAlertCount,
     isWatched, toggleWatch, starBtn,
     addPlan, togglePlan, removePlan, executePlan, runDuePlans, planAvg,

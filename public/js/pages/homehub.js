@@ -276,7 +276,7 @@ const HX = (() => {
     { icon: 'request_quote', color: '#F0A23B', t: 'Request a payment', d: 'Ask a friend for a set amount', go: () => { if (typeof PAY !== 'undefined') PAY.openRequestFor(''); } },
     { icon: 'swap_horiz', color: '#26A69A', t: 'Buy with P2P', d: 'Pay a seller in local currency, off-platform', go: () => { if (typeof P2P !== 'undefined') P2P.setSide('buy'); navigateTo('p2p'); } },
     { icon: 'account_balance_wallet', color: '#FCD535', t: 'Deposit to Spot', d: 'Move paper USDT from Funding into trading', go: () => navigateTo('portfolio').then(() => { if (typeof AS !== 'undefined' && AS.go) AS.go('transfer'); }) },
-    { icon: 'sync_alt', color: '#42A5F5', t: 'Convert', d: 'Swap one coin for another', go: () => { if (typeof CT !== 'undefined') CT.open('convert'); else navigateTo('trade'); } }
+    { icon: 'sync_alt', color: '#42A5F5', t: 'Convert', d: 'Swap one coin for another', go: () => { if (typeof CVT !== 'undefined') CVT.open(''); else navigateTo('trade'); } }
   ];
   let lastFocus = null;
   function addFunds() {

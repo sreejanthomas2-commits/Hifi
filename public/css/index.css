@@ -2052,15 +2052,6 @@ select.input { appearance: none; cursor: pointer; }
 .ct-tab.active { color:var(--t1); border-color:var(--purple); background:color-mix(in srgb, var(--purple) 14%, transparent); }
 .ct-row { display:flex; gap:8px; }
 .ct-row > * { flex:1; min-width:0; }
-.ct-bal { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--t3); margin:6px 0 2px; }
-.ct-bal b { color:var(--t1); }
-.ct-max { margin-left:auto; background:none; border:1px solid var(--border); border-radius:var(--rf);
-  color:var(--purple); font-size:10px; font-weight:800; padding:2px 8px; cursor:pointer; font-family:'Inter',sans-serif; }
-.ct-swap { display:grid; place-items:center; width:32px; height:32px; margin:10px auto; border-radius:50%;
-  border:1px solid var(--border); background:var(--card2); color:var(--t2); cursor:pointer; transition:var(--tr); }
-.ct-swap:hover { color:var(--purple); border-color:var(--purple); transform:rotate(180deg); }
-.ct-preview { border-top:1px solid var(--border); border-bottom:1px solid var(--border);
-  padding:10px 0; margin:14px 0; }
 .ct-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px dashed var(--border); }
 .ct-item:last-child { border-bottom:none; }
 .ct-item.fired { opacity:.6; }
@@ -8647,15 +8638,8 @@ a.dep-btn { text-decoration: none; color: var(--t1); }
 .wv-hero-m.dn { color: var(--red); }
 .wv-hero-note { font-size: 11.5px; color: var(--t3); margin-top: 2px; }
 
-.wv-hero-split { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-.wv-pill { flex: 1 1 96px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
-  padding: 8px 10px; text-align: left; font: inherit; color: var(--t1);
-  background: var(--card2); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
-.wv-pill:hover { border-color: var(--purple); }
-.wv-pill span { font-size: 11.5px; color: var(--t3); }
-.wv-pill b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.wv-acts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.wv-acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .wv-act { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px;
   font: inherit; font-size: 11.5px; color: var(--t2); background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; cursor: pointer; text-align: center; }
@@ -8694,11 +8678,6 @@ a.dep-btn { text-decoration: none; color: var(--t1); }
 .wv-tx-a { display: flex; gap: 8px; margin-top: 10px; }
 .wv-tx-a .btn { flex: 1; }
 
-.wv-swap .form-label { display: block; margin: 10px 0 6px; }
-.wv-swap .form-label:first-child { margin-top: 0; }
-.wv-swap-bal { font-size: 11.5px; color: var(--t3); margin-top: 6px; }
-.wv-swap-ar { display: grid; place-items: center; color: var(--t3); margin: 8px 0 0; }
-.wv-swap-ar .material-symbols-rounded { font-size: 18px; }
 
 .wv-h { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
 .wv-card > .wv-h:first-of-type { border-top: 0; }
@@ -8811,8 +8790,6 @@ a.dep-btn { text-decoration: none; color: var(--t1); }
 .wv-tag-v b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; letter-spacing: .6px; font-weight: 700; }
 .wv-tag-v:hover { border-color: var(--blue); background: var(--card); }
 .wv-tag-v .material-symbols-rounded { font-size: 16px; color: var(--t3); }
-.wv-tag-qr { background: none; border: 0; color: var(--blue); font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
-.wv-tag-qr:hover { text-decoration: underline; }
 .wv-tag-note { flex-basis: 100%; font-size: 10.5px; color: var(--t3); line-height: 1.5; }
 
 .pay-qr-tag { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; color: var(--t1); cursor: pointer; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; font-weight: 700; letter-spacing: .6px; transition: var(--tr); }

@@ -35,8 +35,6 @@ const WV = (() => {
   const toast = m => { if (typeof showToast === 'function') showToast(m); };
   const has = () => typeof MNY !== 'undefined';
 
-  let swap = { from: '', to: '', amount: '' };
-
   const money = v => (has() ? MNY.usd(v) : '$0.00');
   const qty = v => (has() ? MNY.qty(v) : '0');
 
@@ -51,7 +49,6 @@ const WV = (() => {
       <span class="wv-tag-l">Your Trending address</span>
       <button type="button" class="wv-tag-v" onclick="WV.copyTag()" title="Copy">
         ${ico('qr_code_2')}<b>${esc(m.tag)}</b>${ico('content_copy')}</button>
-      <button type="button" class="wv-tag-qr" onclick="PAY.openMyQR()">Show my code</button>
       ${m.guest ? '<span class="wv-tag-note">Sign in and this address follows your account onto any device. As a guest it lives in this browser only.</span>' : ''}
     </div>`;
   }
@@ -75,26 +72,18 @@ const WV = (() => {
         ${esc((mv.abs >= 0 ? '+' : '-') + money(Math.abs(mv.abs)))}
         (${esc((pct >= 0 ? '+' : '') + pct.toFixed(2))}%) today
       </div>
-      <div class="wv-hero-split">
-        ${[['Funding', MNY.total('funding').value, 'funding'],
-           ['Spot', MNY.total('spot').value, 'spot'],
-           ['Earn', MNY.earnTotal(), 'earn']]
-          .map(([l, v, k]) => `<button type="button" class="wv-pill" onclick="WV.go(${attr(k)})">
-             <span>${esc(l)}</span><b>${esc(money(v))}</b></button>`).join('')}
-      </div>
       <div class="wv-hero-note">Simulated balances — no real money moves. Real deposits and withdrawals are separate.</div>
       ${tagHTML()}
     </section>`;
   }
 
+  /* Only what the profile's crypto card above doesn't already offer.
+     Send, Receive, Scan, Swap/Convert and Assets are buttons on that card
+     whichever tab is open, so this row used to repeat them; it keeps the
+     two that exist nowhere else on the profile. */
   const ACTIONS = [
-    ['send', 'Send', 'north_east'],
     ['request', 'Request', 'request_quote'],
-    ['scan', 'Scan &amp; pay', 'qr_code_scanner'],
-    ['myqr', 'Receive', 'qr_code_2'],
-    ['convert', 'Convert', 'currency_exchange'],
-    ['add', 'Add funds', 'south_west'],
-    ['assets', 'All assets', 'account_balance']
+    ['add', 'Add funds', 'south_west']
   ];
   const actionsHTML = () => `<div class="wv-acts">${ACTIONS.map(([k, l, i]) =>
     `<button type="button" class="wv-act" onclick="WV.act(${attr(k)})">
@@ -158,93 +147,10 @@ const WV = (() => {
   }
 
   /* ── Convert ─────────────────────────────────────────────────────── */
-  /* The rate, the fee and both ledger legs belong to CVT, which the
-     Convert button on every Assets row also goes through — one engine,
-     so the two surfaces cannot quote different numbers. This panel is
-     just a second door to it.
-
-     The old version here read a static mock price table, so a swap
-     executed at a price no market was quoting. */
-  function swapHTML() {
-    if (typeof CVT === 'undefined') return card('Convert', '<div class="wv-empty">Convert is still loading…</div>');
-    const all = CVT.options();
-    if (!all.length) return card('Convert', '<div class="wv-empty">No coin has a live price right now.</div>');
-
-    const held = MNY.holdings().filter(r => r.priced && r.live).map(r => r.sym);
-    const from = swap.from && all.includes(swap.from) ? swap.from : (held[0] || all[0]);
-    const to = swap.to && all.includes(swap.to) && swap.to !== from
-      ? swap.to : (all.find(s => s !== from) || from);
-    swap.from = from; swap.to = to;          // so the amount handler can read them
-
-    const q = CVT.quote(from, to, swap.amount);
-    const have = MNY.spendable(from);
-    const sel = (id, cur) => `<select class="input" id="${id}" onchange="WV.setSwap(${attr(id)}, this.value)">
-      ${all.map(s => `<option value="${esc(s)}"${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select>`;
-
-    return card('Convert', `
-      <div class="wv-swap">
-        <label class="form-label" for="wv-swap-amt">You pay</label>
-        <div class="wv-tx">
-          <input class="input" id="wv-swap-amt" type="number" step="any" inputmode="decimal" placeholder="0.00"
-                 value="${esc(swap.amount)}" oninput="WV.setSwap('amount', this.value)">
-          ${sel('from', from)}
-        </div>
-        <div class="wv-swap-bal">Available ${esc(qty(have))} ${esc(from)}</div>
-        <div class="wv-swap-ar">${ico('arrow_downward')}</div>
-        <label class="form-label" for="wv-swap-out">You receive (estimate)</label>
-        <div class="wv-tx">
-          <input class="input" id="wv-swap-out" type="text" readonly value="${q.ok ? esc(qty(q.out)) : ''}" placeholder="0.00">
-          ${sel('to', to)}
-        </div>
-        <div class="wv-note" id="wv-swap-rate">${swapRate(q, from, to)}</div>
-        <button type="button" class="btn btn-primary w100 mt8" onclick="WV.doSwap()"
-          ${q.ok && !q.short ? '' : 'disabled'}>${q.short ? `Not enough ${esc(from)}` : 'Convert'}</button>
-      </div>`);
-  }
-
-  function swapRate(q, from, to) {
-    if (!q.rate) return esc(q.why || 'Waiting for a live price on both sides.');
-    return `1 ${esc(from)} \u2248 ${esc(qty(q.rate))} ${esc(to)} \u00b7 ${(CVT.FEE * 100).toFixed(1)}% fee
-            \u2014 rates are live and move; the estimate is what you would get right now.`;
-  }
-
-  /* Typing the amount only updates the estimate. Repainting the whole
-     tab on every keystroke would take the caret with it. */
-  function setSwap(field, v) {
-    if (field === 'amount') {
-      swap.amount = v;
-      const out = document.getElementById('wv-swap-out');
-      const rate = document.getElementById('wv-swap-rate');
-      const q = CVT.quote(swap.from, swap.to, v);
-      if (out) out.value = q.ok ? qty(q.out) : '';
-      if (rate) rate.innerHTML = swapRate(q, swap.from, swap.to);
-      /* The button's state is decided at render, so typing an amount has
-         to update it here too — otherwise it stays disabled while the
-         estimate above it says the conversion is perfectly possible. */
-      const go = document.querySelector('.wv-swap .btn-primary');
-      if (go) {
-        go.disabled = !(q.ok && !q.short);
-        go.textContent = q.short ? `Not enough ${swap.from}` : 'Convert';
-      }
-      return;
-    }
-    if (field === 'from') swap.from = String(v).toUpperCase();
-    else swap.to = String(v).toUpperCase();
-    repaint();
-  }
-
-  /* Both legs, the fee and the two ledger entries are CVT's — this only
-     reports what came back. */
-  function doSwap() {
-    if (typeof CVT === 'undefined') { toast('Convert is still loading…'); return; }
-    const q = CVT.quote(swap.from, swap.to, swap.amount);
-    if (!q.ok) { toast(q.why); return; }
-    const r = CVT.execute(q.from, q.to, q.amount, { expect: q.out });
-    if (!r.ok) { toast(r.msg); repaint(); return; }
-    swap.amount = '';
-    toast(r.msg);
-    repaint();
-  }
+  /* There is no convert panel here. The Swap button on the profile's
+     crypto card opens Convert (features/convert.js) itself, with its
+     review step and 15-second quote - a second, inline panel that
+     skipped both was one more way to do the same thing. */
 
   /* ── History ─────────────────────────────────────────────────────── */
   /* The real ledger. Every send, tip, request, swap and transfer writes
@@ -301,31 +207,12 @@ const WV = (() => {
     <div class="wv-card-h"><b>${esc(title)}</b>${right || ''}</div>${body}</section>`;
 
   function act(k) {
-    if (k === 'send') {
-      if (typeof PAY !== 'undefined' && PAY.openPayTo) PAY.openPayTo({});
-      else toast('Payments are still loading…');
-      return;
-    }
     if (k === 'request' && typeof PAY !== 'undefined') return PAY.openRequestFor('');
-    if (k === 'scan' && typeof PAY !== 'undefined') return PAY.openScan();
-    if (k === 'myqr' && typeof PAY !== 'undefined') return PAY.openMyQR();
-    if (k === 'convert') {
-      if (typeof CVT !== 'undefined') CVT.open('');
-      else toast('Convert is still loading…');
-      return;
-    }
     if (k === 'add') {
       if (typeof HX !== 'undefined' && HX.addFunds) return HX.addFunds();
       return navigateTo('portfolio');
     }
-    if (k === 'assets') return navigateTo('portfolio');
     toast('That is still loading…');
-  }
-
-  function go(account) {
-    if (account === 'earn') return navigateTo('earn');
-    if (typeof AS !== 'undefined' && AS.go) { navigateTo('portfolio').then(() => AS.go(account)); return; }
-    navigateTo('portfolio');
   }
 
   /* ── Paint ───────────────────────────────────────────────────────── */
@@ -337,7 +224,6 @@ const WV = (() => {
       <div class="wv-connect card wl-panel" data-wl-status>${typeof WL !== 'undefined' ? WL.statusHTML() : ''}</div>
       ${balancesHTML()}
       ${transferHTML()}
-      ${swapHTML()}
       ${historyHTML()}
     </div>`;
   }
@@ -351,7 +237,7 @@ const WV = (() => {
     if (back) back.scrollTop = scroll;
   }
 
-  return { html, repaint, act, go, move, setSwap, doSwap, clearHistory, copyTag };
+  return { html, repaint, act, move, clearHistory, copyTag };
 })();
 
 window.WV = WV;

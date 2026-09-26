@@ -51,10 +51,6 @@ export default function register(SET) {
               act: 'openaddresses', chev: true
             }))
           : [row({ icon: 'qr_code_2', label: 'Add a receiving address', sub: 'Needed before anyone can pay you on-chain', act: 'openaddresses', chev: true })]),
-        sec('', [
-          row({ icon: 'south_west', label: 'Deposit crypto', sub: 'Show an address for a coin and network', act: 'opendeposit', chev: true }),
-          row({ icon: 'north_east', label: 'Send crypto', sub: 'Prepare a send for your wallet app', act: 'opensend', chev: true })
-        ]),
         `<p class="st-note">A connected wallet is <b>read-only</b>: Trending sees the public address and its balance, and nothing else. It cannot move funds, and it is never asked to — Trending does not sign transactions.</p>`
       ].join('');
     }
@@ -73,12 +69,6 @@ export default function register(SET) {
   };
 
   DO.openaddresses = () => { if (typeof WAD !== 'undefined' && WAD.openMine) WAD.openMine(); else toast('Addresses are still loading…'); };
-  DO.opendeposit = () => { if (typeof DEP !== 'undefined' && DEP.open) DEP.open('asset'); else toast('Deposit is still loading…'); };
-  DO.opensend = async () => {
-    if (!(await P().verify('Sending crypto'))) return;
-    if (typeof SC !== 'undefined' && SC.open) SC.open({});
-    else toast('Send is still loading…');
-  };
 
   /* ── Deposits ────────────────────────────────────────────────────── */
 
@@ -88,11 +78,7 @@ export default function register(SET) {
     html: () => {
       const recs = (typeof DEP !== 'undefined' && DEP.records) ? DEP.records() : [];
       return [
-        `<p class="st-lead">Receiving coins from an exchange or another wallet.</p>`,
-        sec('', [
-          row({ icon: 'qr_code_2', label: 'Deposit crypto', sub: 'Pick a coin and a network, then show the address', act: 'opendeposit', chev: true }),
-          row({ icon: 'contacts', label: 'Your receiving addresses', value: (typeof WAD !== 'undefined' && WAD.ownList) ? String(WAD.ownList().length) : '', act: 'openaddresses', chev: true })
-        ]),
+        `<p class="st-lead">How deposits from an exchange or another wallet work for you. To deposit, use Add funds in your wallet; your receiving addresses are under Wallets and connections.</p>`,
         sec('Preferences', [
           row({ icon: 'lan', label: 'Preferred network', sub: 'Offered first when you deposit',
             value: P().get('crypto.defaultNetwork') || 'Ask each time', to: 'networks' }),
@@ -115,11 +101,7 @@ export default function register(SET) {
     html: () => {
       const recs = (typeof SC !== 'undefined' && SC.records) ? SC.records() : [];
       return [
-        `<p class="st-lead">Two ways to send: instantly to another Trending account, or on-chain from your own wallet.</p>`,
-        sec('', [
-          row({ icon: 'send', label: 'Send to a Trending user', sub: 'Free and instant, by name, @handle or Trending Tag', act: 'openpay', chev: true }),
-          row({ icon: 'north_east', label: 'Send via crypto network', sub: 'To an exchange or wallet address — a network fee applies', act: 'opensend', chev: true })
-        ]),
+        `<p class="st-lead">How your sends are checked before they leave. To send, use Send on your profile.</p>`,
         sec('Safety', [
           sw('crypto.confirmSends', 'Review every send', 'Amount, network and fee before the hand-off', { icon: 'fact_check' }),
           sw('crypto.whitelistOnly', 'Only saved addresses', 'Refuse anything not in your address book', { icon: 'verified_user', act: 'tgwhitelist' }),
@@ -136,8 +118,6 @@ export default function register(SET) {
       ].join('');
     }
   });
-
-  DO.openpay = () => { if (window.PAY && PAY.openHub) PAY.openHub(); else toast('Payments are still loading…'); };
 
   reg('feespeed', {
     t: 'Default network speed', i: 'local_gas_station', p: 'withdrawset',

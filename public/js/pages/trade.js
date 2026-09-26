@@ -863,7 +863,7 @@ const TR = (() => {
 
           <div class="tr-tools">
             ${typeof CT !== 'undefined' ? CT.starBtn(sym) : ''}
-            <button class="tr-tool" onclick="CT.open('convert')"><span class="material-symbols-rounded ms-16">swap_horiz</span> Convert</button>
+            <button class="tr-tool" onclick="CVT.open('')"><span class="material-symbols-rounded ms-16">swap_horiz</span> Convert</button>
             <button class="tr-tool" onclick="CT.open('alerts')"><span class="material-symbols-rounded ms-16">notifications_active</span> Alerts <span class="tr-tool-badge" id="ct-alert-count">${typeof CT !== 'undefined' ? CT.activeAlertCount() : 0}</span></button>
             <button class="tr-tool" onclick="CT.open('watch')"><span class="material-symbols-rounded ms-16">star</span> Watchlist</button>
             <button class="tr-tool" onclick="CT.open('dca')"><span class="material-symbols-rounded ms-16">event_repeat</span> Recurring</button>

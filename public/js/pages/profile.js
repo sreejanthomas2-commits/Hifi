@@ -125,17 +125,6 @@ function toggleEditForm() {
   }
 }
 
-/* The Wallet tab's swap lives in WV now, priced off the live feed. These
-   two used to read a static mock table, so a swap executed at a price no
-   market was quoting. They are kept as forwarders because other screens
-   still link to "swap". */
-window.updateSwapEstimate = function() {
-  if (typeof WV !== 'undefined') WV.setSwap('amount', (document.getElementById('wv-swap-amt') || {}).value || '');
-};
-window.submitTokenSwap = function() {
-  if (typeof WV !== 'undefined') WV.doSwap();
-};
-
 function saveProfileChanges() {
   if (typeof PG !== 'undefined' && PG.subject && PG.subject()) return;
   const fn = $id('edit-fname').value.trim();
@@ -891,7 +880,6 @@ function profileSectionHTML(tab) {
     html = `
       <div class="section-hdr mb12">
         <span class="section-title" style="display:inline-flex; align-items:center; gap:6px"><span class="material-symbols-rounded" style="color:var(--orange)">account_balance_wallet</span> Wallet</span>
-        <button class="btn btn-ghost btn-sm flex-center gap4" onclick="navigateTo('portfolio')"><span class="material-symbols-rounded" style="font-size:14px">open_in_full</span> Full assets</button>
       </div>
       ${typeof WV !== 'undefined' ? WV.html() : '<div class="card p20 tc-3">The wallet is still loading…</div>'}
     `;
@@ -1399,7 +1387,7 @@ const PG = (() => {
     const body = $('prof-tab-dynamic-content');
     if (!body) return;
     if (name === 'wallet') name = 'crypto';
-    if (name === 'nfts' || name === 'swap') { focus = focus || name; name = 'crypto'; }
+    if (name === 'nfts') { focus = focus || name; name = 'crypto'; }
     if (name === 'reels') name = 'shorty';
     const isTab = TABS.some(t => t[0] === name);
     if (isTab) { V.tab = name; V.section = null; } else V.section = name;
@@ -1418,8 +1406,7 @@ const PG = (() => {
     if (name === 'shorty') fillShorty();
     paint();
 
-    if (focus === 'swap') reveal(document.getElementById('wv-swap-amt'));
-    else if (focus === 'nfts') reveal($('pg-nfts'));
+    if (focus === 'nfts') reveal($('pg-nfts'));
     else if (typeof focus === 'number') reveal(($('prof-posts-list') || body).children[focus]);
     else if (!isTab) reveal($('pg-tabs'));
     if (name === 'compose') { const inp = $('profile-post-input'); if (inp) inp.focus({ preventScroll: true }); }
@@ -1597,7 +1584,10 @@ const PG = (() => {
         return;
       }
       case 'wallet': show('crypto'); reveal($('pg-tabs')); return;
-      case 'swap': case 'nfts': show('crypto', k); return;
+      case 'nfts': show('crypto', k); return;
+      // Convert itself, with its review step and quote timer - the wallet
+      // no longer has a second, inline swap panel to scroll to.
+      case 'swap': if (window.CVT) CVT.open(''); else toast('Convert is still loading…'); return;
       case 'send': pay('openHub'); return;
       case 'receive': pay('openMyQR'); return;
       case 'scan': pay('openScan'); return;
