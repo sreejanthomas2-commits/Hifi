@@ -100,8 +100,12 @@ const settle = () => new Promise(r => setTimeout(r, 20));
     ok('practice products are chipped Practice', html.includes('ch-chip ch-sandbox">Practice'));
     ok('nothing is chipped Real money', !html.includes('Real money</span>'));
     ok('the card tile says why, not a promise', /Trending Card.*?Unavailable.*?card-issuing partner/s.test(html));
-    ok('the five quick actions are there', ['Deposit', 'Withdraw', 'Send', 'Receive', 'Convert'].every(n => html.includes(`<span>${n}</span>`)));
-    ok('the legend explains the chips', html.includes('uses paper money kept on this device'));
+    ok('headed "All crypto services"', html.includes('All crypto services'));
+    ok('no second row of Send/Receive buttons (the profile card has them)', !html.includes('ch-quick'));
+    ok('deposit, withdraw, send, receive and convert are all tiles', ['Deposit crypto', 'Withdraw crypto', 'Send crypto', 'Receive crypto', 'Convert']
+      .every(n => html.includes(`<span class="ch-tile-t">${n}</span>`)));
+    ok('the legend explains the chips', html.includes('uses paper money on this device'));
+    ok('it is not a page of its own', !/pane-cryptohub/.test(html) && typeof w.ctx.getCryptohubTemplate === 'undefined');
   }
 
   console.log('\nthe balance');

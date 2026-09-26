@@ -377,22 +377,25 @@ advice**. A lawyer in each country Trending serves has to confirm it.
 
 ## 8. UI/UX architecture
 
-- **Crypto Hub:** a new pane, *Crypto*, in the sidebar and mobile nav. The
-  existing Trade, P2P, Earn, Portfolio and Crypto Market panes stay as they are,
-  and are also reached from the hub. Nothing is removed. Top to bottom:
-  - **Balance card:** total value, then available, locked and pending, with a
-    *Sandbox* badge while the money is sandbox money.
-  - **Action row:** Deposit · Withdraw · Send · Receive · Convert.
-  - **Groups of tiles:**
-    - *Trade:* Spot, Buy/Sell, Convert, Markets
-    - *Move money:* Send, Receive, Pay & QR, Transfer abroad, Fiat in/out
-    - *Grow:* Earn
-    - *P2P*
-    - *Card*
-    - *Your money:* Wallet, Portfolio, History
-    - *Safety:* Security Center, Support
-  - **Status chip on each tile:** Sandbox · Not available in your country (tap
-    for why) · Coming soon.
+- **All crypto services live on the Profile's Crypto tab**, not on a page of
+  their own. (A separate Crypto Hub page was built first; it was folded into
+  the profile because one more page to find made the app harder to use.) The
+  existing Trade, P2P, Earn, Assets and Crypto Market pages stay as they are.
+  - **The crypto card** above the profile tabs keeps the everyday buttons:
+    Send, Receive, Scan, Swap, Trade, Earn, P2P, NFTs.
+  - **The Crypto tab**, top to bottom:
+    - **Balance split:** available, locked and pending. This is practice money.
+    - **Every service as a compact tile**, with a status chip (Ready ·
+      Practice · Coming · Unavailable · Paused). The tiles are grouped:
+      - *Trade:* Spot, Buy/Sell, Convert, P2P, Market prices, Asset details
+      - *Move money:* Deposit, Withdraw, Send, Receive, Pay, QR, Send money
+        abroad, Add money from a bank, Cash out to a bank
+      - *Grow:* Earn
+      - *Your money:* Wallet, Portfolio, History
+      - *Card and safety:* Card, Security Center, Help and support
+    - **Tapping an unavailable tile** says why, and offers the alternative
+      where there is one.
+    - **Below the tiles**, as before: the wallet and NFTs.
 - **Shared components**, built once and used by every product:
   - confirmation sheet with the nine lines from §12 of the brief
   - status timeline
@@ -420,7 +423,7 @@ together. A screen on its own doesn't count.
 | Phase | What | Needs from you |
 |---|---|---|
 | **A. Honesty fixes** (browser only, small) | Remove the invented order book. P2P: no automatic release after "Paid" — the seller confirms, plus countdown, dispute button, fraud warnings. Label the made-up merchants and traders as demo. Earn: risk wording, "indicative" rates, redemption terms. Convert: visible 15 s countdown and auto-refresh. Pay: label the random declines as simulated | Approval |
-| **B. Crypto Hub + switchboard** | `GET /api/products` and the hub page, with each tile opening the existing screens. Shared components: problem card, skeletons, offline banner. The status timeline and confirmation sheet move to Phase D, so they're built against the first real server transaction | Approval |
+| **B. Crypto services + switchboard** | `GET /api/products`, and every service on the Profile's Crypto tab, with each tile opening the existing screens. Shared components: problem card, skeletons, offline banner. The status timeline and confirmation sheet move to Phase D, so they're built against the first real server transaction | Approval |
 | **C. Server foundation** | Fix the database connect bug. Two-book ledger, retry protection, per-user rate limits, audit on every action, compliance and risk hooks (closed by default), support tickets. Tests against a **real** MongoDB | A database: MongoDB Atlas (you create it), or my downloading MongoDB's official test server for local tests (I'll give the size and ask first) |
 | **D. Wallet on the server** | Balances (available / locked / pending), transfers between Trending users, Pay/QR, server Convert quotes, one history, the status timeline and the confirmation sheet. Old browser balances can't be trusted (anyone could edit them), so sandbox accounts start fresh; the old history stays visible | Approval to reset sandbox balances |
 | **E. Spot on the server** | Orders, fills at the real Binance book, limit and stop triggers in the worker, cancel, histories, large-order confirmation | An always-on host for the worker |

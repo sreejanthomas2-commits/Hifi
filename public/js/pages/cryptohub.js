@@ -1,9 +1,12 @@
 /* ╔══════════════════════════════════════════════════════════════════╗
-   ║  CRYPTO HUB — every crypto service, one page                      ║
+   ║  CRYPTO SERVICES — every one, on your profile's Crypto tab        ║
    ║                                                                   ║
-   ║  Top to bottom: the balance (available, locked, pending), the     ║
-   ║  five things people do most, then every service in groups, each   ║
-   ║  with a chip that says what it is right now:                      ║
+   ║  Not a page of its own: one more page to find made the app        ║
+   ║  harder, so it lives where your crypto already is. The profile's  ║
+   ║  crypto card above has the everyday buttons (Send, Receive,       ║
+   ║  Swap...); this adds the balance split (available, locked,        ║
+   ║  pending) and every service in groups, each with a chip that      ║
+   ║  says what it is right now:                                       ║
    ║                                                                   ║
    ║    Ready        works now, and Trending holds no money for it     ║
    ║    Practice     works, on paper money that lives on this device   ║
@@ -12,14 +15,11 @@
    ║    Paused       switched off for maintenance                      ║
    ║                                                                   ║
    ║  The server's switchboard (GET /api/products) decides the chip.   ║
-   ║  This page only draws it, and it owns what each tile OPENS: the   ║
+   ║  This file only draws it, and it owns what each tile OPENS: the   ║
    ║  server names a product and nothing more, so nothing it sends can ║
-   ║  become code here. If the server can't be reached the page uses   ║
-   ║  the same catalogue file at its starting states - none of which   ║
-   ║  is real money - and says it is doing that.                       ║
-   ║                                                                   ║
-   ║  Nothing is removed by this page: Trade, P2P, Earn, Assets and    ║
-   ║  Crypto Market are still where they were, and are also here.     ║
+   ║  become code here. If the server can't be reached it uses the     ║
+   ║  same catalogue file at its starting states - none of which is    ║
+   ║  real money - and says it is doing that.                          ║
    ╚══════════════════════════════════════════════════════════════════╝ */
 
 'use strict';
@@ -155,55 +155,38 @@ const CXH = (() => {
     return { total: available + locked, available, locked, pending, unpriced: nw.unpriced, parts: { orders, escrow, earn: nw.earn } };
   }
 
+  /* Three numbers in one row. The profile's crypto card above already
+     shows the totals by account; this is the split the card doesn't:
+     what can be used, what is committed, what is on its way. */
   function balanceHTML() {
     const b = balances();
-    if (!b) return FUI.skeleton(1, 'row');
-    const cell = (label, v, sub) => `<div class="ch-bal-cell"><span>${esc(label)}</span><b>${esc(usd(v))}</b>${sub ? `<em>${esc(sub)}</em>` : ''}</div>`;
+    if (!b) return '';
+    const cell = (label, v, sub) => `<div class="ch-bal-cell"><span>${esc(label)}</span><b>${esc(usd(v))}</b><em>${esc(sub)}</em></div>`;
     const lockedSub = [b.parts.orders > 0 && 'open orders', b.parts.escrow > 0 && 'P2P escrow', b.parts.earn > 0 && 'Earn'].filter(Boolean).join(', ');
-    return `<div class="card ch-bal">
-      <div class="ch-bal-top">
-        <div>
-          <div class="ch-bal-l">Total value <span class="ch-chip ch-sandbox">Practice</span></div>
-          <div class="ch-bal-v">${esc(usd(b.total))}</div>
-        </div>
-      </div>
-      <div class="ch-bal-grid">
-        ${cell('Available', b.available, 'Can be used now')}
-        ${cell('Locked', b.locked, lockedSub || 'Nothing locked')}
-        ${cell('Pending', b.pending, b.pending > 0 ? 'On its way, not in the total' : 'Nothing incoming')}
-      </div>
-      <div class="ch-bal-note">Paper balances on this device. ${b.unpriced ? `${b.unpriced} coin${b.unpriced === 1 ? '' : 's'} with no price ${b.unpriced === 1 ? 'is' : 'are'} left out of the total. ` : ''}Nothing here is real money.</div>
+    return `<div class="ch-bal" role="group" aria-label="Practice balance">
+      ${cell('Available', b.available, 'Can be used now')}
+      ${cell('Locked', b.locked, lockedSub || 'Nothing locked')}
+      ${cell('Pending', b.pending, b.pending > 0 ? 'On its way to you' : 'Nothing incoming')}
+      <div class="ch-bal-note">Practice money on this device. ${b.unpriced ? `${b.unpriced} coin${b.unpriced === 1 ? '' : 's'} with no price ${b.unpriced === 1 ? 'is' : 'are'} left out. ` : ''}Nothing here is real money.</div>
     </div>`;
   }
 
-  /* ── The page ────────────────────────────────────────────────────── */
+  /* ── The services ────────────────────────────────────────────────── */
   const CHIP = {
     real: ['Ready', 'ch-real'], sandbox: ['Practice', 'ch-sandbox'], coming: ['Coming', 'ch-coming'],
     unavailable: ['Unavailable', 'ch-off'], paused: ['Paused', 'ch-off'], live: ['Real money', 'ch-live']
   };
-  const chip = p => { const c = CHIP[p.state] || CHIP.unavailable; return `<span class="ch-chip ${c[1]}">${c[0]}</span>`; };
-  const firstSentence = s => { const m = String(s || '').match(/^.*?[.!?](\s|$)/); return m ? m[0].trim() : String(s || ''); };
+  const chipOf = p => CHIP[p.state] || CHIP.unavailable;
 
-  const QUICK = ['deposit', 'withdraw', 'send', 'receive', 'convert'];
-  function quickHTML() {
-    return `<div class="ch-quick" role="group" aria-label="Most used">
-      ${QUICK.map(id => product(id)).filter(Boolean).map(p => `
-        <button type="button" class="ch-q${usable(p) ? '' : ' ch-q-off'}" onclick="CXH.tap(${A(p.id)})"
-                aria-label="${esc(p.name)}: ${esc((CHIP[p.state] || CHIP.unavailable)[0])}">
-          <span class="material-symbols-rounded" aria-hidden="true">${esc(p.icon)}</span>
-          <span>${esc(p.name.replace(' crypto', ''))}</span>
-        </button>`).join('')}
-    </div>`;
-  }
-
+  // Icon, name and what it is right now - the detail is one tap away.
   function tileHTML(p) {
-    const line = usable(p) ? p.note : firstSentence(p.why) || p.note;
-    return `<button type="button" class="ch-tile${usable(p) ? '' : ' ch-tile-off'}" onclick="CXH.tap(${A(p.id)})">
+    const c = chipOf(p);
+    const hint = usable(p) ? p.note : p.why;
+    return `<button type="button" class="ch-tile${usable(p) ? '' : ' ch-tile-off'}" onclick="CXH.tap(${A(p.id)})"
+        title="${esc(hint)}" aria-label="${esc(p.name)}, ${esc(c[0])}. ${esc(hint)}">
       <span class="ch-tile-i material-symbols-rounded" aria-hidden="true">${esc(p.icon)}</span>
-      <span class="ch-tile-b">
-        <span class="ch-tile-t">${esc(p.name)} ${chip(p)}</span>
-        <span class="ch-tile-s">${esc(line)}</span>
-      </span>
+      <span class="ch-tile-t">${esc(p.name)}</span>
+      <span class="ch-chip ${c[1]}">${c[0]}</span>
     </button>`;
   }
 
@@ -212,12 +195,13 @@ const CXH = (() => {
       const items = board.products.filter(p => p.group === g.id);
       if (!items.length) return '';
       return `<section class="ch-group" aria-labelledby="ch-g-${esc(g.id)}">
-        <h2 class="ch-group-t" id="ch-g-${esc(g.id)}">${esc(g.name)}</h2>
+        <h4 class="ch-group-t" id="ch-g-${esc(g.id)}">${esc(g.name)}</h4>
         <div class="ch-tiles">${items.map(tileHTML).join('')}</div>
       </section>`;
     }).join('');
   }
 
+  /* Draws into #ch-root, which the profile's Crypto tab puts at its top. */
   function paint() {
     const root = $('ch-root');
     if (!root) return;
@@ -227,27 +211,23 @@ const CXH = (() => {
         what: "Trending's server didn't answer, and the app's own list of services couldn't be read either. This usually means the connection dropped.",
         safe: 'Yes. Nothing was sent or changed. Your practice balances are stored on this device.',
         status: 'Nothing is in progress.',
-        todo: 'No. You can try again now, or use Trade, P2P and Earn from the menu as usual.',
+        todo: 'No. You can try again now; your wallet below still works.',
         act: { label: 'Try again', onclick: 'CXH.retry()' }
       });
       return;
     }
     if (!board) {
-      root.innerHTML = FUI.skeleton(1, 'row') + FUI.skeleton(6, 'tile');
+      root.innerHTML = FUI.skeleton(6, 'tile');
       load();
       return;
     }
     root.innerHTML = `
       ${FUI.offline()}
+      <h3 class="ch-title">All crypto services</h3>
       ${source === 'local' ? `<div class="ch-src" role="status">Trending's server couldn't be reached, so this shows each service at its starting state. None of them is real money either way. <button type="button" class="ch-link" onclick="CXH.retry()">Check again</button></div>` : ''}
       ${balanceHTML()}
-      ${quickHTML()}
       ${groupsHTML()}
-      <div class="ch-legend">
-        <p><b>Practice</b> uses paper money kept on this device. Nothing real moves.</p>
-        <p><b>Ready</b> works now without Trending holding your money: live prices, your own wallet, your account's security.</p>
-        <p><b>Unavailable</b> needs a licence or a partner Trending doesn't have yet. Tap one to see what.</p>
-      </div>`;
+      <p class="ch-legend"><b>Practice</b> uses paper money on this device. <b>Ready</b> works now without Trending holding your money. <b>Unavailable</b> needs a licence or partner Trending doesn't have yet; tap one to see what.</p>`;
   }
 
   // Balances move with prices and trades; repaint the card, not the page.
@@ -261,24 +241,11 @@ const CXH = (() => {
 
 window.CXH = CXH;
 
-function getCryptohubTemplate() {
-  return `<section id="pane-cryptohub" class="pane">
-    <h1 class="pane-title" style="display:flex; align-items:center; gap:10px">
-      <span class="material-symbols-rounded emoji-3d" style="font-size:32px; color:var(--brand)">hub</span>
-      <span>Crypto</span>
-    </h1>
-    <div id="ch-root"></div>
-  </section>`;
-}
-
-function renderCryptohub() { CXH.paint(); }
-
 /* ── Global bridge ───────────────────────────────────────────────────
    This file is an ES module, so its top-level names are private to it.
-   The router and inline onclick= handlers look them up on the global
+   The profile and inline onclick= handlers look them up on the global
    object, so they are republished here. */
 import { publish } from '../globals.js?v=3';
 publish('pages/cryptohub.js', {
-  CXH: () => CXH, getCryptohubTemplate: () => getCryptohubTemplate,
-  renderCryptohub: () => renderCryptohub
+  CXH: () => CXH
 });

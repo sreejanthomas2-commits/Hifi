@@ -1373,7 +1373,9 @@ const PG = (() => {
     set('pg-cx-staked', window.EN && EN.stakedValue ? money(EN.stakedValue()) : '—');
   }
 
-  const cryptoHTML = () => `<div class="pg-crypto">${profileSectionHTML('wallet')}<div id="pg-nfts" class="pg-anchor"></div>${profileSectionHTML('nfts')}</div>`;
+  /* Every crypto service first (pages/cryptohub.js draws into #ch-root),
+     then the wallet and NFTs as before - one place for all of it. */
+  const cryptoHTML = () => `<div class="pg-crypto"><div id="ch-root" class="ch-embed"></div>${profileSectionHTML('wallet')}<div id="pg-nfts" class="pg-anchor"></div>${profileSectionHTML('nfts')}</div>`;
 
   function pay(fn) {
     if (window.PAY && typeof PAY[fn] === 'function') PAY[fn]();
@@ -1416,6 +1418,7 @@ const PG = (() => {
     body.innerHTML = html;
     if (typeof IX !== 'undefined' && IX.bindAllEmojis) IX.bindAllEmojis(body);
     if (name === 'shorty') fillShorty();
+    if (name === 'crypto' && window.CXH) CXH.paint();
     paint();
 
     if (focus === 'swap') reveal(document.getElementById('wv-swap-amt'));

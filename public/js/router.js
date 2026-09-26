@@ -4,7 +4,7 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-import { ensurePane } from './lazy.js?v=hb1';
+import { ensurePane } from './lazy.js?v=pc1';
 
 /* Through window, not the module-local binding a few lines down.
    components/mobile.js and features/discover.js both decorate
@@ -113,9 +113,7 @@ async function navigateTo(pane) {
     _safe('renderHomeHub', 'renderHomeHub');
   }
   if (pane === 'explore') _safe('renderExplore', 'renderExplore');
-  if (pane === 'cryptomarket') _safe('renderCryptomarket', 'renderCryptomarket');
-  if (pane === 'cryptohub') _safe('renderCryptohub', 'renderCryptohub');
-  if (pane === 'reels') _safe('renderReels', 'renderReels');
+  if (pane === 'cryptomarket') _safe('renderCryptomarket', 'renderCryptomarket');  if (pane === 'reels') _safe('renderReels', 'renderReels');
   if (pane === 'community') _safe('renderCommunity', 'renderCommunity');
   if (pane === 'profile') _safe('renderProfile', 'renderProfile');
   if (pane === 'messages') _safe('setupMessages', 'setupMessages');
