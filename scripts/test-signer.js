@@ -170,7 +170,7 @@ ok('no signer module reads a private key from the environment', (() => {
 console.log('\nthe queue is reachable by a signer and nobody else');
 (async () => {
   const express = require('express');
-  process.env.JWT_SECRET = 'test-only';
+  process.env.FIREBASE_PROJECT_ID = 'test-only';   // so user routes answer 401, not 503
   process.env.SIGNER_TOKEN = 'signer-secret-for-this-run';
   const app = express();
   app.use(express.json());

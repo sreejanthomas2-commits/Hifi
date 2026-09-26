@@ -49,14 +49,14 @@ function mockChain() {
   const rpcUrl = `http://127.0.0.1:${chain.address().port}`;
 
   Object.assign(process.env, {
-    JWT_SECRET: 'test-secret-only-for-this-run',
     CUSTODY_ENABLED: 'true',
     WATCHER_RPC_ETHEREUM: rpcUrl,
     FEE_CACHE_MS: '1'
   });
 
   const fees = require('../services/fees');
-  const { sign } = require('../middleware/auth');
+  const T = require('./lib/test-tokens');
+  T.install(require('../middleware/auth'));
 
   console.log('\nfees come from the chain, and only from the chain');
   const q = await fees.quote('ethereum', { token: false });
@@ -97,7 +97,7 @@ function mockChain() {
     let data = null; try { data = await r.json(); } catch (e) {}
     return { status: r.status, data: data || {} };
   };
-  const token = sign('user_wd_1');
+  const token = T.mint('user_wd_1');
 
   let r = await call('/api/crypto/withdraw/quote', { asset: 'ETH', network: 'ethereum' });
   check('quote without a session → 401', r.status, 401);

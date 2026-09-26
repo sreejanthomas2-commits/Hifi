@@ -332,21 +332,70 @@ const TP = (() => {
      is not an open wallet. Nothing is stored: the clock is in memory
      and resets when the tab closes.
 
-     It is a confirmation, not a check of who you are - anyone holding
-     the unlocked device can answer yes - so it is titled as one. Asking
-     the sign-in provider to re-authenticate is the real version. */
+     Signed in, "again" means proving it is you to the sign-in provider:
+     the password for an email account, a fresh Google or Apple sign-in
+     in a pop-up for those. It used to be a Yes button, which anyone
+     holding the unlocked device could press. A sign-in within the same
+     few minutes already counts. A guest has nothing to re-prove - their
+     paper money lives only on this device - so a guest still confirms. */
   let verifiedAt = 0;
   const verifiedFor = () => Math.max(1, +get('crypto.verifyMins') || 5) * 60000;
   const isVerified = () => Date.now() - verifiedAt < verifiedFor();
+  const AUTH_SDK = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
   async function verify(what) {
     if (isVerified()) return true;
-    const ask = window.appConfirm;
-    if (typeof ask !== 'function') { verifiedAt = Date.now(); return true; }
-    const ok = await ask(`${what || 'This change'} affects your money or your account security. Continue?`,
-      { title: 'Confirm this change', ok: 'Yes, continue' });
+    const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+    const ok = user ? await reauthenticate(user, what || 'This change') : await confirmOnly(what);
     if (ok) verifiedAt = Date.now();
     return !!ok;
+  }
+
+  async function confirmOnly(what) {
+    const ask = window.appConfirm;
+    if (typeof ask !== 'function') return true;
+    return !!(await ask(`${what || 'This change'} affects your money or your account security. Continue?`,
+      { title: 'Confirm this change', ok: 'Yes, continue' }));
+  }
+
+  async function reauthenticate(user, what) {
+    try {
+      const t = await user.getIdTokenResult();
+      if (Date.now() - Number(t.claims.auth_time) * 1000 < verifiedFor()) return true;
+    } catch (e) { /* offline: fall through and ask */ }
+    const ask = window.appConfirm, askText = window.appPrompt;
+    const via = (user.providerData || []).map(p => p && p.providerId);
+    const say = m => { if (m && typeof showToast === 'function') showToast(m); };
+    try {
+      const m = await import(AUTH_SDK);
+      if (via.indexOf('password') > -1 && user.email && typeof askText === 'function') {
+        const pw = await askText(`${what} affects your money or your account security. Enter your password to confirm it is you.`, '',
+          { title: 'Confirm it is you', ok: 'Confirm', password: true });
+        if (!pw) return false;
+        await m.reauthenticateWithCredential(user, m.EmailAuthProvider.credential(user.email, pw));
+        return true;
+      }
+      const google = via.indexOf('google.com') > -1, apple = via.indexOf('apple.com') > -1;
+      if ((google || apple) && typeof ask === 'function') {
+        if (!(await ask(`${what} affects your money or your account security. Sign in with ${google ? 'Google' : 'Apple'} again to confirm it is you.`,
+          { title: 'Confirm it is you', ok: 'Continue' }))) return false;
+        await m.reauthenticateWithPopup(user, google ? new m.GoogleAuthProvider() : new m.OAuthProvider('apple.com'));
+        return true;
+      }
+      // A phone account would need a new text message; signing in again is simpler.
+      if (typeof ask === 'function') {
+        await ask('To confirm it is you, sign out and sign in again, then try this within a few minutes.', { title: 'Sign in again', ok: 'OK', alert: true });
+      }
+      return false;
+    } catch (e) {
+      const code = e && e.code;
+      say(code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials' ? 'That password is not right.'
+        : code === 'auth/too-many-requests' ? 'Too many attempts. Wait a few minutes and try again.'
+        : code === 'auth/user-mismatch' ? 'That was a different account. Sign in with the one you are using here.'
+        : code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' ? ''
+        : 'That could not be confirmed. Check your connection and try again.');
+      return false;
+    }
   }
   const dropVerify = () => { verifiedAt = 0; };
 

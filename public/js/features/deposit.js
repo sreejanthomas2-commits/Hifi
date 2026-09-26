@@ -121,9 +121,11 @@ const DEP = (() => {
     issued[key] = null;
     if (!(await askCustody())) return null;
     try {
+      // The wallet server knows who you are only from your sign-in token.
+      const who = typeof authHeaders === 'function' ? await authHeaders() : {};
       const r = await fetch('/api/crypto/deposit/address', {
         method: 'POST', credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: Object.assign({ 'Content-Type': 'application/json', Accept: 'application/json' }, who),
         body: JSON.stringify({ asset: sym, network: net })
       });
       if (r.status === 200) issued[key] = await r.json();

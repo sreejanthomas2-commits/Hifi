@@ -2,8 +2,8 @@
    ║  DEPOSIT API TESTS —  node scripts/test-deposit-api.js            ║
    ║                                                                   ║
    ║  Boots the wallet routes in-process and checks the answers that   ║
-   ║  matter when something is missing: no session secret, no token, a ║
-   ║  forged token, custody switched off, an unsupported pair, no      ║
+   ║  matter when something is missing: no Firebase project, no token, ║
+   ║  a forged token, custody switched off, an unsupported pair, no    ║
    ║  database. Every one of them must refuse — the failure this       ║
    ║  guards against is a server that invents an address when it is    ║
    ║  half-configured.                                                 ║
@@ -44,6 +44,7 @@ const XPUB = (() => {
 })();
 
 const express = require('express');
+const T = require('./lib/test-tokens');        // held here: boot() clears the module cache
 let PORT = 3177;
 
 async function boot(env) {
@@ -71,24 +72,24 @@ const call = async (path, opts) => {
     ok ? pass++ : fail++;
   };
 
-  console.log('\n1 · no JWT_SECRET — wallet routes must close, public config must still work');
-  let s = await boot({ JWT_SECRET: '', CUSTODY_ENABLED: 'false' });
+  console.log('\n1 · no Firebase project — wallet routes must close, public config must still work');
+  let s = await boot({ FIREBASE_PROJECT_ID: '', CUSTODY_ENABLED: 'false' });
   check('GET /assets is public', (await call('/api/crypto/assets')).status, 200);
   let r = await call('/api/crypto/deposit/address', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"asset":"ETH","network":"ethereum"}' });
   check('POST /deposit/address → 503 auth_unconfigured', r.status, 503);
   check('  and says why', r.body.error, 'auth_unconfigured');
   await new Promise(d => s.close(d));
 
-  console.log('\n2 · secret set, no token');
-  s = await boot({ JWT_SECRET: 'test-secret-only-for-this-run', CUSTODY_ENABLED: 'false' });
-  const { sign } = require('../middleware/auth');
+  console.log('\n2 · project set, no token');
+  s = await boot({ CUSTODY_ENABLED: 'false' });
+  T.install(require('../middleware/auth'));
   r = await call('/api/crypto/deposits');
   check('GET /deposits without a token → 401', r.status, 401);
   r = await call('/api/crypto/deposits', { headers: { Authorization: 'Bearer not.a.jwt' } });
   check('a forged token → 401', r.status, 401);
 
   console.log('\n3 · signed in, custody switched off');
-  const token = sign('user_test_1');
+  const token = T.mint('user_test_1');
   r = await call('/api/crypto/deposit/address', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
     body: JSON.stringify({ asset: 'ETH', network: 'ethereum' })
@@ -110,8 +111,9 @@ const call = async (path, opts) => {
   await new Promise(d => s.close(d));
 
   console.log('\n5 · custody on, key configured — but no database');
-  s = await boot({ JWT_SECRET: 'test-secret-only-for-this-run', CUSTODY_ENABLED: 'true', CUSTODY_XPUB_EVM: XPUB });
-  const token2 = require('../middleware/auth').sign('user_test_1');
+  s = await boot({ CUSTODY_ENABLED: 'true', CUSTODY_XPUB_EVM: XPUB, ADMIN_UIDS: 'ops_1' });
+  T.install(require('../middleware/auth'));
+  const token2 = T.mint('user_test_1');
   r = await call('/api/crypto/deposit/address', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token2 },
     body: JSON.stringify({ asset: 'ETH', network: 'ethereum' })
@@ -119,7 +121,7 @@ const call = async (path, opts) => {
   check('no mongo → 503 no_database (never a made-up address)', r.body.error, 'no_database');
 
   console.log('\n6 · operator preview');
-  const adminToken = require('../middleware/auth').sign('ops_1', { admin: true });
+  const adminToken = T.mint('ops_1');         // admin because ADMIN_UIDS says so, not the token
   r = await call('/api/crypto/custody/preview?network=ethereum&count=2', { headers: { Authorization: 'Bearer ' + adminToken } });
   check('admin preview → 200', r.status, 200);
   check('  returns 2 addresses', r.body.addresses.length, 2);

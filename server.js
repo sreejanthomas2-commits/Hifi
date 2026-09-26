@@ -12,9 +12,6 @@ const app = express();
    server-side and checked after writing, and the withdrawal second factor
    is stored and checked - but holding people's money needs more than the
    absence of known bugs, and these are still missing:
-     - a way for a signed-in person to get an API session: nothing issues
-       one (middleware/auth.js sign() has no caller), and the plan is to
-       verify Firebase ID tokens instead
      - confirmation tracking for withdrawals: nothing moves one past
        "broadcast" by checking the chain, so held funds never settle, and
        the signer's word is all that says a transaction was sent
@@ -27,8 +24,8 @@ const app = express();
    not start. The services read the flag at call time, so overriding it
    here covers them too. */
 if (String(process.env.CUSTODY_ENABLED || '').toLowerCase() === 'true') {
-  console.error('CUSTODY_ENABLED=true refused: custody is not ready to hold funds (no API sign-in, no withdrawal ' +
-    'confirmation tracking, no reorg handling, not yet tested against a real database). Running with custody off.');
+  console.error('CUSTODY_ENABLED=true refused: custody is not ready to hold funds (no withdrawal confirmation ' +
+    'tracking, no reorg handling, not yet tested against a real database). Running with custody off.');
   process.env.CUSTODY_ENABLED = 'false';
 }
 

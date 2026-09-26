@@ -130,6 +130,16 @@
     }
   };
 
+  // ── WHO YOU ARE, FOR THE WALLET SERVER ──
+  /* The server checks the Firebase sign-in token itself (middleware/
+     auth.js). Callers use this only for the app's own /api addresses,
+     never another site. getIdToken() refreshes an expired token. */
+  window.authHeaders = async function() {
+    const u = auth && auth.currentUser;
+    if (!u) return {};
+    try { return { Authorization: 'Bearer ' + await u.getIdToken() }; } catch (e) { return {}; }
+  };
+
   // ── SIGNED OUT EVERYWHERE ──
   /* "Sign out of every device" writes a time to sessions/{uid}. Each
      signed-in device watches that document, and one that signed in

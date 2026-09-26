@@ -33,7 +33,11 @@ const MOB = (() => {
         <div class="mob-dialog" role="alertdialog" aria-modal="true" aria-labelledby="mob-dlg-t" aria-describedby="mob-dlg-m">
           ${opts.title ? `<h3 id="mob-dlg-t">${esc(opts.title)}</h3>` : '<h3 id="mob-dlg-t" class="mob-sr">Confirm</h3>'}
           <p id="mob-dlg-m">${esc(opts.message)}</p>
-          ${opts.input ? `<input class="input mob-dlg-in" type="text" value="${esc(opts.value || '')}" aria-label="${esc(opts.message)}">` : ''}
+          ${opts.input ? (opts.password
+            // A password field is never prefilled, and says what it is so
+            // the browser's password manager can fill it.
+            ? `<input class="input mob-dlg-in" type="password" autocomplete="current-password" aria-label="${esc(opts.message)}">`
+            : `<input class="input mob-dlg-in" type="text" value="${esc(opts.value || '')}" aria-label="${esc(opts.message)}">`) : ''}
           <div class="mob-dialog-a">
             ${opts.alert ? '' : `<button type="button" class="btn btn-ghost" data-v="0">${esc(opts.cancel || 'Cancel')}</button>`}
             <button type="button" class="btn ${opts.danger ? 'mob-danger' : 'btn-primary'}" data-v="1">${esc(opts.ok || 'OK')}</button>

@@ -66,9 +66,11 @@ const WD = (() => {
 
   /* ── Server calls ────────────────────────────────────────────────── */
   async function api(path, body) {
+    // The wallet server knows who you are only from your sign-in token.
+    const who = typeof authHeaders === 'function' ? await authHeaders() : {};
     const r = await fetch(path, {
       method: body ? 'POST' : 'GET', credentials: 'same-origin',
-      headers: Object.assign({ Accept: 'application/json' },
+      headers: Object.assign({ Accept: 'application/json' }, who,
         body ? { 'Content-Type': 'application/json' } : {},
         V && V.idempotencyKey && path === '/api/crypto/withdraw' ? { 'Idempotency-Key': V.idempotencyKey } : {}),
       body: body ? JSON.stringify(body) : undefined
@@ -478,7 +480,7 @@ const WD = (() => {
           /* Server-side reasons a user cannot act on are not worth
              repeating on every card. */
           const raw = (q.data && q.data.message) || '';
-          n.feeError = /session secret|database|custody/i.test(raw)
+          n.feeError = /session secret|Firebase project|database|custody/i.test(raw)
             ? 'Unavailable on this build.'
             : (raw || 'Fee unavailable right now.');
         }
