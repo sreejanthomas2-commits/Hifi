@@ -31,7 +31,7 @@
 
 'use strict';
 
-const CATALOGUE = require('../public/js/data/crypto-products.json');
+const CATALOGUE = require('../config/crypto-products.json');
 
 const STATES = new Set(['real', 'sandbox', 'coming', 'unavailable', 'paused', 'live']);
 const BASE = new Set(['real', 'sandbox', 'coming', 'unavailable']);

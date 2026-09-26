@@ -390,7 +390,6 @@ const MNY = (() => {
     try { if (hasTR() && TR.repaint) TR.repaint(); } catch (e) {}
     try { if (typeof AS !== 'undefined' && AS.repaint) AS.repaint(); } catch (e) {}
     try { if (typeof HX !== 'undefined' && HX.repaint) HX.repaint(); } catch (e) {}
-    try { if (typeof CXH !== 'undefined' && CXH.repaintBalance) CXH.repaintBalance(); } catch (e) {}
     try { if (typeof window.repaintWalletTab === 'function') window.repaintWalletTab(); } catch (e) {}
     try { if (typeof window.updateTipSummary === 'function' && document.getElementById('tip-summary')) window.updateTipSummary(); } catch (e) {}
   }
