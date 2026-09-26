@@ -9,9 +9,10 @@ rules_version = '2';
    design. So everything is closed unless a rule below opens it, and
    each rule opens exactly what the app does today:
 
-     users/{uid}   your profile and synced settings - only you
-     posts/{id}    the public feed - anyone reads, signed-in people
-                   post as themselves, likes move by one
+     users/{uid}     your profile and synced settings - only you
+     sessions/{uid}  when you last signed out of every device - only you
+     posts/{id}      the public feed - anyone reads; verified accounts
+                     post as themselves, likes move by one
 
    Paste into Firebase console -> Firestore -> Rules -> Publish, or
    deploy with the Firebase CLI. Keep this file and the console in step.
@@ -45,15 +46,47 @@ service cloud.firestore {
         && (t.size() < 6 || safeTag(t[5]));
     }
 
+    /* An email-and-password account has to confirm its address before
+       it writes anything other people will see. Google and Apple
+       accounts arrive confirmed; a phone account was confirmed by SMS. */
+    function verified() {
+      return request.auth.token.get('email_verified', false) == true
+        || request.auth.token.firebase.sign_in_provider == 'phone';
+    }
+
+    /* "Sign out of every device" writes the time into sessions/{uid}.
+       A session that signed in before then can no longer write, or read
+       the profile. auth_time is when the session signed in, and it does
+       not move when the token refreshes, so an old session stays old
+       however long it keeps refreshing. */
+    function sessionOk() {
+      let p = /databases/$(database)/documents/sessions/$(request.auth.uid);
+      return !exists(p)
+        || request.auth.token.auth_time * 1000 > get(p).data.revokedAt.toMillis();
+    }
+
     /* A person's own profile and settings. It holds their email
-       address, so nobody else can read it. */
+       address, so nobody else can read it - and nor can a session they
+       have signed out everywhere. */
     match /users/{uid} {
-      allow read, delete: if isOwner(uid);
-      allow create, update: if isOwner(uid)
+      allow read, delete: if isOwner(uid) && sessionOk();
+      allow create, update: if isOwner(uid) && sessionOk()
         && request.resource.data.keys().hasOnly([
              'displayName', 'email', 'photoURL', 'xp', 'level',
              'joinedAt', 'followers', 'following', 'prefs', 'prefsAt'])
         && (!('displayName' in request.resource.data) || str(request.resource.data.displayName, 80));
+    }
+
+    /* When the account last signed out everywhere. Readable by the
+       owner from ANY session, even an ended one - that is how an old
+       device finds out it has been signed out, and it holds nothing but
+       a time. Only a still-valid session can set it, and only to now. */
+    match /sessions/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && sessionOk()
+        && request.resource.data.keys().hasOnly(['revokedAt'])
+        && request.resource.data.revokedAt == request.time;
+      allow delete: if isOwner(uid) && sessionOk();
     }
 
     /* The public feed. */
@@ -66,7 +99,7 @@ service cloud.firestore {
       // The id must be one Firestore generated (addDoc: 20 letters and
       // digits). A client could otherwise pick its own with setDoc, and
       // an id is text that ends up inside the page.
-      allow create: if signedIn()
+      allow create: if signedIn() && verified() && sessionOk()
         && postId.matches('^[A-Za-z0-9]{20}$')
         && request.resource.data.keys().hasOnly([
              'author', 'handle', 'uid', 'time', 'body', 'tags',
@@ -90,14 +123,15 @@ service cloud.firestore {
       // A like moves the count by one, up or down, and touches nothing
       // else. (One like per person needs a likes sub-collection - the
       // app does not keep one yet.)
-      allow update: if signedIn()
+      allow update: if signedIn() && verified() && sessionOk()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
         && request.resource.data.likes >= 0
         && (request.resource.data.likes == resource.data.likes + 1
             || request.resource.data.likes == resource.data.likes - 1);
 
-      // Only the author can delete their post.
-      allow delete: if isOwner(resource.data.uid);
+      // Only the author can delete their post - verified or not, so that
+      // deleting an account always works.
+      allow delete: if isOwner(resource.data.uid) && sessionOk();
     }
   }
 }

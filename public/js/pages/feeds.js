@@ -614,7 +614,10 @@ async function likePost(e, id) {
       // Revert local UI if failed
       p.liked = !p.liked;
       p.likes -= change;
-      showToast('Error liking post.');
+      // An unconfirmed email account is refused by the shared feed's rules.
+      showToast(S.user && S.user.needsVerification
+        ? 'Confirm your email to like posts in the shared feed — Settings → Security.'
+        : 'Error liking post.');
       renderFeed();
     }
   } else {
@@ -765,14 +768,34 @@ async function publishPost() {
   showToast('Posted ✨');
 
   if (window.db && window.firebaseCollection && window.firebaseAddDoc) {
-    const giveUp = new Promise((_, reject) => setTimeout(() => reject(new Error('no answer from Firestore')), 8000));
-    Promise.race([window.firebaseAddDoc(window.firebaseCollection(window.db, 'posts'), newPost), giveUp])
-      .then(() => { localPost.synced = true; savePostsToLocal(); })
-      .catch(err => console.warn('Post kept on this device; the cloud copy was not saved.', err && err.message));
+    shareToCloud(newPost, localPost);
   }
 
   // Social-to-earn: publishing is a contribution, so it pays (up to a daily cap).
   if (typeof SF !== 'undefined') SF.earn('publish_post');
+}
+
+/* The shared feed takes posts only from accounts that have confirmed
+   their email (firestore.rules). An unconfirmed one keeps the post on
+   this device and is told why, rather than failing in the console. The
+   link may have been opened since sign-in, so Firebase is asked again
+   first. */
+async function shareToCloud(newPost, localPost) {
+  if (S.user && S.user.needsVerification) {
+    const nowOk = typeof recheckEmailVerification === 'function' && await recheckEmailVerification();
+    if (!nowOk) {
+      showToast('Posted on this device only. Confirm your email to share posts with everyone — Settings → Security.');
+      return;
+    }
+  }
+  const giveUp = new Promise((_, reject) => setTimeout(() => reject(new Error('no answer from Firestore')), 8000));
+  try {
+    await Promise.race([window.firebaseAddDoc(window.firebaseCollection(window.db, 'posts'), newPost), giveUp]);
+    localPost.synced = true;
+    savePostsToLocal();
+  } catch (err) {
+    console.warn('Post kept on this device; the cloud copy was not saved.', err && err.message);
+  }
 }
 
 // ── REAL-TIME FIRESTORE LISTENER ──

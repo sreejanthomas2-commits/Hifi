@@ -102,9 +102,21 @@
     submit.textContent = creating ? 'Creating account…' : 'Signing in…';
     try {
       const method = creating ? window.firebaseCreateUserWithEmailAndPassword : window.firebaseSignInWithEmailAndPassword;
-      await method(window.firebaseAuth, get('auth-email').value.trim(), get('auth-password').value);
+      const cred = await method(window.firebaseAuth, get('auth-email').value.trim(), get('auth-password').value);
       localStorage.removeItem('ts_guest');
       get('auth-password').value = '';
+      /* A new email account confirms its address before it can post to
+         the shared feed, so the link goes out straight away. The modal is
+         closing, so the result is said in a toast rather than here. */
+      if (creating && cred && cred.user && !cred.user.emailVerified) {
+        try {
+          const { sendEmailVerification } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+          await sendEmailVerification(cred.user);
+          if (typeof showToast === 'function') showToast(`Account created. Open the link we sent to ${cred.user.email} to confirm it — then you can post to the feed.`);
+        } catch (e) {
+          if (typeof showToast === 'function') showToast('Account created. The confirmation email could not be sent — resend it from Settings → Security.');
+        }
+      }
     } catch (error) {
       feedback(why(error, 'Unable to sign in. Please try again.'));
     } finally {

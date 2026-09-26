@@ -105,7 +105,7 @@ export default function register(SET) {
   };
 
   DO.deactivate = async () => {
-    if (!(await ask('Deactivating makes your account private and signs you out. Nothing is deleted, and signing back in undoes it.',
+    if (!(await ask('Deactivating marks your account private on this device and signs you out. Nothing is deleted, and signing back in undoes it. Posts you already shared to the feed stay public — delete your account to remove them.',
       { title: 'Deactivate account', ok: 'Deactivate', danger: true }))) return;
     P().set('privacy.account', 'private');
     P().set('account.deactivated', Date.now());
@@ -113,17 +113,82 @@ export default function register(SET) {
     if (typeof signOut === 'function') signOut();
   };
 
-  DO.deleteacct = async () => {
-    if (!(await ask('This erases every Trending post, message, setting and paper balance stored on this device. It cannot be undone. Your sign-in account and anything you posted to the shared feed are not deleted by this — that part is not built yet.',
-      { title: 'Delete account', ok: 'Delete everything', danger: true }))) return;
-    const typed = await askText('Type DELETE to confirm.', '', { title: 'Are you certain?', ok: 'Delete' });
-    if (String(typed || '').trim().toUpperCase() !== 'DELETE') { toast('Not deleted.'); return; }
-    if (!(await P().verify('Deleting your account'))) return;
+  /* Firebase deletes a sign-in account only from a session that signed
+     in within the last few minutes. That is checked BEFORE anything is
+     deleted, so a stale session is not left half-way: posts gone, account
+     still there. A Google account re-confirms in a pop-up; any other is
+     asked to sign in again first. */
+  async function freshSignIn(user) {
+    const t = await user.getIdTokenResult();
+    if (Date.now() - Number(t.claims.auth_time) * 1000 < 4 * 60 * 1000) return true;
+    if ((user.providerData || []).some(p => p && p.providerId === 'google.com')) {
+      const { reauthenticateWithPopup, GoogleAuthProvider } = await import(AUTH_SDK);
+      await reauthenticateWithPopup(user, new GoogleAuthProvider());
+      return true;
+    }
+    return false;
+  }
+
+  function wipeDevice() {
     try {
       Object.keys(localStorage).filter(k => k.indexOf('ts_') === 0 && k !== 'ts_theme')
         .forEach(k => localStorage.removeItem(k));
     } catch (e) {}
-    toast('Everything on this device has been erased');
+  }
+
+  /* Signed in, this deletes the account itself: every post shared to the
+     feed, the profile, the sessions record, then the sign-in - in that
+     order, because once the sign-in is gone nothing can prove the posts
+     were yours. A guest has only this device, so only this device is
+     erased. It used to erase the device alone and call that deleting the
+     account, while the account and its public posts stayed. */
+  DO.deleteacct = async () => {
+    const user = !guest() ? fbUser() : null;
+    const what = user
+      ? 'This deletes your Trending account: your sign-in, your profile and every post you shared to the feed — and erases everything this device holds. It cannot be undone.'
+      : 'This erases every Trending post, message, setting and paper balance stored on this device. It cannot be undone.';
+    if (!(await ask(what, { title: 'Delete account', ok: 'Delete everything', danger: true }))) return;
+    const typed = await askText('Type DELETE to confirm.', '', { title: 'Are you certain?', ok: 'Delete' });
+    if (String(typed || '').trim().toUpperCase() !== 'DELETE') { toast('Not deleted.'); return; }
+    if (!(await P().verify('Deleting your account'))) return;
+
+    if (user) {
+      if (!window.db) { toast('Trending is offline right now, so nothing was deleted.'); return; }
+      try {
+        if (!(await freshSignIn(user))) {
+          await ask('For your safety, an account can only be deleted right after signing in. Sign in again, then delete it within five minutes.',
+            { title: 'Sign in again', ok: 'Sign out', alert: true });
+          await window.firebaseSignOut(window.firebaseAuth);
+          return;
+        }
+      } catch (e) { toast('Your sign-in was not confirmed, so nothing was deleted.'); return; }
+
+      toast('Deleting your account…');
+      try {
+        const m = await import(FIRESTORE);
+        const mine = await m.getDocs(m.query(m.collection(window.db, 'posts'), m.where('uid', '==', user.uid)));
+        for (let i = 0; i < mine.docs.length; i += 400) {        // a batch holds at most 500 writes
+          const batch = m.writeBatch(window.db);
+          mine.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        }
+        await m.deleteDoc(m.doc(window.db, 'users', user.uid));
+        await m.deleteDoc(m.doc(window.db, 'sessions', user.uid));
+      } catch (e) {
+        toast('Your posts and profile could not all be deleted, so the account was kept. Try again when you are online.');
+        return;
+      }
+      try {
+        await user.delete();
+      } catch (e) {
+        toast(e && e.code === 'auth/requires-recent-login'
+          ? 'Your posts and profile are deleted. Sign in once more and repeat this to delete the sign-in itself.'
+          : 'Your posts and profile are deleted, but the sign-in could not be. Try again.');
+        return;
+      }
+    }
+    wipeDevice();
+    toast(user ? 'Your account has been deleted' : 'Everything on this device has been erased');
     setTimeout(() => location.reload(), 900);
   };
 
@@ -207,6 +272,9 @@ export default function register(SET) {
          no sign-in ever asked for a second step. It stays visible so
          people know it is coming, but as a statement, not a control. */
       sec('Sign-in protection', [
+        ...(me().needsVerification ? [row({ icon: 'mark_email_unread', label: 'Confirm your email',
+          sub: 'Needed before you can post or like in the shared feed. Tap to check again, or to get a new link.',
+          value: 'Not confirmed', warn: true, act: 'verifyemail', chev: true })] : []),
         row({ icon: 'password', label: 'Change password', sub: 'A reset link goes to your email', act: 'password', chev: true }),
         row({ icon: 'phonelink_lock', label: 'Two-factor authentication', sub: 'A second step when signing in. Not built yet — today your password or Google account is the only step.', value: 'Not available yet', disabled: true }),
         row({ icon: 'key', label: 'Passkeys', to: 'passkeys', value: 'Not available yet' })
@@ -234,18 +302,27 @@ export default function register(SET) {
     ].join('')
   });
 
+  /* Checks first - the link may already have been opened on the phone -
+     and only sends a new one if it has not. */
+  DO.verifyemail = async () => {
+    if (typeof sendEmailVerificationLink !== 'function') { toast('Sign-in is offline right now.'); return; }
+    const r = await sendEmailVerificationLink();
+    toast(r.message);
+    SET.repaint();
+  };
+
   reg('devices', {
     t: 'Devices and sessions', i: 'devices', p: 'security', k: 'devices sessions active trusted sign out remote logout everywhere',
     html: () => {
-      /* Ending another device's session used to be offered here, but all
-         it did was delete that device's line from this browser's list -
-         the device itself stayed signed in. Signing a device out from
-         somewhere else needs the server to revoke its session, which is
-         not built yet. So the list is a record, removing a line says
-         that is all it does, and the one real sign-out is this one. */
+      /* One device cannot be signed out on its own from here - that needs
+         a server that can revoke a single session - so the list is a
+         record and removing a line only tidies it. Signing out of EVERY
+         device is real: it records the time in sessions/{uid}, the
+         database refuses any session that signed in before then, and each
+         of those devices notices and signs itself out. */
       const list = P().devices();
       return [
-        `<p class="st-lead">Devices this browser has recorded for your account. Signing another device out from here is not built yet — it stays signed in until it signs out itself.</p>`,
+        `<p class="st-lead">Devices this browser has recorded for your account. Removing one only tidies this list; to end the other sessions, sign out of every device.</p>`,
         sec('', list.map(d => row({
           icon: d.here ? 'smartphone' : 'computer',
           label: d.name + (d.here ? ' · this device' : ''),
@@ -253,21 +330,37 @@ export default function register(SET) {
           value: d.here ? 'Active' : 'Remove from list', good: d.here,
           act: d.here ? '' : 'enddevice', arg: d.id, chev: !d.here
         }))),
-        sec('', [row({ icon: 'logout', label: 'Sign out on this device', sub: 'Other devices stay signed in', act: 'endall', danger: true, chev: true })])
+        sec('', [row({ icon: 'logout', label: 'Sign out of every device', sub: 'Every device, including this one, has to sign in again', act: 'endall', danger: true, chev: true })])
       ].join('');
     }
   });
 
   DO.enddevice = async id => {
-    if (!(await ask('Remove this device from the list? This does not sign it out — it stays signed in until it signs out itself.', { ok: 'Remove', danger: true }))) return;
+    if (!(await ask('Remove this device from the list? This does not sign it out — use "Sign out of every device" for that.', { ok: 'Remove', danger: true }))) return;
     P().endDevice(id);
     toast('Removed from the list');
     SET.repaint();
   };
 
-  /* signOut() asks for its own confirmation. */
-  DO.endall = () => {
-    if (typeof signOut === 'function') signOut();
+  const FIRESTORE = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  const AUTH_SDK = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  const fbUser = () => (window.firebaseAuth && window.firebaseAuth.currentUser) || null;
+
+  DO.endall = async () => {
+    const user = fbUser();
+    if (guest() || !user || !window.db) { if (typeof signOut === 'function') signOut(); return; }
+    if (!(await ask('Sign out on every device, including this one? Each will have to sign in again.', { ok: 'Sign out everywhere', danger: true }))) return;
+    if (!(await P().verify('Signing out of every device'))) return;
+    try {
+      const m = await import(FIRESTORE);
+      await m.setDoc(m.doc(window.db, 'sessions', user.uid), { revokedAt: m.serverTimestamp() });
+    } catch (e) {
+      toast('That did not go through, so your other devices are still signed in. Try again.');
+      return;
+    }
+    P().devices().forEach(d => P().endDevice(d.id));
+    await window.firebaseSignOut(window.firebaseAuth);
+    toast('Signed out on every device');
   };
 
   reg('loginactivity', {

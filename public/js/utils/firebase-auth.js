@@ -52,11 +52,17 @@
         email: user.email,
         avatar: user.photoURL || null,
         bio: 'Verified Trending member 🛡️',
-        level: 1
+        level: 1,
+        /* An email-and-password account that has not opened its
+           confirmation link yet. The shared feed refuses its posts and
+           likes (firestore.rules verified()), so the app says why. */
+        needsVerification: needsVerification(user)
       };
+      if (S.user.needsVerification) recheckVerification(user);
 
       // Save user profile to Firestore
       saveUserProfile(user);
+      watchSessions(user);
       
       updateUserUI();
       updateAvatarWithPhoto();
@@ -68,6 +74,7 @@
       
       showToast(`Welcome, ${S.user.fname}! 🚀`);
     } else {
+      stopWatchingSessions();
       // User is signed out — show auth modal
       console.log('👤 No user signed in, showing auth modal.');
       S.user = {
@@ -84,6 +91,71 @@
         openAuthModal();
       }
     }
+  }
+
+  // ── EMAIL CONFIRMATION ──
+  const AUTH_SDK = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  const needsVerification = user => !user.emailVerified &&
+    (user.providerData || []).some(p => p && p.providerId === 'password');
+
+  /* The link is opened in the mail app, often on another device, so this
+     session does not hear about it. Asking Firebase again picks it up,
+     and a fresh token carries the confirmed flag to the database. */
+  async function recheckVerification(user) {
+    try {
+      await user.reload();
+      const now = auth && auth.currentUser;
+      if (now && now.emailVerified) {
+        await now.getIdToken(true);
+        if (S.user) S.user.needsVerification = false;
+        return true;
+      }
+    } catch (e) { /* offline - keep the old answer */ }
+    return false;
+  }
+  window.recheckEmailVerification = () => auth && auth.currentUser ? recheckVerification(auth.currentUser) : Promise.resolve(false);
+
+  window.sendEmailVerificationLink = async function() {
+    const u = auth && auth.currentUser;
+    if (!u || !u.email) return { ok: false, message: 'Sign in with an email address first.' };
+    if (await recheckVerification(u)) return { ok: true, already: true, message: 'Your email is confirmed.' };
+    try {
+      const { sendEmailVerification } = await import(AUTH_SDK);
+      await sendEmailVerification(u);
+      return { ok: true, message: 'Confirmation link sent to ' + u.email };
+    } catch (e) {
+      return { ok: false, message: e && e.code === 'auth/too-many-requests'
+        ? 'A link was sent a moment ago. Check your inbox, or try again in a few minutes.'
+        : 'The link could not be sent right now.' };
+    }
+  };
+
+  // ── SIGNED OUT EVERYWHERE ──
+  /* "Sign out of every device" writes a time to sessions/{uid}. Each
+     signed-in device watches that document, and one that signed in
+     before that time signs itself out. The database enforces it anyway -
+     an older session can no longer write, or read the profile - this
+     just makes the device notice instead of failing quietly. */
+  let unwatchSessions = null;
+  function stopWatchingSessions() {
+    if (unwatchSessions) { try { unwatchSessions(); } catch (e) {} unwatchSessions = null; }
+  }
+  async function watchSessions(user) {
+    stopWatchingSessions();
+    if (!window.db || !window.firebaseOnSnapshot || !window.firebaseDoc) return;
+    let signedInAt = 0;
+    try { signedInAt = Number((await user.getIdTokenResult()).claims.auth_time) * 1000; } catch (e) { return; }
+    if (!signedInAt || !auth.currentUser || auth.currentUser.uid !== user.uid) return;
+    unwatchSessions = window.firebaseOnSnapshot(window.firebaseDoc(window.db, 'sessions', user.uid), snap => {
+      const at = snap.exists() ? snap.data().revokedAt : null;
+      const endedAt = at && at.toMillis ? at.toMillis() : 0;
+      if (endedAt && endedAt >= signedInAt) {
+        stopWatchingSessions();
+        window.firebaseSignOut(auth).then(() => {
+          if (typeof showToast === 'function') showToast('You were signed out on every device. Sign in again to continue.');
+        });
+      }
+    }, () => { /* rules not published yet, or offline - the database still enforces it */ });
   }
 
   // ── GUEST MODE ──

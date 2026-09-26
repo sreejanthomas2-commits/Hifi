@@ -36,7 +36,7 @@
    list itself is grouped. Each exports a register(SET) that declares
    its screens — imports are hoisted, so every one of these is defined
    by the time SET exists and they are called below. */
-import registerAccount from './settings-account.js?v=sec0';
+import registerAccount from './settings-account.js?v=sec1';
 import registerPrivacy from './settings-privacy.js?v=st1';
 import registerApp from './settings-app.js?v=st1';
 import registerCrypto from './settings-crypto.js?v=sec0';
