@@ -138,8 +138,54 @@ const P2P = (() => {
   }
 
   /* ── Order lifecycle ─────────────────────────────────────────────── */
-  /* buy  : pay fiat off-platform  → merchant releases → crypto credited
-     sell : crypto escrowed now    → merchant pays you → order completes */
+  /* Escrow is released by the SELLER confirming the money arrived, or by
+     a dispute decision - never by the buyer saying they paid. It used to
+     release by itself 2.6 seconds after "I have paid", which is the one
+     thing a P2P desk must never do: a scammer would only have to tap a
+     button.
+
+       buy  : pending_payment -> paid (you say you paid)
+              -> the seller releases -> completed
+       sell : your coin is escrowed at open -> awaiting_payment
+              -> buyer_paid (they say they paid) -> you check your own
+              account, then release -> completed
+       both : disputed -> resolved_release | resolved_return
+
+     An unpaid order expires, and a seller's escrow comes back on its own.
+
+     The counterparties here are made up, so their half of the flow - the
+     seller releasing, the buyer paying, a reviewer deciding - is a button
+     marked Demo. Each step stays visible as the other side's action
+     instead of hiding inside a timer. */
+  const PAY_MS = 15 * 60 * 1000;       // the buyer's time to pay and mark paid
+  const RELEASE_MS = 10 * 60 * 1000;   // the seller's time to release before a dispute can open
+  const FINAL = ['completed', 'resolved_release', 'resolved_return', 'expired', 'cancelled'];
+  const isFinal = o => FINAL.includes(o.status);
+  const payBy = o => o.payBy || ((o.created || 0) + PAY_MS);
+  const disputeFrom = o => (o.paidAt || o.created || 0) + RELEASE_MS;
+  const ask = (msg, opts) => (typeof appConfirm === 'function'
+    ? appConfirm(msg, opts)
+    : Promise.resolve(typeof window.confirm === 'function' ? window.confirm(msg) : true));
+  const late = o => Date.now() > payBy(o);
+  const find = id => P.orders.find(x => x.id === id);
+
+  // A buyer's coin lands in Funding; a seller's escrow goes back there.
+  function creditBuyer(o) {
+    if (o.side === 'buy' && typeof MNY !== 'undefined') {
+      MNY.receive(o.coin, o.qty, { kind: 'receive', via: 'P2P', from: o.merchant, simulated: false });
+    }
+  }
+  function returnEscrow(o) {
+    if (o.side === 'sell' && typeof MNY !== 'undefined') {
+      MNY.receive(o.coin, o.qty, { kind: 'receive', via: 'P2P escrow returned', simulated: false });
+    }
+  }
+  function close(o, status) {
+    o.status = status;
+    o.closedAt = Date.now();
+    if (status === 'completed') o.completed = o.closedAt;
+  }
+
   function createOrder(offerId, fiatAmount) {
     const list = offers(P.side, P.coin, P.fiat);
     const o = list.find(x => x.id === offerId);
@@ -164,14 +210,15 @@ const P2P = (() => {
       if (!esc_.ok) return toast(esc_.msg);
     }
 
+    const now = Date.now();
     const order = {
-      id: 'P' + Date.now(),
+      id: 'P' + now,
       ref: 'TR-' + Math.random().toString(36).slice(2, 10).toUpperCase(),
       side: P.side, coin: P.coin, fiat: P.fiat,
       qty, fiatAmount: amt, price: o.price,
       merchant: o.merchant.name, pay: o.pays[0],
       status: P.side === 'buy' ? 'pending_payment' : 'awaiting_payment',
-      created: Date.now()
+      created: now, payBy: now + PAY_MS
     };
 
     P.orders.unshift(order);
@@ -179,59 +226,134 @@ const P2P = (() => {
     closeModal();
     P.tab = 'orders';
     paint();
-    toast(`Order ${order.ref} opened — ${P.side === 'buy' ? 'pay the seller to continue' : 'crypto held in escrow'}`);
+    toast(`Order ${order.ref} opened — ${P.side === 'buy' ? 'pay the seller within 15 minutes' : 'your crypto is locked in escrow'}`);
     if (typeof SF !== 'undefined') SF.rep('gave_tip');
   }
 
-  /* Buyer confirms the fiat transfer; the seller then releases escrow. */
-  function markPaid(id) {
-    const o = P.orders.find(x => x.id === id);
-    if (!o || o.status !== 'pending_payment') return;
+  /* Buyer: you have sent the money. That only tells the seller to go and
+     look - the escrow does not move. */
+  async function markPaid(id) {
+    const o = find(id);
+    if (!o || o.side !== 'buy' || o.status !== 'pending_payment') return;
+    if (late(o)) return void expireDue();
+    const yes = await ask(`Only confirm once ${fiatFmt(o.fiatAmount, o.fiat)} has left your account, sent to ${o.merchant} by ${o.pay}. Marking an order paid without paying gets accounts closed.`,
+      { title: 'Have you paid?', ok: "I've paid" });
+    // The order may have expired, or been cancelled, while the dialog was open.
+    if (!yes || o.status !== 'pending_payment') return;
+    if (late(o)) return void expireDue();
     o.status = 'paid';
     o.paidAt = Date.now();
     save(); paint();
-    toast('Marked as paid — waiting for the seller to release');
-    release(id, 2600);
+    toast('Marked as paid. The crypto stays in escrow until the seller confirms your money arrived.');
   }
 
-  /* The simulated seller releases a moment after you mark the order paid.
-     The timer doesn't survive a reload, so an order reloaded mid-release
-     is picked up again at start-up (below) instead of spinning on
-     "Seller is releasing escrow…" forever. */
-  function release(id, wait) {
-    setTimeout(() => {
-      const cur = P.orders.find(x => x.id === id);
-      if (!cur || cur.status !== 'paid') return;
-      cur.status = 'completed';
-      cur.completed = Date.now();
-      if (typeof MNY !== 'undefined') {
-        MNY.receive(cur.coin, cur.qty, { kind: 'receive', via: 'P2P', from: cur.merchant, simulated: false });
-      }
-      save(); paint();
-      toast(`Released — ${qtyFmt(cur.qty)} ${cur.coin} credited to your account ✅`);
-    }, wait);
-  }
-
-  /* Seller confirms fiat landed; escrowed crypto goes to the buyer. */
-  function confirmReceived(id) {
-    const o = P.orders.find(x => x.id === id);
-    if (!o || o.status !== 'awaiting_payment') return;
-    o.status = 'completed';
-    o.completed = Date.now();
+  /* Seller: the money is in your account, so release the escrow. Only
+     once the buyer has said they paid - before that there is nothing to
+     release against. */
+  async function confirmReceived(id) {
+    const o = find(id);
+    if (!o || o.side !== 'sell' || o.status !== 'buyer_paid') return;
+    const yes = await ask(`Check your ${o.pay} account first: ${fiatFmt(o.fiatAmount, o.fiat)} must be there in full, from the name on this order. A screenshot or a message is not proof. Once released, ${qtyFmt(o.qty)} ${o.coin} can't be taken back.`,
+      { title: `Release ${o.coin} to ${o.merchant}?`, ok: 'Release', danger: true });
+    if (!yes || o.status !== 'buyer_paid') return;
+    close(o, 'completed');
     save(); paint();
-    toast(`Payment confirmed — ${qtyFmt(o.qty)} ${o.coin} released from escrow`);
+    toast(`Released — ${qtyFmt(o.qty)} ${o.coin} went to ${o.merchant}`);
   }
 
-  function cancelOrder(id) {
-    const o = P.orders.find(x => x.id === id);
-    if (!o || o.status === 'completed' || o.status === 'cancelled') return;
-    // Selling refunds escrow; buying never moved funds, so nothing to undo.
-    if (o.side === 'sell' && typeof MNY !== 'undefined') {
-      MNY.receive(o.coin, o.qty, { kind: 'receive', via: 'P2P escrow returned', simulated: false });
+  /* A dispute freezes the order: the escrow stays exactly where it is
+     until someone decides. The buyer can open one once the seller has
+     had RELEASE_MS to release; the seller can as soon as the buyer says
+     they paid (the usual reason: the money never arrived). */
+  function canDispute(o) {
+    if (!o) return false;
+    if (o.side === 'buy') return o.status === 'paid' && Date.now() >= disputeFrom(o);
+    return o.status === 'buyer_paid';
+  }
+  async function openDispute(id) {
+    const o = find(id);
+    if (!canDispute(o)) return;
+    const yes = await ask('The order freezes and the crypto stays locked in escrow until a decision. Keep your payment receipt - you will be asked for it.',
+      { title: 'Open a dispute?', ok: 'Open dispute' });
+    if (!yes || !canDispute(o)) return;
+    o.disputedFrom = o.status;
+    o.status = 'disputed';
+    o.disputedAt = Date.now();
+    save(); paint();
+    toast('Dispute opened — the crypto stays in escrow until it is decided');
+  }
+  function withdrawDispute(id) {
+    const o = find(id);
+    if (!o || o.status !== 'disputed') return;
+    o.status = o.disputedFrom === 'buyer_paid' || o.disputedFrom === 'paid' ? o.disputedFrom : (o.side === 'buy' ? 'paid' : 'buyer_paid');
+    delete o.disputedAt;
+    save(); paint();
+    toast('Dispute withdrawn — the order is back where it was');
+  }
+
+  async function cancelOrder(id) {
+    const o = find(id);
+    // A seller can't walk away once the buyer says the money is on its way,
+    // and nobody can while a dispute is open.
+    const open = () => !isFinal(o) && o.status !== 'disputed' && (o.side === 'buy' || o.status === 'awaiting_payment');
+    if (!o || !open()) return;
+    if (o.side === 'buy' && o.status === 'paid') {
+      const yes = await ask('Cancel only if you did NOT send the money. If you did, wait for the seller, or open a dispute - cancelling gives up your claim on this order.',
+        { title: 'Cancel this order?', ok: 'Cancel order', cancel: 'Keep order', danger: true });
+      if (!yes || !open()) return;
     }
-    o.status = 'cancelled';
+    close(o, 'cancelled');
+    returnEscrow(o);
     save(); paint();
-    toast(`Order ${o.ref} cancelled${o.side === 'sell' ? ' — escrow returned' : ''}`);
+    toast(`Order ${o.ref} cancelled${o.side === 'sell' ? ' — your crypto is back in Funding' : ''}`);
+  }
+
+  /* Unpaid orders close when their time runs out. A seller's escrow comes
+     back; a buyer never moved anything in the first place. */
+  function expireDue() {
+    const now = Date.now();
+    let changed = false;
+    P.orders.forEach(o => {
+      if ((o.status === 'pending_payment' || o.status === 'awaiting_payment') && now > payBy(o)) {
+        close(o, 'expired');
+        returnEscrow(o);
+        changed = true;
+      }
+    });
+    if (changed) { save(); paint(); }
+    return changed;
+  }
+
+  /* ── The other side, in this demo ────────────────────────────────── */
+  function demoSellerReleases(id) {
+    const o = find(id);
+    if (!o || o.side !== 'buy' || o.status !== 'paid') return;
+    close(o, 'completed');
+    creditBuyer(o);
+    save(); paint();
+    toast(`The seller confirmed your payment — ${qtyFmt(o.qty)} ${o.coin} released to your Funding account`);
+  }
+  function demoBuyerPays(id) {
+    const o = find(id);
+    if (!o || o.side !== 'sell' || o.status !== 'awaiting_payment') return;
+    if (late(o)) return void expireDue();
+    o.status = 'buyer_paid';
+    o.paidAt = Date.now();
+    save(); paint();
+    toast('The buyer says they have paid. Check your account before you release anything.');
+  }
+  /* In live P2P a Trending reviewer makes this call on the evidence.
+     'release' sends the coin to the buyer; 'return' gives it back to the
+     seller. */
+  function demoDecide(id, outcome) {
+    const o = find(id);
+    if (!o || o.status !== 'disputed' || (outcome !== 'release' && outcome !== 'return')) return;
+    if (outcome === 'release') { close(o, 'resolved_release'); creditBuyer(o); }
+    else { close(o, 'resolved_return'); returnEscrow(o); }
+    save(); paint();
+    toast(outcome === 'release'
+      ? `Decided for the buyer — ${qtyFmt(o.qty)} ${o.coin} released`
+      : `Decided for the seller — ${qtyFmt(o.qty)} ${o.coin} returned`);
   }
 
   /* ── Your own ads ────────────────────────────────────────────────── */
@@ -278,19 +400,69 @@ const P2P = (() => {
   function setPay(p) { P.pay = p; save(); paint(); }
 
   const STATUS = {
-    pending_payment:  { label: 'Pending payment',  cls: 'warn' },
-    awaiting_payment: { label: 'Awaiting payment', cls: 'warn' },
-    paid:             { label: 'Paid · releasing', cls: 'info' },
-    completed:        { label: 'Completed',        cls: 'ok' },
-    cancelled:        { label: 'Cancelled',        cls: 'off' }
+    pending_payment:  { label: 'Pay the seller',          cls: 'warn' },
+    awaiting_payment: { label: 'Waiting for the buyer',   cls: 'warn' },
+    paid:             { label: 'Waiting for the seller',  cls: 'info' },
+    buyer_paid:       { label: 'Check your payment',      cls: 'warn' },
+    disputed:         { label: 'Under review',            cls: 'info' },
+    completed:        { label: 'Completed',               cls: 'ok' },
+    resolved_release: { label: 'Decided · released',      cls: 'ok' },
+    resolved_return:  { label: 'Decided · returned',      cls: 'off' },
+    expired:          { label: 'Expired',                 cls: 'off' },
+    cancelled:        { label: 'Cancelled',               cls: 'off' }
   };
+
+  // Arguments for inline handlers: JSON, then escaped for the attribute.
+  const A = v => esc(JSON.stringify(v === undefined ? null : v));
+
+  /* The warnings that stop the common P2P scams, shown where each one
+     happens: when an order opens, while the buyer pays, and while the
+     seller decides whether to release. */
+  const FRAUD = `<ul class="p2p-fraud">
+      <li>Pay, and get paid, only with the details in this order, from an account in your own name.</li>
+      <li>Never release crypto until the money is in your account: not on a screenshot, a text message or a promise.</li>
+      <li>Trending staff never ask you to release early, pay extra, or move the chat to another app.</li>
+    </ul>`;
+
+  /* ── Clocks ──────────────────────────────────────────────────────── */
+  const mmss = ms => {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  };
+  function clockHTML(o) {
+    let until = 0, label = '';
+    if (o.status === 'pending_payment') { until = payBy(o); label = 'Time left to pay'; }
+    else if (o.status === 'awaiting_payment') { until = payBy(o); label = 'The buyer has to pay within'; }
+    else if (o.side === 'buy' && o.status === 'paid' && !canDispute(o)) { until = disputeFrom(o); label = 'You can open a dispute in'; }
+    if (!until) return '';
+    return `<span class="p2p-clock" data-p2p-until="${until}" data-p2p-label="${esc(label)}">${esc(label)} ${mmss(until - Date.now())}</span>`;
+  }
+  /* One timer while the orders tab is on screen. It rewrites the clock
+     text in place, expires orders whose time is up, and repaints when a
+     clock reaches zero (a dispute button appears, an order closes). */
+  let clock = null;
+  function tick() {
+    const els = typeof document.querySelectorAll === 'function' ? document.querySelectorAll('[data-p2p-until]') : [];
+    if (!document.getElementById('p2p-root') || !els.length) { clearInterval(clock); clock = null; return; }
+    if (expireDue()) return;
+    let due = false;
+    els.forEach(el => {
+      const left = Number(el.dataset.p2pUntil) - Date.now();
+      if (left <= 0) due = true;
+      else el.textContent = el.dataset.p2pLabel + ' ' + mmss(left);
+    });
+    if (due) paint();
+  }
+  function startClock() {
+    if (!clock && P.tab === 'orders' && P.orders.some(o => clockHTML(o))) clock = setInterval(tick, 1000);
+  }
 
   function paint() {
     const root = document.getElementById('p2p-root');
     if (!root) return;
 
     const coins = coinList();
-    const tabs = [['market', 'Ad book'], ['orders', `My orders${P.orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length ? ' •' : ''}`], ['ads', 'My ads']];
+    const tabs = [['market', 'Ad book'], ['orders', `My orders${P.orders.some(o => !isFinal(o)) ? ' •' : ''}`], ['ads', 'My ads']];
 
     root.innerHTML = `
       <div class="p2p-bar card">
@@ -323,6 +495,7 @@ const P2P = (() => {
       </div>
 
       <div id="p2p-body">${P.tab === 'market' ? marketHTML() : P.tab === 'orders' ? ordersHTML() : adsHTML()}</div>`;
+    startClock();
   }
 
   function marketHTML() {
@@ -333,7 +506,8 @@ const P2P = (() => {
     const spot = usdPrice(P.coin) * (FIAT[P.fiat] || FIAT.USD).rate;
 
     return `
-      <div class="p2p-spot">Reference price · <b>${fiatFmt(spot, P.fiat)}</b> per ${esc(P.coin)}</div>
+      <div class="p2p-spot">Reference price · <b>${fiatFmt(spot, P.fiat)}</b> per ${esc(P.coin)}${P.fiat === 'USD' ? '' : ' · at a fixed indicative exchange rate, not a live one'}</div>
+      <div class="p2p-demo-note">These merchants are made up for practice: their names, order counts, completion rates and badges are not real. Live P2P would list only real, checked accounts.</div>
       <div class="p2p-list">
         ${list.map(o => {
           const m = o.merchant;
@@ -342,8 +516,8 @@ const P2P = (() => {
             <div class="p2p-ad-m">
               <div class="p2p-av">${esc(m.name[0])}</div>
               <div class="p2p-m-info">
-                <div class="p2p-m-name">${esc(m.name)} ${m.verified ? '<span class="p2p-verified" title="Verified merchant">✓</span>' : ''}${o.mineAd ? '<span class="p2p-mine">your ad</span>' : ''}</div>
-                <div class="p2p-m-stats">${m.orders.toLocaleString()} orders · ${m.rate}% · ~${m.release} min</div>
+                <div class="p2p-m-name">${esc(m.name)} ${m.verified ? '<span class="p2p-verified" title="What a verified merchant looks like. This one is made up, so nobody verified it.">✓</span>' : ''}${o.mineAd ? '<span class="p2p-mine">your ad</span>' : '<span class="p2p-demo-chip">Demo</span>'}</div>
+                <div class="p2p-m-stats">${o.mineAd ? 'Your ad' : `${m.orders.toLocaleString()} orders · ${m.rate}% · ~${m.release} min <span class="tc-3">(made-up figures)</span>`}</div>
               </div>
             </div>
             <div class="p2p-ad-px">
@@ -357,7 +531,7 @@ const P2P = (() => {
             </div>
             ${o.mineAd
               ? `<button class="btn btn-ghost btn-sm" onclick="P2P.setTab('ads')">Manage ad</button>`
-              : `<button class="btn btn-sm ${P.side === 'buy' ? 'p2p-btn-buy' : 'p2p-btn-sell'}" onclick="P2P.openOrderForm('${o.id}')">
+              : `<button class="btn btn-sm ${P.side === 'buy' ? 'p2p-btn-buy' : 'p2p-btn-sell'}" onclick="P2P.openOrderForm(${A(o.id)})">
               ${P.side === 'buy' ? 'Buy' : 'Sell'} ${esc(o.coin)}
             </button>`}
           </div>`;
@@ -365,35 +539,91 @@ const P2P = (() => {
       </div>`;
   }
 
+  /* What is happening, whether the crypto is safe, and what to do next -
+     one line per status, so no order is ever just a spinner. */
+  function explain(o) {
+    const coin = `${qtyFmt(o.qty)} ${esc(o.coin)}`;
+    const money = fiatFmt(Number(o.fiatAmount) || 0, o.fiat);
+    const who = esc(o.merchant), via = esc(o.pay), ref = esc(o.ref);
+    const buy = o.side === 'buy';
+    switch (o.status) {
+      case 'pending_payment':
+        return `Send ${money} to ${who} by ${via}, then tap <b>I've paid</b>. The seller's ${coin} is locked in escrow for you. Nothing has moved yet.`;
+      case 'paid':
+        return `The ${coin} stays locked in escrow until ${who} confirms your ${money} arrived. Tapping "I've paid" doesn't release it. If they haven't released it in time, you can open a dispute.`;
+      case 'awaiting_payment':
+        return `Your ${coin} is locked in escrow: safe, and not released to anyone. ${who} has to pay ${money} by ${via}. If they don't pay in time, the order expires and your ${coin} comes back to you.`;
+      case 'buyer_paid':
+        return `${who} says they've paid ${money}. <b>Check your ${via} account yourself before you release</b>: the full amount, from the name on this order. Once released, it can't be taken back. If the money isn't there, open a dispute.`;
+      case 'disputed':
+        return `The order is frozen and the ${coin} is locked in escrow; nobody can move it until a decision. In live P2P a Trending reviewer decides from both sides' proof. This practice desk has no reviewers, so the Demo buttons show each outcome.`;
+      case 'completed':
+        return buy ? `${coin} released to your Funding account.` : `${coin} released to ${who}.`;
+      case 'resolved_release':
+        return buy ? `Decided for you: ${coin} released to your Funding account.` : `Decided for the buyer: ${coin} released to ${who}.`;
+      case 'resolved_return':
+        return buy ? `Decided for the seller: the ${coin} went back to them. If you sent money, the seller has to return it. Contact support and quote ${ref}.`
+                   : `Decided for you: ${coin} returned to your Funding account.`;
+      case 'expired':
+        return buy ? `Closed: it wasn't marked paid in time. Nothing moved. If you did send money, contact support and quote ${ref}.`
+                   : `Closed: the buyer didn't pay in time. Your ${coin} is back in Funding.`;
+      case 'cancelled':
+        return buy ? 'Cancelled. Nothing moved.' : `Cancelled. Your ${coin} is back in Funding.`;
+    }
+    return '';
+  }
+
+  const demoBtn = (fn, args, label) =>
+    `<button class="btn btn-ghost btn-sm p2p-demo" onclick="P2P.${fn}(${args})" title="Practice only: this is the other side's step, done for you"><span class="p2p-demo-tag">Demo</span> ${label}</button>`;
+  const btn = (cls, fn, id, label) => `<button class="btn ${cls} btn-sm" onclick="P2P.${fn}(${id})">${label}</button>`;
+
+  function actionsHTML(o) {
+    const id = A(o.id);
+    switch (o.status) {
+      case 'pending_payment':
+        return btn('btn-primary', 'markPaid', id, "I've paid") + btn('btn-ghost', 'cancelOrder', id, 'Cancel');
+      case 'paid':
+        return demoBtn('demoSellerReleases', id, 'Seller confirms your payment')
+          + (canDispute(o) ? btn('btn-ghost', 'openDispute', id, 'Open dispute') : '')
+          + btn('btn-ghost', 'cancelOrder', id, 'Cancel');
+      case 'awaiting_payment':
+        return demoBtn('demoBuyerPays', id, 'Buyer marks paid') + btn('btn-ghost', 'cancelOrder', id, 'Cancel');
+      case 'buyer_paid':
+        return btn('btn-primary', 'confirmReceived', id, 'Payment received — release')
+          + btn('btn-ghost', 'openDispute', id, 'Not received — dispute');
+      case 'disputed':
+        return demoBtn('demoDecide', id + ', ' + A('release'), 'Decide for the buyer')
+          + demoBtn('demoDecide', id + ', ' + A('return'), 'Decide for the seller')
+          + btn('btn-ghost', 'withdrawDispute', id, 'Withdraw dispute');
+    }
+    return '';
+  }
+
   function ordersHTML() {
     if (!P.orders.length) return `<div class="p2p-empty">No orders yet. Open one from the ad book.</div>`;
     return `<div class="p2p-list">${P.orders.map(o => {
       const st = STATUS[o.status] || STATUS.cancelled;
-      const acts = o.status === 'pending_payment'
-        ? `<button class="btn btn-primary btn-sm" onclick="P2P.markPaid('${o.id}')">I have paid</button>
-           <button class="btn btn-ghost btn-sm" onclick="P2P.cancelOrder('${o.id}')">Cancel</button>`
-        : o.status === 'awaiting_payment'
-        ? `<button class="btn btn-primary btn-sm" onclick="P2P.confirmReceived('${o.id}')">Payment received</button>
-           <button class="btn btn-ghost btn-sm" onclick="P2P.cancelOrder('${o.id}')">Cancel</button>`
-        : o.status === 'paid'
-        ? `<span class="p2p-wait"><span class="material-symbols-rounded ms-16 spinner">sync</span> Seller is releasing escrow…</span>`
-        : '';
+      const side = o.side === 'sell' ? 'sell' : 'buy';
+      const acts = actionsHTML(o);
+      const clk = clockHTML(o);
       return `
         <div class="card p2p-order">
           <div class="p2p-o-top">
             <div>
-              <span class="p2p-o-side ${o.side}">${o.side.toUpperCase()}</span>
+              <span class="p2p-o-side ${side}">${side.toUpperCase()}</span>
               <b>${qtyFmt(o.qty)} ${esc(o.coin)}</b>
               <span class="tc-3">· ${esc(o.ref)}</span>
             </div>
             <span class="p2p-status ${st.cls}">${st.label}</span>
           </div>
           <div class="p2p-o-grid">
-            <div><span>Amount</span><b>${fiatFmt(o.fiatAmount, o.fiat)}</b></div>
-            <div><span>Price</span><b>${fiatFmt(o.price, o.fiat)}</b></div>
-            <div><span>Counterparty</span><b>${esc(o.merchant)}</b></div>
+            <div><span>Amount</span><b>${fiatFmt(Number(o.fiatAmount) || 0, o.fiat)}</b></div>
+            <div><span>Price</span><b>${fiatFmt(Number(o.price) || 0, o.fiat)}</b></div>
+            <div><span>Counterparty</span><b>${esc(o.merchant)}${o.merchant === 'You' ? '' : ' <span class="p2p-demo-chip">Demo</span>'}</b></div>
             <div><span>Method</span><b>${esc(o.pay)}</b></div>
           </div>
+          <div class="p2p-explain" role="status">${explain(o)}${clk ? '<br>' + clk : ''}</div>
+          ${o.status === 'pending_payment' || o.status === 'buyer_paid' ? FRAUD : ''}
           ${acts ? `<div class="p2p-o-acts">${acts}</div>` : ''}
         </div>`;
     }).join('')}</div>`;
@@ -460,13 +690,14 @@ const P2P = (() => {
 
       <div class="p2p-note">
         <span class="material-symbols-rounded ms-16">lock</span>
-        ${buying
-          ? 'The seller\'s crypto is held in escrow. Pay them directly, then mark the order as paid.'
-          : 'Your crypto is escrowed when the order opens and released once you confirm payment.'}
-        The fiat transfer happens between you and the counterparty — this screen never moves money.
+        <span>${buying
+          ? 'The seller\'s crypto is locked in escrow while you pay. Pay them within 15 minutes, then tap I\'ve paid. It is released when the seller confirms your money arrived, not when you tap the button.'
+          : 'Your crypto is locked in escrow when the order opens. It is released only when you confirm the buyer\'s money is in your account. If they don\'t pay within 15 minutes, it comes back to you.'}
+        The money itself moves between you and the other person; this screen never moves it.</span>
       </div>
+      ${FRAUD}
 
-      <button class="btn w100 ${buying ? 'p2p-btn-buy' : 'p2p-btn-sell'}" onclick="P2P.createOrder('${o.id}', document.getElementById('p2p-amt').value)">
+      <button class="btn w100 ${buying ? 'p2p-btn-buy' : 'p2p-btn-sell'}" onclick="P2P.createOrder(${A(o.id)}, document.getElementById('p2p-amt').value)">
         Open order
       </button>`);
   }
@@ -520,14 +751,18 @@ const P2P = (() => {
         pay: document.getElementById('ad-pay').value })">Post ad</button>`);
   }
 
-  // Orders reloaded while the seller was releasing finish now.
-  setTimeout(() => P.orders.filter(o => o.status === 'paid').forEach(o => release(o.id, 1200)), 0);
+  /* Orders whose time ran out while the app was closed close now. An
+     order that was waiting for the seller stays waiting: it used to be
+     released here, on start-up, without anyone confirming anything. */
+  setTimeout(expireDue, 0);
 
   return {
     paint, setSide, setTab, setCoin, setFiat, setPay,
     openOrderForm, previewOrder, createOrder, openAdForm, postAd,
     markPaid, confirmReceived, cancelOrder, toggleAd, removeAd, closeModal,
-    offers, FIAT, get state() { return P; }
+    openDispute, withdrawDispute, canDispute, expireDue,
+    demoSellerReleases, demoBuyerPays, demoDecide,
+    offers, FIAT, PAY_MS, RELEASE_MS, get state() { return P; }
   };
 })();
 
@@ -541,7 +776,7 @@ function getP2pTemplate() {
     </h1>
     <div class="tr-banner">
       <span class="material-symbols-rounded ms-16">info</span>
-      Simulated marketplace. Crypto escrow moves your paper balances; the fiat leg is off-platform by design and no real payment is ever initiated here.
+      Practice marketplace. The merchants are made up, exchange rates are fixed indicative figures, and escrow moves your paper balance only. The money side happens between the two people, off Trending, and no real payment is ever made here.
     </div>
     <div id="p2p-root"></div>
   </section>`;

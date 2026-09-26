@@ -216,6 +216,7 @@ const HC = (() => {
           <span class="material-symbols-rounded" style="color:#F0B90B">savings</span> Earn</span>
         <span class="section-link" onclick="navigateTo('earn')">All rates</span>
       </div>
+      <div class="fs11 tc-3" style="margin-bottom:6px">Practice products at sandbox rates: indicative, not offers, never guaranteed.</div>
       ${atWork > 0
         ? `<div class="hc-eq-sub" style="margin-bottom:8px">
              <span class="tc-1 fw7">${usd(atWork)}</span><span class="tc-3">at work</span></div>`

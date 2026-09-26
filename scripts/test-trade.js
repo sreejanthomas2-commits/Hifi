@@ -54,7 +54,7 @@ function makeWorld(opts) {
   const ctx = {
     window: {},
     localStorage,
-    document: { getElementById: () => null },
+    document: { getElementById: id => (o.nodes && o.nodes[id]) || null },
     showToast: m => toasts.push(m),
     setTimeout, console
   };
@@ -200,8 +200,24 @@ function stale() {
   check('  with nothing spent', w.TR.state.cash, 100000);
 }
 
+/* A pair with no real book shows no book. The panel used to draw seven
+   levels of seeded numbers labelled "simulated depth" - liquidity that
+   does not exist. */
+function noFakeBook() {
+  console.log('\nno invented order book');
+  const nodes = { 'tr-book-body': { innerHTML: '' }, 'tr-book-src': { className: '', textContent: '' } };
+  const w = makeWorld({ nodes });
+  w.TR.paintBook();
+  const html = nodes['tr-book-body'].innerHTML;
+  ok('a pair with no live book says there is none', /No order book for this pair/.test(html));
+  ok('  and draws no price levels', !/tr-depth-row/.test(html));
+  check('  the source label says so', nodes['tr-book-src'].textContent, 'no order book');
+  ok('  and never "simulated depth"', !/simulated depth/.test(html + nodes['tr-book-src'].textContent));
+}
+
 function done() {
   stale();
+  noFakeBook();
   console.log(`\n${pass} passed, ${fail} failed\n`);
   process.exit(fail ? 1 : 0);
 }

@@ -109,6 +109,7 @@ function makeWorld(opts) {
     document: makeDoc(),
     console
   };
+  Object.assign(ctx, o.extra || {});   // a clock and timers, where a test needs them
   ctx.window.localStorage = localStorage;
   ctx.globalThis = ctx;
   vm.createContext(ctx);
@@ -285,6 +286,44 @@ console.log('\na reference token cannot be opened for conversion');
   const { CVT } = w;
   CVT.open('TREND');
   check('the sheet does not open', CVT.state, 'null');
+}
+
+console.log('\na quote on the Confirm screen expires and refreshes');
+{
+  const clock = { t: Date.UTC(2026, 8, 26, 12) };
+  class FakeDate extends Date {
+    constructor(...a) { super(...(a.length ? a : [clock.t])); }
+    static now() { return clock.t; }
+  }
+  const ticks = [];
+  const w = makeWorld({ extra: { Date: FakeDate, setInterval: fn => { ticks.push(fn); return ticks.length; }, clearInterval: () => {} } });
+  const { CVT, MNY, prices } = w;
+  const tick = () => ticks.forEach(fn => fn());
+  const sheet = () => w.ctx.document.getElementById('cvt-scrim').innerHTML;
+  CVT.open('USDT', 'BTC');
+  CVT.setAmount('100');
+  CVT.review();
+  check('the quote lasts 15 seconds', CVT.state.quoted.expiresAt - clock.t, 15000);
+  ok('the Confirm screen shows the countdown', sheet().includes('New quote in 15s'));
+  ok('  and the price-movement warning', sheet().includes('Prices move while you read'));
+  const firstOut = CVT.state.quoted.out;
+  prices.BTC.usd = 101;              // the market moves 1%
+  clock.t += 16000;
+  const before = MNY.balanceOf('BTC', 'funding');
+  CVT.submit();
+  check('an expired quote is never converted', MNY.balanceOf('BTC', 'funding'), before);
+  check('  it is replaced by a fresh one', CVT.state.quoted.expiresAt - clock.t, 15000);
+  ok('  priced at the new market', CVT.state.quoted.out < firstOut);
+  ok('  and the screen says what it was', sheet().includes('Quote refreshed'));
+  clock.t += 15000;
+  tick();
+  check('left open, the screen takes a new quote by itself at zero', CVT.state.quoted.expiresAt - clock.t, 15000);
+  CVT.submit();
+  ok('a quote inside its time converts', MNY.balanceOf('BTC', 'funding') > before);
+  check('  and the sheet says so', CVT.state.step, 'done');
+  const after = MNY.balanceOf('BTC', 'funding');
+  CVT.submit();
+  check('a second tap does not convert again', MNY.balanceOf('BTC', 'funding'), after);
 }
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

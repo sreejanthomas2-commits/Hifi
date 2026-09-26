@@ -649,9 +649,11 @@ const PAY = (() => {
     const value = r.amount * priceOf(r.asset);
     const who = r.to ? r.to.name : 'They';
 
+    /* A simulated contact answers at random, so its "no" is labelled as
+       exactly that rather than passed off as a real person's decision. */
     if (Math.random() < 0.15) {
       r.status = 'declined';
-      r.reason = who + ' declined this request';
+      r.reason = who + ' declined this request (a simulated contact, which declines about 1 in 7 at random)';
     } else if (!takeInbound(value)) {
       r.status = 'declined';
       r.reason = `Daily settlement cap reached (${usd(INBOUND_CAP)}/day)`;

@@ -33,6 +33,11 @@ const CVT = (() => {
 
   const FEE = 0.01;                  // the platform fee, as the Wallet panel charged
   const DRIFT = 0.005;               // 0.5% — how far the rate may move before we re-ask
+  /* A quote on the Confirm screen is good for this long. The screen
+     counts it down and takes a fresh one at zero, and Convert refuses a
+     quote past its time, so nobody agrees to a number that is minutes
+     old just because the screen was left open. */
+  const QUOTE_MS = 15000;
 
   let V = null;                      // { from, to, amount, step, quoted, done } while open
 
@@ -158,9 +163,35 @@ const CVT = (() => {
   }
 
   function close() {
+    stopClock();
     const s = document.getElementById('cvt-scrim');
     if (s) s.remove();
     V = null;
+  }
+
+  /* ── The quote's clock ───────────────────────────────────────────── */
+  const stamp = q => ({ ...q, at: Date.now(), expiresAt: Date.now() + QUOTE_MS });
+  const secsLeft = q => Math.max(0, Math.ceil(((q && q.expiresAt) - Date.now()) / 1000));
+  let clock = null;
+  function stopClock() { if (clock) { clearInterval(clock); clock = null; } }
+  function startClock() {
+    stopClock();
+    if (typeof setInterval === 'function') clock = setInterval(tickQuote, 1000);
+  }
+  // A fresh quote for the same coins and amount, noting what it replaced.
+  function refreshQuote() {
+    if (!V || !V.quoted) return;
+    const prev = V.quoted;
+    const q = quote(prev.from, prev.to, prev.amount);
+    V.quoted = q.ok && !q.short ? stamp(q) : null;
+    V.refreshed = V.quoted && Math.abs(V.quoted.out - prev.out) > 1e-12 ? { was: prev.out } : null;
+    if (!V.quoted) { stopClock(); V.expiredWhy = q.short ? `You no longer hold enough ${prev.from}.` : (q.why || ''); }
+  }
+  function tickQuote() {
+    if (!V || V.step !== 'review' || !V.quoted) { stopClock(); return; }
+    if (Date.now() >= V.quoted.expiresAt) { refreshQuote(); render(); return; }
+    const el = document.getElementById('cvt-ttl');
+    if (el) el.textContent = `New quote in ${secsLeft(V.quoted)}s`;
   }
 
   function render() {
@@ -245,8 +276,9 @@ const CVT = (() => {
 
   function reviewHTML() {
     const q = V.quoted;
-    if (!q) return '<div class="cvt-warn">That quote expired. Go back and try again.</div>';
+    if (!q) return `<div class="cvt-warn">That quote expired and a new one couldn't be taken. ${esc(V.expiredWhy || '')} Nothing was converted. Go back and try again.</div>`;
     const row = (l, v, cls) => `<div class="cvt-row"><span>${esc(l)}</span><b class="${cls || ''}">${v}</b></div>`;
+    const was = V.refreshed ? `<div class="cvt-fine" role="status">Quote refreshed: it was ${esc(qty(V.refreshed.was))} ${esc(q.to)}.</div>` : '';
     return `
       <div class="cvt-sum">
         <div class="cvt-sum-t">${coin(q.from, 26)}<b>${esc(qty(q.amount))} ${esc(q.from)}</b></div>
@@ -258,9 +290,12 @@ const CVT = (() => {
         ${row('Value', esc(usd(q.usdIn)))}
         ${row(`Fee (${(FEE * 100).toFixed(1)}%)`, `${esc(qty(q.feeQty))} ${esc(q.from)} · ${esc(usd(q.feeUsd))}`)}
         ${row(`${esc(q.from)} after`, `${esc(qty(Math.max(0, q.have - q.amount)))} ${esc(q.from)}`)}
+        ${row('You receive (estimated)', `${esc(qty(q.out))} ${esc(q.to)}`)}
+        ${row('Quote', `<span id="cvt-ttl" aria-live="off">New quote in ${secsLeft(q)}s</span>`)}
       </div>
+      ${was}
       <button type="button" class="btn btn-primary w100 cvt-go" onclick="CVT.submit()">Convert</button>
-      <div class="cvt-fine">If the rate has moved by the time you tap, you will be shown the new figure rather than converted at it.</div>`;
+      <div class="cvt-fine">Prices move while you read. This quote lasts ${QUOTE_MS / 1000} seconds and then refreshes on its own. If the rate moves more than ${(DRIFT * 100).toFixed(1)}% before you tap, you'll see the new figure first rather than being converted at it.</div>`;
   }
 
   function doneHTML() {
@@ -324,28 +359,41 @@ const CVT = (() => {
     const q = quote(V.from, V.to, V.amount);
     if (!q.ok) { toast(q.why); return; }
     if (q.short) { toast(`Not enough ${q.from}. You hold ${qty(q.have)}.`); return; }
-    V.quoted = q;
+    V.quoted = stamp(q);
+    V.refreshed = null;
     V.step = 'review';
     render();
+    startClock();
   }
 
-  function back() { if (V) { V.step = 'form'; render(); } }
+  function back() { if (V) { stopClock(); V.step = 'form'; render(); } }
 
   function submit() {
-    if (!V || !V.quoted) return;
+    if (!V || V.step !== 'review' || !V.quoted) return;
+    /* A quote past its time is never used, even if the clock hasn't
+       ticked yet (a sleeping laptop, a background tab). Take a fresh one
+       and ask again. */
+    if (Date.now() >= V.quoted.expiresAt) {
+      refreshQuote();
+      render();
+      toast(V.quoted ? 'That quote expired. Here is a fresh one: check it and tap Convert again.' : 'That quote expired. Nothing was converted.');
+      return;
+    }
     const q = V.quoted;
     const r = execute(q.from, q.to, q.amount, { expect: q.out });
 
     if (!r.ok && r.moved) {
       /* The rate moved past the threshold. Show the new number on the
          same screen and let them agree to that one instead. */
-      V.quoted = r.quote;
+      V.refreshed = { was: q.out };
+      V.quoted = stamp(r.quote);
       toast(r.msg);
       render();
       return;
     }
     if (!r.ok) { toast(r.msg); return; }
 
+    stopClock();
     V.done = { from: q.from, to: q.to, amount: q.amount, out: r.out, moved: r.moved };
     V.step = 'done';
     render();
@@ -356,6 +404,7 @@ const CVT = (() => {
     open, close, back, submit, review, flip, max, field, setAmount,
     quote, execute, options, canConvert, whyNot,
     get FEE() { return FEE; },
+    get QUOTE_MS() { return QUOTE_MS; },
     get state() { return V; }
   };
 })();

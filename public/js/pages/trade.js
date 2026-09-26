@@ -445,10 +445,14 @@ const TR = (() => {
 
   /* ── Depth ──────────────────────────────────────────────────────── */
   /* The real Binance ladder when the stream is on this pair — twenty
-     levels, ten updates a second. The synthetic ladder below is only the
-     fallback for coins Binance doesn't list, and says so in the UI. */
+     levels, ten updates a second. There is no other source. A pair
+     Binance doesn't list has no book here, and the panel says so: it
+     used to draw seven levels of seeded numbers labelled "simulated
+     depth", which is liquidity that does not exist. Trending has no book
+     of its own yet, so it shows none rather than a made-up one. */
   function depth(sym) {
-    if (QUOTE === 'USDT' && !window.TokenMarkets?.isStock(sym) && typeof MD !== 'undefined' && MD.book && MD.book.at &&
+    const streamable = QUOTE === 'USDT' && !window.TokenMarkets?.isStock(sym) && typeof MD !== 'undefined';
+    if (streamable && MD.book && MD.book.at &&
         String(MD.status().pair).toUpperCase() === String(sym).toUpperCase()) {
       const b = MD.book;
       if (b.bids.length && b.asks.length) {
@@ -459,19 +463,11 @@ const TR = (() => {
         };
       }
     }
-    const mid = pairPrice(sym);
-    if (!mid) return { bids: [], asks: [] };
-    const rows = 7;
-    const step = mid * 0.0006;
-    const bids = [], asks = [];
-    for (let i = 1; i <= rows; i++) {
-      const seed = (i * 9301 + sym.length * 49297) % 233280 / 233280;
-      const size = (0.4 + seed * 2.2) * (mid > 1000 ? 0.6 : mid > 1 ? 40 : 20000);
-      bids.push({ price: mid - step * i, size });
-      asks.push({ price: mid + step * i, size: size * (0.7 + seed * 0.7) });
-    }
-    return { bids, asks };
+    // Listed on Binance: the book is on its way. Otherwise there isn't one.
+    const coming = streamable && typeof MD.has === 'function' && MD.has(sym) && MD.isLive && MD.isLive();
+    return { real: false, waiting: !!coming, bids: [], asks: [] };
   }
+  const bookSource = d => d.real ? 'live · Binance' : d.waiting ? 'connecting' : 'no order book';
 
   /* ── Live surfaces ──────────────────────────────────────────────── */
   /* These three repaint on their own from the market feed. A full desk
@@ -482,7 +478,11 @@ const TR = (() => {
 
   function bookHTML(sym) {
     const d = depth(sym);
-    if (!d.bids.length) return '<div class="tr-empty">Waiting for the book…</div>';
+    if (!d.bids.length) {
+      return d.waiting
+        ? '<div class="tr-empty">Waiting for the book…</div>'
+        : '<div class="tr-empty">No order book for this pair. Trending has no book of its own and doesn\'t invent one. Paper orders here fill at the last price, ' + pairLabel(sym) + '.</div>';
+    }
     const maxSize = Math.max(...d.bids.concat(d.asks).map(r => r.size), 1e-9);
     const ladder = (rows, kind) => rows.map(r => `
       <div class="tr-depth-row ${kind}">
@@ -579,9 +579,9 @@ const TR = (() => {
     if (el) el.innerHTML = bookHTML(T.pair);
     const src = document.getElementById('tr-book-src');
     if (src) {
-      const real = depth(T.pair).real;
-      src.className = real ? 'tr-live' : 'tr-sim';
-      src.textContent = real ? 'live · Binance' : 'simulated depth';
+      const d = depth(T.pair);
+      src.className = d.real ? 'tr-live' : 'tr-sim';
+      src.textContent = bookSource(d);
     }
   }
   function paintTape() {
@@ -923,7 +923,7 @@ const TR = (() => {
             </div>
 
             <div class="card tr-book">
-              <div class="tr-sec-t">Order book <span id="tr-book-src" class="${d.real ? 'tr-live' : 'tr-sim'}">${d.real ? 'live · Binance' : 'simulated depth'}</span></div>
+              <div class="tr-sec-t">Order book <span id="tr-book-src" class="${d.real ? 'tr-live' : 'tr-sim'}">${bookSource(d)}</span></div>
               <div id="tr-book-body">${bookHTML(sym)}</div>
               <div class="tr-sec-t mt12">Market trades</div>
               <div id="tr-tape" class="tr-tape">${tapeHTML()}</div>

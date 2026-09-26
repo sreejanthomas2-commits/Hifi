@@ -59,6 +59,28 @@ const EN = (() => {
     { id: 'p3', sym: 'JUP',   name: 'Jupiter',        stakeCoin: 'SOL',  apy: 22.7, days: 21, raised: 0.44, total: 1500000 }
   ];
 
+  /* What every product has to say before anyone stakes: the rate and what
+     kind of number it is, the term, how redemption works, the fees, and
+     the risk. These are practice products and every rate is a fixed
+     sandbox figure, so there is no rate history to show and nothing is
+     promised. A number with no label next to it reads like an offer. */
+  const STABLE = ['USDT', 'USDC', 'USD1'];
+  function termsOf(p) {
+    return [
+      ['Rate', `${p.apy}% a year, indicative. A fixed sandbox figure: not a past return and not a promised one.`],
+      ['Term', p.term ? `${p.term} days, locked` : 'None, flexible'],
+      ['Redeem', p.term
+        ? `At the end of the term. Redeem early and you get your ${p.coin} back, but no interest.`
+        : 'Any time. Interest stops when you redeem.'],
+      ['Fees', 'None'],
+      ['Risk', STABLE.includes(p.coin)
+        ? `${p.coin} can lose its dollar peg. A real yield depends on whoever pays it, and can fall or stop.`
+        : `${p.coin}'s price can fall while it is staked, by more than the interest. A real rate changes and is never guaranteed.`]
+    ];
+  }
+  const termsHTML = p => `<dl class="en-terms">${termsOf(p).map(([k, v]) =>
+    `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
+
   const QUIZZES = [
     { id: 'q1', topic: 'What is a liquid staking token?',
       opts: ['A receipt token you can trade while your stake stays locked',
@@ -267,7 +289,7 @@ const EN = (() => {
       status: 'active'
     });
     save(); TR.repaint(); repaint();
-    return { ok: true, msg: `Staked ${qty(amt)} ${p.coin} at ${p.apy}% APY` };
+    return { ok: true, msg: `Staked ${qty(amt)} ${p.coin} at an indicative ${p.apy}% a year` };
   }
 
   /* Locked terms redeemed early forfeit accrued interest but return the
@@ -430,7 +452,7 @@ const EN = (() => {
     const cards = [
       ['At work',      usd(totalEarning()),   'Principal across all three'],
       ['Accrued',      usd(accruedValue()),   'Interest not yet redeemed'],
-      ['Blended APY',  blendedApy().toFixed(2) + '%', 'Weighted by amount staked'],
+      ['Blended rate', blendedApy().toFixed(2) + '%', 'Indicative, weighted by amount'],
       ['Fees paid',    usd(E.feesPaid),       'Performance fees to traders']
     ];
     return `<div class="en-summary">
@@ -495,7 +517,7 @@ const EN = (() => {
         <div class="en-trader-top">
           <div class="en-av">${esc(t.name.split(' ').map(w => w[0]).join(''))}</div>
           <div class="en-trader-id">
-            <div class="en-row-t">${esc(t.name)}</div>
+            <div class="en-row-t">${esc(t.name)} <span class="p2p-demo-chip">Demo</span></div>
             <div class="en-row-s">${esc(t.handle)} · ${esc(t.style)}</div>
           </div>
           <span class="en-risk en-risk-${t.risk.toLowerCase()}">${esc(t.risk)}</span>
@@ -521,10 +543,13 @@ const EN = (() => {
     }).join('');
 
     return `${mine}
-      <h3 class="en-h">Top traders</h3>
+      <h3 class="en-h">Demo traders</h3>
       <div class="en-note">
-        Copies mirror the trader's coins against live prices and settle to your paper
-        balance. ${(PERF_FEE * 100).toFixed(0)}% performance fee on profit only — a losing copy pays nothing.
+        These traders are made up for practice. Their names, returns, win rates, copier
+        counts and assets are invented, not anyone's real record. A copy mirrors their
+        pretend coins against live prices and settles to your paper balance.
+        ${(PERF_FEE * 100).toFixed(0)}% fee on gains only; a losing copy pays nothing.
+        Copying a real trader can lose money, and past returns don't predict future ones.
       </div>
       <div class="en-traders">${board}</div>
       ${history}`;
@@ -574,9 +599,10 @@ const EN = (() => {
             <div class="en-row-t">${esc(p.coin)}</div>
             <div class="en-row-s">${p.type === 'locked' ? `${p.term} days locked` : 'Flexible · redeem any time'}</div>
           </div>
-          <div class="en-apy">${p.apy}%<span>APY</span></div>
+          <div class="en-apy">${p.apy}%<span>a year · indicative</span></div>
         </div>
         <div class="en-row-s">Min ${qty(p.min)} ${esc(p.coin)} · you hold ${qty(bal)}</div>
+        ${termsHTML(p)}
         ${live ? `<div class="en-copy-form">
           <input class="en-input" type="number" step="any" placeholder="${qty(p.min)} min" id="en-stake-${p.id}">
           <button class="btn btn-primary btn-sm" onclick="EN.stakeFrom('${p.id}')">Stake</button>
@@ -587,15 +613,25 @@ const EN = (() => {
     return `${positions}
       <h3 class="en-h">Products</h3>
       <div class="en-note">
-        Staked coin leaves your Portfolio immediately and interest accrues from real elapsed
-        time, not tick count. Locked terms redeemed early return principal but forfeit interest.
+        Practice products at fixed sandbox rates. Staked coin leaves your Portfolio at once, and
+        interest accrues with real elapsed time. Each card lists its term, how to redeem, fees and
+        risks. Real crypto yields change, are never guaranteed, and can lose money.
       </div>
       <div class="en-prods">${shelf}</div>`;
   }
 
-  function stakeFrom(productId) {
+  /* A locked stake ties the coin up for the whole term, so it is said out
+     loud before it happens rather than found out at redemption. */
+  async function stakeFrom(productId) {
     const el = document.getElementById('en-stake-' + productId);
-    const res = stake(productId, el ? el.value : 0);
+    const amount = el ? el.value : 0;
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (p && p.term && parseFloat(amount) >= p.min && typeof appConfirm === 'function') {
+      const yes = await appConfirm(`Your ${p.coin} is locked for ${p.term} days. Redeem early and you get it back with no interest. ${p.apy}% is an indicative sandbox rate, not a promise.`,
+        { title: `Lock ${amount} ${p.coin} for ${p.term} days?`, ok: 'Lock and stake' });
+      if (!yes) return;
+    }
+    const res = stake(productId, amount);
     toast(res.msg);
   }
 
@@ -631,10 +667,10 @@ const EN = (() => {
         <div class="en-prod-top">
           ${ic(pool.sym, 26)}
           <div>
-            <div class="en-row-t">${esc(pool.sym)}</div>
+            <div class="en-row-t">${esc(pool.sym)} <span class="p2p-demo-chip">Demo</span></div>
             <div class="en-row-s">${esc(pool.name)} · stake ${esc(pool.stakeCoin)}</div>
           </div>
-          <div class="en-apy">${pool.apy}%<span>APY</span></div>
+          <div class="en-apy">${pool.apy}%<span>a year · demo</span></div>
         </div>
         <div class="en-bar"><i style="width:${(pool.raised * 100).toFixed(0)}%"></i></div>
         <div class="en-row-s">${(pool.raised * 100).toFixed(0)}% of ${pool.total.toLocaleString()} ${esc(pool.sym)} allocated · ${pool.days} days · you hold ${qty(bal)} ${esc(pool.stakeCoin)}</div>
@@ -689,8 +725,9 @@ const EN = (() => {
     return `${mine}${pending}
       <h3 class="en-h">Launchpool</h3>
       <div class="en-note">
+        Demo pools: the rates, allocations and progress bars are made up for practice.
         Stake a coin you already hold to farm a new listing. Your stake is never
-        converted — unstake returns it in full, plus whatever the pool farmed.
+        converted; unstaking returns it in full, plus whatever the pool farmed, in paper tokens.
       </div>
       <div class="en-prods">${pools}</div>
 
@@ -733,8 +770,9 @@ function getEarnTemplate() {
     </h1>
     <div class="tr-banner">
       <span class="material-symbols-rounded ms-16">info</span>
-      Paper yield. Copy trades, stakes and pools all settle against the same simulated
-      balance as the trading desk — no real funds, no custody, no counterparty.
+      Practice yield. Every rate is a fixed sandbox figure, not an offer or a promise, and the
+      traders and pools are made up. Everything settles against the same paper balance as the
+      trading desk; no real funds. Real crypto yields change, are never guaranteed, and can lose money.
     </div>
     <div id="en-root"></div>
   </section>`;
