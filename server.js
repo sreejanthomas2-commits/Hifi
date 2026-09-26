@@ -112,6 +112,12 @@ app.use('/api/link-preview', require('./routes/linkPreview'));
 // cost before sending from their own wallet app.
 app.use('/api/fees', require('./routes/fees'));
 
+// The crypto switchboard: which services are real, practice, coming or
+// unavailable for this person, and why. The Crypto Hub draws what this
+// says. Nothing can be switched to real money from here - see
+// services/products.js for everything that has to exist first.
+app.use('/api/products', require('./routes/products'));
+
 // The signer's queue. Mounted BEFORE the /api/crypto routers: a router
 // mounted on a prefix runs its middleware over every path beneath it, so
 // the user-session check on /api/crypto would otherwise answer these

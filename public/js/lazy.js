@@ -44,6 +44,9 @@
 
 /* pane name (as navigateTo receives it) → the module that draws it. */
 const PAGES = {
+  /* Nothing at boot reads the hub's globals: it only reads everyone
+     else's (MNY, TR, P2P), and MNY checks CXH exists before calling it. */
+  cryptohub:    './pages/cryptohub.js?v=hb1',
   reels:        './pages/reels.js?v=cm1',
   cryptomarket: './pages/cryptomarket.js?v=8m8',
   settings:     './pages/settings.js?v=sec2'

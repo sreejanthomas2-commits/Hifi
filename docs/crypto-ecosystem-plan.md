@@ -1,7 +1,7 @@
 # Trending Crypto — audit and build plan
 
-*26 September 2026. Proposal, waiting for approval. Nothing in this document is
-built unless it says "exists".*
+*26 September 2026. Phases A and B are built (see §9). Everything else in this
+document is a proposal, and isn't built unless it says "exists".*
 
 ## The short version
 
@@ -420,9 +420,9 @@ together. A screen on its own doesn't count.
 | Phase | What | Needs from you |
 |---|---|---|
 | **A. Honesty fixes** (browser only, small) | Remove the invented order book. P2P: no automatic release after "Paid" — the seller confirms, plus countdown, dispute button, fraud warnings. Label the made-up merchants and traders as demo. Earn: risk wording, "indicative" rates, redemption terms. Convert: visible 15 s countdown and auto-refresh. Pay: label the random declines as simulated | Approval |
-| **B. Crypto Hub + switchboard** | `GET /api/products` and the hub page, with each tile opening the existing screens. Shared components (confirmation sheet, timeline, problem card, skeletons, offline banner) | Approval |
+| **B. Crypto Hub + switchboard** | `GET /api/products` and the hub page, with each tile opening the existing screens. Shared components: problem card, skeletons, offline banner. The status timeline and confirmation sheet move to Phase D, so they're built against the first real server transaction | Approval |
 | **C. Server foundation** | Fix the database connect bug. Two-book ledger, retry protection, per-user rate limits, audit on every action, compliance and risk hooks (closed by default), support tickets. Tests against a **real** MongoDB | A database: MongoDB Atlas (you create it), or my downloading MongoDB's official test server for local tests (I'll give the size and ask first) |
-| **D. Wallet on the server** | Balances (available / locked / pending), transfers between Trending users, Pay/QR, server Convert quotes, one history. Old browser balances can't be trusted (anyone could edit them), so sandbox accounts start fresh; the old history stays visible | Approval to reset sandbox balances |
+| **D. Wallet on the server** | Balances (available / locked / pending), transfers between Trending users, Pay/QR, server Convert quotes, one history, the status timeline and the confirmation sheet. Old browser balances can't be trusted (anyone could edit them), so sandbox accounts start fresh; the old history stays visible | Approval to reset sandbox balances |
 | **E. Spot on the server** | Orders, fills at the real Binance book, limit and stop triggers in the worker, cancel, histories, large-order confirmation | An always-on host for the worker |
 | **F. P2P on the server** | Real ads, ledger escrow, timers, seller release, disputes, appeals, staff console | Decision on payment details |
 | **G. Earn on the server** | Product config with disclosures, positions, accrual, redemption; copy trading from real accounts | — |

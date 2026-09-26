@@ -9991,3 +9991,74 @@ html.tp-no-shares:not(.tp-no-shares-all) .post-card.mine [data-count="shares"] {
 
 /* The tool row keeps its height however tall the panel below it gets. */
 .stu-tabs { flex-shrink: 0; }
+
+/* == CRYPTO HUB ===================================================== */
+/* One page for every crypto service. Chips say what each one is right
+   now; the off tiles stay tappable so they can say why. */
+#ch-root { display: flex; flex-direction: column; gap: 14px; max-width: 980px; }
+.ch-bal { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.ch-bal-l { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--t3); display: flex; align-items: center; gap: 8px; }
+.ch-bal-v { font-size: 30px; font-weight: 900; letter-spacing: -.03em; color: var(--t1); font-variant-numeric: tabular-nums; }
+.ch-bal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ch-bal-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: var(--r2); background: var(--card2); }
+.ch-bal-cell span { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--t3); }
+.ch-bal-cell b { font-size: 15px; color: var(--t1); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
+.ch-bal-cell em { font-style: normal; font-size: 11px; color: var(--t3); line-height: 1.35; }
+.ch-bal-note { font-size: 11.5px; color: var(--t3); }
+.ch-quick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.ch-q { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; min-height: 64px; border-radius: var(--r3);
+  border: 1px solid var(--border); background: var(--card); color: var(--t1); font-size: 12px; font-weight: 700; cursor: pointer; }
+.ch-q .material-symbols-rounded { font-size: 22px; color: var(--brand); }
+.ch-q:hover { border-color: var(--brand); }
+.ch-q-off { color: var(--t3); }
+.ch-q-off .material-symbols-rounded { color: var(--t3); }
+.ch-group-t { margin: 6px 2px 8px; font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--t2); }
+.ch-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.ch-tile { display: flex; align-items: flex-start; gap: 12px; text-align: left; padding: 12px 14px; min-height: 64px; border-radius: var(--r3);
+  border: 1px solid var(--border); background: var(--card); color: var(--t1); cursor: pointer; font: inherit; }
+.ch-tile:hover { border-color: color-mix(in srgb, var(--brand) 60%, var(--border)); }
+.ch-tile:focus-visible, .ch-q:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ch-tile-i { font-size: 24px; color: var(--brand); flex-shrink: 0; margin-top: 1px; }
+.ch-tile-off .ch-tile-i { color: var(--t3); }
+.ch-tile-b { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ch-tile-t { font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ch-tile-s { font-size: 11.5px; color: var(--t3); line-height: 1.4; }
+.ch-chip { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: var(--rf); border: 1px solid; white-space: nowrap; }
+.ch-real { color: var(--green); border-color: color-mix(in srgb, var(--green) 55%, transparent); }
+.ch-sandbox { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 55%, transparent); }
+.ch-coming { color: var(--t2); border-color: var(--border); border-style: dashed; }
+.ch-off { color: var(--t3); border-color: var(--border); }
+.ch-live { color: var(--brand); border-color: var(--brand); }
+.ch-src { font-size: 12px; color: var(--t2); padding: 10px 12px; border-radius: var(--r2); border: 1px dashed var(--border); }
+.ch-link { background: none; border: none; padding: 0; color: var(--brand); font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.ch-legend { font-size: 11.5px; color: var(--t3); line-height: 1.5; padding: 4px 2px 20px; }
+.ch-legend p { margin: 0 0 4px; }
+.ch-legend b { color: var(--t2); }
+@media (max-width: 600px) {
+  .ch-bal-grid { grid-template-columns: 1fr; }
+  .ch-quick { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .ch-q { font-size: 10.5px; padding: 10px 2px; }
+  .ch-tiles { grid-template-columns: 1fr; }
+}
+
+/* == SHARED MONEY UI (components/finui.js) ========================= */
+.fui-problem { border: 1px solid color-mix(in srgb, var(--red) 45%, var(--border)); border-radius: var(--r3); padding: 14px 16px;
+  background: color-mix(in srgb, var(--red) 6%, var(--card)); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.fui-problem-t { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: var(--t1); }
+.fui-problem-t .material-symbols-rounded { color: var(--red); }
+.fui-problem dl { margin: 0; display: grid; gap: 6px; font-size: 12.5px; width: 100%; }
+.fui-problem dl > div { display: grid; grid-template-columns: 150px 1fr; gap: 8px; }
+.fui-problem dt { color: var(--t3); font-weight: 700; }
+.fui-problem dd { margin: 0; color: var(--t2); line-height: 1.45; }
+@media (max-width: 600px) { .fui-problem dl > div { grid-template-columns: 1fr; gap: 1px; } }
+.fui-offline { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--t1); padding: 9px 12px; border-radius: var(--r2);
+  background: color-mix(in srgb, var(--orange) 14%, var(--card)); border: 1px solid color-mix(in srgb, var(--orange) 45%, var(--border)); }
+.fui-offline[hidden] { display: none; }
+.fui-skel-wrap { display: grid; gap: 8px; }
+.fui-skel-tiles { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.fui-skel { border: 1px solid var(--border); border-radius: var(--r3); background: var(--card); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.fui-skel-row { min-height: 110px; }
+.fui-skel i { display: block; height: 10px; border-radius: 4px; background: var(--card2); width: 70%; animation: fui-pulse 1.2s ease-in-out infinite alternate; }
+.fui-skel i + i { width: 45%; }
+@keyframes fui-pulse { from { opacity: .55; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fui-skel i { animation: none; } }

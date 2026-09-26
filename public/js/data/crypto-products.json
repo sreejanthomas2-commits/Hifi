@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "groups": [
+    { "id": "trade", "name": "Trade" },
+    { "id": "move", "name": "Move money" },
+    { "id": "grow", "name": "Grow" },
+    { "id": "money", "name": "Your money" },
+    { "id": "safety", "name": "Card and safety" }
+  ],
+  "products": [
+    { "id": "spot", "name": "Spot trading", "group": "trade", "icon": "candlestick_chart", "base": "sandbox", "regulated": true,
+      "note": "Paper money at live Binance prices" },
+    { "id": "buysell", "name": "Buy / Sell", "group": "trade", "icon": "shopping_cart", "base": "sandbox", "regulated": true,
+      "note": "Quick market orders on the paper desk" },
+    { "id": "convert", "name": "Convert", "group": "trade", "icon": "currency_exchange", "base": "sandbox", "regulated": true,
+      "note": "15-second quotes, fee shown first" },
+    { "id": "p2p", "name": "P2P", "group": "trade", "icon": "swap_horiz", "base": "sandbox", "regulated": true,
+      "note": "Practice desk with escrow and disputes" },
+    { "id": "markets", "name": "Market prices", "group": "trade", "icon": "monitoring", "base": "real",
+      "note": "Live public market data" },
+    { "id": "asset", "name": "Asset details", "group": "trade", "icon": "query_stats", "base": "real",
+      "note": "Price, chart and facts for each coin" },
+
+    { "id": "deposit", "name": "Deposit crypto", "group": "move", "icon": "download", "base": "real",
+      "note": "Into a wallet you control" },
+    { "id": "withdraw", "name": "Withdraw crypto", "group": "move", "icon": "upload", "base": "unavailable", "regulated": true,
+      "why": "Trending doesn't hold anyone's crypto, so there is nothing to withdraw. Your coins are in your own wallet: send them from there.",
+      "alt": "send", "altLabel": "Send from your wallet" },
+    { "id": "send", "name": "Send crypto", "group": "move", "icon": "send", "base": "real",
+      "note": "Prepared here, sent from your own wallet" },
+    { "id": "receive", "name": "Receive crypto", "group": "move", "icon": "qr_code_2", "base": "real",
+      "note": "Your own address, as a QR code" },
+    { "id": "pay", "name": "Trending Pay", "group": "move", "icon": "contactless", "base": "sandbox", "regulated": true,
+      "note": "Pay and request by handle, in paper money" },
+    { "id": "qr", "name": "QR payments", "group": "move", "icon": "qr_code_scanner", "base": "sandbox", "regulated": true,
+      "note": "Scan to pay, show yours to get paid" },
+    { "id": "remit", "name": "Send money abroad", "group": "move", "icon": "public", "base": "coming", "regulated": true,
+      "why": "Being built next: every fee, the exchange rate and the exact amount your recipient gets, all shown before you send. Real transfers also need a licensed payout partner in each country." },
+    { "id": "fiat_in", "name": "Add money from a bank", "group": "move", "icon": "account_balance", "base": "unavailable", "regulated": true,
+      "why": "Adding money from a bank or card needs a licensed payment partner, and Trending doesn't have one yet. Nothing in Trending asks for your bank or card details." },
+    { "id": "fiat_out", "name": "Cash out to a bank", "group": "move", "icon": "account_balance_wallet", "base": "unavailable", "regulated": true,
+      "why": "Cashing out to a bank needs a licensed payment partner, and Trending doesn't have one yet. The balances here are practice money and can't be cashed out." },
+
+    { "id": "earn", "name": "Earn", "group": "grow", "icon": "savings", "base": "sandbox", "regulated": true,
+      "note": "Practice products; every rate and risk shown" },
+
+    { "id": "wallet", "name": "Wallet", "group": "money", "icon": "account_balance_wallet", "base": "sandbox",
+      "note": "Every balance, in one place" },
+    { "id": "portfolio", "name": "Portfolio", "group": "money", "icon": "pie_chart", "base": "sandbox",
+      "note": "What you hold and how it moved today" },
+    { "id": "history", "name": "Transaction history", "group": "money", "icon": "receipt_long", "base": "sandbox",
+      "note": "Every movement, newest first" },
+
+    { "id": "card", "name": "Trending Card", "group": "safety", "icon": "credit_card", "base": "unavailable", "regulated": true,
+      "why": "A Trending card needs a card-issuing partner, and Trending doesn't have one. There is no card, card number or waiting list yet." },
+    { "id": "security", "name": "Security Center", "group": "safety", "icon": "shield_lock", "base": "real",
+      "note": "Two-factor, devices, sign out everywhere" },
+    { "id": "support", "name": "Help and support", "group": "safety", "icon": "support_agent", "base": "real",
+      "note": "Report a problem, quoting its reference" }
+  ]
+}
