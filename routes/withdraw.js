@@ -27,6 +27,7 @@ const { NETWORKS } = require('../config/crypto-deposit');
 const custody = require('../services/custody');
 const address = require('../lib/address');
 const { requireAuth } = require('../middleware/auth');
+const { limit } = require('../middleware/ratelimit');
 
 const router = express.Router();
 
@@ -86,8 +87,18 @@ const publicWd = w => ({
 
 router.use(requireAuth);
 
+/* Per person. Checking an address or a quote happens as someone types,
+   so it gets room; asking to send, and every two-factor step, do not -
+   a burst there is a script, not a person. Nothing half-runs: over the
+   limit is a 429 before the handler starts. */
+const MIN = 60 * 1000;
+const typing = limit({ scope: 'wd.typing', windowMs: MIN, max: 120 });
+const sending = limit({ scope: 'wd.request', windowMs: 10 * MIN, max: 10 });
+const cancelling = limit({ scope: 'wd.cancel', windowMs: 10 * MIN, max: 20 });
+const factor = limit({ scope: 'wd.2fa', windowMs: 10 * MIN, max: 10 });
+
 /* ── Address check, as the user types ────────────────────────────── */
-router.post('/withdraw/validate', (req, res) => {
+router.post('/withdraw/validate', typing, (req, res) => {
   if (limited('quote', req, res)) return;
   const network = String((req.body && req.body.network) || '').toLowerCase();
   const net = NETWORKS[network];
@@ -106,7 +117,7 @@ router.post('/withdraw/validate', (req, res) => {
 /* The pair is checked before the database, for the same reason the
    deposit route does it: answering "no database" to "can I send ETH over
    Bitcoin?" hides the answer that would have saved someone's money. */
-router.post('/withdraw/quote', async (req, res) => {
+router.post('/withdraw/quote', typing, async (req, res) => {
   if (limited('quote', req, res)) return;
   const pair = withdraw.checkPair(String((req.body || {}).asset || '').toUpperCase(),
                                   String((req.body || {}).network || '').toLowerCase());
@@ -122,7 +133,7 @@ router.post('/withdraw/quote', async (req, res) => {
 });
 
 /* ── Request ─────────────────────────────────────────────────────── */
-router.post('/withdraw', async (req, res) => {
+router.post('/withdraw', sending, async (req, res) => {
   if (limited('send', req, res)) return;
   const pair = withdraw.checkPair(String((req.body || {}).asset || '').toUpperCase(),
                                   String((req.body || {}).network || '').toLowerCase());
@@ -175,7 +186,7 @@ router.get('/2fa', async (req, res) => {
   res.json(await twofactor.status(req.user.id));
 });
 
-router.post('/2fa/enrol', async (req, res) => {
+router.post('/2fa/enrol', factor, async (req, res) => {
   if (limited('send', req, res) || needDb(res)) return;
   const out = await twofactor.begin(req.user.id, (req.body && req.body.label) || '');
   if (!out.ok) return res.status(statusFor(out.code)).json(out);
@@ -184,19 +195,19 @@ router.post('/2fa/enrol', async (req, res) => {
   res.json({ ok: true, uri: out.uri, secret: out.secret });
 });
 
-router.post('/2fa/confirm', async (req, res) => {
+router.post('/2fa/confirm', factor, async (req, res) => {
   if (limited('send', req, res) || needDb(res)) return;
   const out = await twofactor.confirm(req.user.id, (req.body || {}).code);
   res.status(out.ok ? 200 : statusFor(out.code)).json(out);
 });
 
-router.post('/2fa/disable', async (req, res) => {
+router.post('/2fa/disable', factor, async (req, res) => {
   if (limited('send', req, res) || needDb(res)) return;
   const out = await twofactor.disable(req.user.id, (req.body || {}).code);
   res.status(out.ok ? 200 : statusFor(out.code)).json(out);
 });
 
-router.post('/withdrawals/:id/cancel', async (req, res) => {
+router.post('/withdrawals/:id/cancel', cancelling, async (req, res) => {
   if (limited('send', req, res) || needDb(res)) return;
   if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'bad_id' });
   const out = await withdraw.cancel(req.user.id, req.params.id);

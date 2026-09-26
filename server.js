@@ -85,10 +85,15 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 // Database Connection (Fallback to in-memory/mock if no URI)
+/* The connection string holds a password, so it is never logged; the
+   driver's own error messages name the host, not the credentials. The
+   two options this used to pass (useNewUrlParser, useUnifiedTopology)
+   were removed from the MongoDB driver, which now refuses them - so a
+   configured database could never connect at all. */
 if (process.env.MONGO_URI) {
-  mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB Connected via Atlas'))
-    .catch(err => console.error('MongoDB Connection Error:', err));
+  mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
+    .then(() => console.log('MongoDB connected.'))
+    .catch(err => console.error('MongoDB connection failed:', err && err.name, '-', err && err.message));
 } else {
   console.log('No MONGO_URI provided. Running with in-memory Mock Data mode.');
 }
@@ -117,6 +122,11 @@ app.use('/api/fees', require('./routes/fees'));
 // says. Nothing can be switched to real money from here - see
 // services/products.js for everything that has to exist first.
 app.use('/api/products', require('./routes/products'));
+
+// Support tickets, each tied to the transaction it is about. Signed in;
+// a ticket is visible to its owner and to staff (ADMIN_UIDS), read-only
+// and audited for staff. Answers 503 until a database is connected.
+app.use('/api/support', require('./routes/support'));
 
 // The signer's queue. Mounted BEFORE the /api/crypto routers: a router
 // mounted on a prefix runs its middleware over every path beneath it, so
