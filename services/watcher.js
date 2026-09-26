@@ -24,7 +24,8 @@
 'use strict';
 
 const { DepositAddress, DepositTx, AuditLog, NetworkState } = require('../models/custody');
-const { NETWORKS } = require('../config/crypto-deposit');
+const { NETWORKS, NATIVE_ASSET } = require('../config/crypto-deposit');
+const tokenList = require('../config/custody-tokens');
 const custody = require('./custody');
 const ledger = require('./ledger');
 
@@ -114,17 +115,33 @@ const evm = {
           }]);
         } catch (e) { logs = []; }
         for (const log of logs) {
-          const to = '0x' + String(log.topics[2]).slice(26).toLowerCase();
-          const rec = byAddress.get(to);
-          if (!rec) continue;
-          const height = parseInt(log.blockNumber, 16);
-          found.push({
-            network, txHash: log.transactionHash, vout: parseInt(log.logIndex, 16),
-            address: rec.address, addressId: String(rec._id), userId: rec.userId,
-            asset: rec.asset, amount: BigInt(log.data || '0x0').toString(),
-            confirmations: tip - height + 1, blockHeight: height,
-            contract: String(log.address).toLowerCase()
-          });
+          /* What arrived is decided by the contract that emitted the
+             event, looked up in the operator's allow-list - never by the
+             asset the receiving address happens to have been issued for.
+             That was the old rule, and it credited any token at all,
+             including one deployed for the purpose, as the real thing.
+
+             ERC-721 shares the Transfer signature but has four topics
+             and no amount in data; BigInt('0x') on its empty data threw
+             and stopped the whole sweep for that chain, every tick, for
+             good. So the shape is checked, and one odd log is skipped
+             rather than allowed to stop the rest. */
+          try {
+            if (!Array.isArray(log.topics) || log.topics.length !== 3) continue;
+            if (!/^0x[0-9a-fA-F]{64}$/.test(String(log.data))) continue;
+            const to = '0x' + String(log.topics[2]).slice(26).toLowerCase();
+            const rec = byAddress.get(to);
+            if (!rec) continue;
+            const height = parseInt(log.blockNumber, 16);
+            const contract = String(log.address).toLowerCase();
+            const token = tokenList.tokenFor(network, contract);
+            found.push({
+              network, txHash: log.transactionHash, vout: parseInt(log.logIndex, 16),
+              address: rec.address, addressId: String(rec._id), userId: rec.userId,
+              asset: token ? token.asset : null, amount: BigInt(log.data).toString(),
+              confirmations: tip - height + 1, blockHeight: height, contract
+            });
+          } catch (e) { /* malformed log - skip it, keep sweeping */ }
         }
       }
     }
@@ -139,9 +156,11 @@ const evm = {
         const to = (tx.to || '').toLowerCase();
         const rec = byAddress.get(to);
         if (!rec || !tx.value || BigInt(tx.value) === 0n) continue;
+        // The native coin, not the network's code: ETH on Arbitrum is
+        // ETH, and ARB there is a token.
         found.push({
           network, txHash: tx.hash, vout: 0, address: rec.address,
-          addressId: String(rec._id), userId: rec.userId, asset: NETWORKS[network].code,
+          addressId: String(rec._id), userId: rec.userId, asset: NATIVE_ASSET[network] || null,
           amount: BigInt(tx.value).toString(),
           confirmations: tip - h + 1, blockHeight: h, contract: ''
         });
@@ -169,19 +188,24 @@ async function record(hit) {
   const key = { network: hit.network, txHash: hit.txHash, vout: hit.vout };
 
   /* The address was issued for one asset. Anything else arriving on it
-     is recorded and flagged, never credited quietly. */
+     is recorded and flagged, never credited quietly - and so is a token
+     whose contract is not on the allow-list (hit.asset is null then),
+     and anything arriving on an address this system did not issue. */
   const addr = await DepositAddress.findById(hit.addressId);
-  const mismatch = addr && addr.asset !== hit.asset;
+  const refuse = !hit.asset ? `token contract ${hit.contract || '(none)'} is not on the allow-list`
+    : !addr ? 'the receiving address is not one Trending issued'
+    : addr.asset !== hit.asset ? `address was issued for ${addr.asset}, received ${hit.asset}`
+    : '';
 
   let doc = await DepositTx.findOne(key);
   if (!doc) {
     try {
       doc = await DepositTx.create({
         ...key, addressId: hit.addressId, address: hit.address, userId: hit.userId,
-        asset: hit.asset, amount: hit.amount, contract: hit.contract,
+        asset: hit.asset || 'UNLISTED', amount: hit.amount, contract: hit.contract,
         confirmations: hit.confirmations, required, blockHeight: hit.blockHeight,
-        status: mismatch ? 'rejected' : (hit.confirmations >= required ? 'confirmed' : 'confirming'),
-        rejectedReason: mismatch ? `address was issued for ${addr.asset}, received ${hit.asset}` : ''
+        status: refuse ? 'rejected' : (hit.confirmations >= required ? 'confirmed' : 'confirming'),
+        rejectedReason: refuse
       });
       await AuditLog.create([{ actor: 'watcher', action: 'deposit.detected', subject: hit.txHash,
         detail: { network: hit.network, asset: hit.asset, amount: hit.amount, userId: hit.userId } }]);

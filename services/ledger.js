@@ -108,10 +108,18 @@ async function reverse({ userId, asset, amount, referenceId, memo }) {
 }
 
 /* The authoritative balance: replayed from entries, not read from the
-   cache. Used by reconciliation and by anything that must be certain. */
-async function balanceOf(userId, asset) {
+   cache. Used by reconciliation and by anything that must be certain.
+
+   Summed per ACCOUNT, not per user. Money held for a withdrawal sits in
+   the user's 'hold' account - a debit from 'user', a credit to 'hold' -
+   so what they can spend and what is on its way out are two balances,
+   each exact. Summing every entry carrying the user's id used to mix
+   the two, and counted a completed withdrawal twice. */
+async function balanceOf(userId, asset, kind) {
+  const acc = await WalletAccount.findOne({ userId, asset, kind: kind || 'user' });
+  if (!acc) return '0';
   const rows = await LedgerEntry.aggregate([
-    { $match: { userId, asset } },
+    { $match: { accountId: String(acc._id) } },
     { $group: {
         _id: '$direction',
         total: { $sum: { $toDecimal: '$amount' } }
@@ -123,6 +131,17 @@ async function balanceOf(userId, asset) {
     if (r._id === 'credit') credits = v; else debits = v;
   });
   return (credits - debits).toString();
+}
+
+/* Rewrite the cached balances from the ledger. The cache is for reads;
+   writing it from arithmetic on values read earlier lost updates when
+   two requests overlapped, so it is recomputed instead. Last write wins,
+   and every write is a correct total. */
+async function refresh(userId, asset) {
+  const available = await balanceOf(userId, asset, 'user');
+  const pending = await balanceOf(userId, asset, 'hold');
+  await WalletAccount.updateOne({ userId, asset, kind: 'user' }, { available, pending, updatedAt: new Date() });
+  return { available, pending };
 }
 
 /* Does the cache still agree with the ledger? Run it on a schedule; an
@@ -150,4 +169,4 @@ async function startSession() {
   } catch (e) { return null; }
 }
 
-module.exports = { credit, reverse, balanceOf, reconcile, account };
+module.exports = { credit, reverse, balanceOf, refresh, reconcile, account };

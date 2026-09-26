@@ -254,8 +254,21 @@ const ASSETS = [
     networks: [{ net: 'ethereum' }] }
 ];
 
+/* The coin each network pays its own fees in - a protocol fact, and not
+   the same thing as the network's `code`. Arbitrum's code is ARB, but ARB
+   is a token there; the coin that moves in a plain transfer is ETH, as it
+   is on Base and OP Mainnet. Anything that decides what arrived or what
+   is being sent reads this table, never the code. */
+const NATIVE_ASSET = {
+  bitcoin: 'BTC', ethereum: 'ETH', base: 'ETH', arbitrum: 'ETH', optimism: 'ETH',
+  polygon: 'POL', bnb: 'BNB', solana: 'SOL', tron: 'TRX', xrpl: 'XRP',
+  avalanche: 'AVAX', etc: 'ETC', dogecoin: 'DOGE', litecoin: 'LTC', bitcoincash: 'BCH',
+  cardano: 'ADA', polkadot: 'DOT', ton: 'TON', stellar: 'XLM', near: 'NEAR',
+  hedera: 'HBAR', algorand: 'ALGO', tezos: 'XTZ', cosmos: 'ATOM', kaspa: 'KAS'
+};
+
 /* Bumped whenever the two tables above change, so a client holding an
    older copy can tell that it is behind. */
 const VERSION = '2026-09-18.1';
 
-module.exports = { NETWORKS, ASSETS, VERSION };
+module.exports = { NETWORKS, ASSETS, NATIVE_ASSET, VERSION };

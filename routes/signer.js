@@ -60,6 +60,10 @@ router.use((req, res, next) => {
 
 /* What the signer is told. Deliberately narrow: enough to build and
    check a transaction, and nothing about the person behind it. */
+/* No contract is ever sent, so everything here is a native-coin transfer.
+   Token withdrawals are refused before they reach this queue (services/
+   withdraw.js checkPair) and again by the signer's own policy, until the
+   contract can come from the operator's allow-list. */
 const forSigner = w => ({
   id: String(w._id), asset: w.asset, network: w.network,
   chainId: (NETWORKS[w.network] || {}).chainId || null,

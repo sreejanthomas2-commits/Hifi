@@ -7,24 +7,28 @@ require('dotenv').config();
 
 const app = express();
 
-/* Custody stays off until three known flaws are fixed:
-     - the watcher credits any token sent to a deposit address as the
-       asset that address was issued for, because no contract allow-list
-       exists yet
-     - a withdrawal's funds hold is keyed on the client's idempotency key
-       across all users, and is a read-then-write with no transaction, so
-       it can be skipped or raced
-     - the withdrawal second factor is never looked up (req.walletUser is
-       never set), and nothing stores a TOTP secret
-   Until those land, CUSTODY_ENABLED=true is refused here rather than
-   trusted. Forcing it off - instead of exiting - keeps the rest of the
-   app up: every custodial route already answers 503 "custody_disabled"
-   when it is off, and the chain watcher below does not start. Remove this
-   block in the change that fixes all three, not before. The services read
-   the flag at call time, so overriding it here covers them too. */
+/* Custody stays off. The three flaws this block was first written for are
+   fixed - token contracts are allow-listed, withdrawal holds are keyed
+   server-side and checked after writing, and the withdrawal second factor
+   is stored and checked - but holding people's money needs more than the
+   absence of known bugs, and these are still missing:
+     - a way for a signed-in person to get an API session: nothing issues
+       one (middleware/auth.js sign() has no caller), and the plan is to
+       verify Firebase ID tokens instead
+     - confirmation tracking for withdrawals: nothing moves one past
+       "broadcast" by checking the chain, so held funds never settle, and
+       the signer's word is all that says a transaction was sent
+     - reorganisation handling after a deposit is credited
+     - a run of the custody tests against a real MongoDB replica set;
+       scripts/test-custody-flows.js uses an in-memory stand-in
+   So CUSTODY_ENABLED=true is refused here rather than trusted. Forcing it
+   off - instead of exiting - keeps the rest of the app up: every custodial
+   route answers 503 "custody_disabled", and the chain watcher below does
+   not start. The services read the flag at call time, so overriding it
+   here covers them too. */
 if (String(process.env.CUSTODY_ENABLED || '').toLowerCase() === 'true') {
-  console.error('CUSTODY_ENABLED=true refused: custody is not safe to run until the token allow-list, ' +
-    'atomic withdrawal holds and withdrawal two-factor are built. Running with custody off.');
+  console.error('CUSTODY_ENABLED=true refused: custody is not ready to hold funds (no API sign-in, no withdrawal ' +
+    'confirmation tracking, no reorg handling, not yet tested against a real database). Running with custody off.');
   process.env.CUSTODY_ENABLED = 'false';
 }
 

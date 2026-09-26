@@ -7,6 +7,7 @@
    ║    GET  /withdrawals         this user's withdrawals              ║
    ║    GET  /withdrawals/:id                                          ║
    ║    POST /withdrawals/:id/cancel   only while still queued         ║
+   ║    GET  /2fa  · POST /2fa/enrol · /2fa/confirm · /2fa/disable     ║
    ║                                                                   ║
    ║  Quote and validate are cheap and safe to call as the user types. ║
    ║  POST /withdraw is the only one that moves anything, and it       ║
@@ -20,6 +21,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const withdraw = require('../services/withdraw');
+const twofactor = require('../services/twofactor');
 const { Withdrawal } = require('../models/custody');
 const { NETWORKS } = require('../config/crypto-deposit');
 const custody = require('../services/custody');
@@ -61,6 +63,14 @@ function needCustody(res) {
   });
   return true;
 }
+
+/* One place that maps a refusal to an HTTP status. */
+const STATUS = {
+  twofactor: 401, twofactor_required: 401, twofactor_reused: 401,
+  twofactor_locked: 429, cooling_off: 403, twofactor_unconfigured: 503, twofactor_unavailable: 503,
+  insufficient: 409, below_minimum: 409, conflict: 409, already_enrolled: 409, no_enrolment: 409
+};
+const statusFor = code => STATUS[code] || 400;
 
 const publicWd = w => ({
   id: String(w._id), asset: w.asset, network: w.network,
@@ -127,15 +137,10 @@ router.post('/withdraw', async (req, res) => {
       to: String(b.to || ''),
       amount: String(b.amount || '0'),
       twoFactor: b.twoFactor,
-      user: req.walletUser || null,
       idempotencyKey: req.get('Idempotency-Key') || b.idempotencyKey,
       ip: req.ip
     });
-    if (!out.ok) {
-      const code = out.code === 'twofactor' || out.code === 'twofactor_required' || out.code === 'twofactor_reused' ? 401
-        : out.code === 'insufficient' || out.code === 'below_minimum' ? 409 : 400;
-      return res.status(code).json(out);
-    }
+    if (!out.ok) return res.status(statusFor(out.code)).json(out);
     res.status(out.idempotent ? 200 : 201).json({
       ok: true, idempotent: !!out.idempotent, withdrawal: publicWd(out.withdrawal)
     });
@@ -158,6 +163,37 @@ router.get('/withdrawals/:id', async (req, res) => {
   const row = await Withdrawal.findById(req.params.id);
   if (!row || row.userId !== req.user.id) return res.status(404).json({ error: 'not_found' });
   res.json({ withdrawal: publicWd(row) });
+});
+
+/* ── Second factor ───────────────────────────────────────────────── */
+/* Status, enrol, confirm, turn off. Every one is scoped to the session's
+   own user id; none takes a user id from the request. Guesses share the
+   tight "send" budget, and the service itself locks the factor after
+   repeated wrong codes. */
+router.get('/2fa', async (req, res) => {
+  if (needDb(res)) return;
+  res.json(await twofactor.status(req.user.id));
+});
+
+router.post('/2fa/enrol', async (req, res) => {
+  if (limited('send', req, res) || needDb(res)) return;
+  const out = await twofactor.begin(req.user.id, (req.body && req.body.label) || '');
+  if (!out.ok) return res.status(statusFor(out.code)).json(out);
+  // The secret is in this one response and nowhere else in the clear.
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, uri: out.uri, secret: out.secret });
+});
+
+router.post('/2fa/confirm', async (req, res) => {
+  if (limited('send', req, res) || needDb(res)) return;
+  const out = await twofactor.confirm(req.user.id, (req.body || {}).code);
+  res.status(out.ok ? 200 : statusFor(out.code)).json(out);
+});
+
+router.post('/2fa/disable', async (req, res) => {
+  if (limited('send', req, res) || needDb(res)) return;
+  const out = await twofactor.disable(req.user.id, (req.body || {}).code);
+  res.status(out.ok ? 200 : statusFor(out.code)).json(out);
 });
 
 router.post('/withdrawals/:id/cancel', async (req, res) => {

@@ -27,21 +27,22 @@
 
 const crypto = require('crypto');
 const { Withdrawal, WalletAccount, LedgerEntry, AuditLog, DepositAddress } = require('../models/custody');
-const { NETWORKS, ASSETS } = require('../config/crypto-deposit');
+const { NETWORKS, ASSETS, NATIVE_ASSET } = require('../config/crypto-deposit');
 const address = require('../lib/address');
-const totp = require('../lib/totp');
+const twofactor = require('./twofactor');
 const fees = require('./fees');
 const ledger = require('./ledger');
 
 const DUPLICATE = 11000;
 const big = v => BigInt(String(v == null ? '0' : v));
 
-/* Limits are policy, set by the operator, not guessed by the code. */
+/* Limits are policy, set by the operator, not guessed by the code. The
+   cool-off after setting up two-factor (WD_COOLOFF_MS) is enforced in
+   services/twofactor.js; it used to be read here and never used. */
 const LIMITS = {
   perRequest: process.env.WD_MAX_PER_REQUEST || '',
   perDay: process.env.WD_MAX_PER_DAY || '',
-  count24h: Number(process.env.WD_MAX_COUNT_24H || 20),
-  coolOffMs: Number(process.env.WD_COOLOFF_MS || 0)
+  count24h: Number(process.env.WD_MAX_COUNT_24H || 20)
 };
 
 const assetOf = s => ASSETS.find(a => a.symbol === String(s || '').toUpperCase());
@@ -60,6 +61,19 @@ function checkPair(asset, network) {
   }
   if (net.status !== 'open') {
     return { ok: false, code: 'network_' + net.status, message: `Withdrawals over ${net.label} are ${net.status} right now.` };
+  }
+  /* Only the network's own coin, for now. A token withdrawal has to be
+     sent to the token's contract with the amount in calldata, and the
+     signer queue has never carried a contract - so a DAI withdrawal of
+     100×10¹⁸ base units reached the signer as a plain transfer of 100
+     ETH, labelled DAI. Until contracts come from the allow-list and the
+     queue carries them, tokens are refused here and again by the signer. */
+  const native = NATIVE_ASSET[network];
+  if (a.symbol !== native) {
+    return {
+      ok: false, code: 'token_withdrawals_unsupported',
+      message: `Withdrawing ${a.symbol} is not supported yet. Over ${net.label}, only ${native || 'the network’s own coin'} can be withdrawn for now.`
+    };
   }
   return { ok: true, asset: a, net };
 }
@@ -110,7 +124,7 @@ async function quote({ userId, asset, network, amount }) {
 }
 
 /* ── Checks that must pass before funds move ─────────────────────── */
-async function guard({ userId, asset, network, to, amount, twoFactor, user }) {
+async function guard({ userId, asset, network, to, amount, twoFactor }) {
   const q = await quote({ userId, asset, network, amount });
   if (!q.ok) return q;
 
@@ -144,17 +158,17 @@ async function guard({ userId, asset, network, to, amount, twoFactor, user }) {
     }
   }
 
-  /* Second factor, when the account has one. Required above the
-     threshold whether or not the client asked for it. */
-  if (user && user.totpSecret) {
-    const check = totp.verify(user.totpSecret, twoFactor);
-    if (!check.ok) return { ok: false, code: 'twofactor', message: check.reason };
-    if (user.lastTotpCounter != null && check.counter <= user.lastTotpCounter) {
-      return { ok: false, code: 'twofactor_reused', message: 'That code has already been used. Wait for the next one.' };
-    }
-    q.totpCounter = check.counter;
-  } else if (String(process.env.WD_REQUIRE_2FA || 'true') === 'true') {
-    return { ok: false, code: 'twofactor_required', message: 'Turn on two-factor authentication before withdrawing.' };
+  /* Second factor, looked up by the session's own user id - never from
+     anything the client sends. Last, so a code is not spent on a request
+     that was going to fail anyway. In production it cannot be switched
+     off: WD_REQUIRE_2FA=false is honoured only outside production, and
+     the chance to "make withdrawals work" by turning the factor off is
+     exactly the mistake worth making impossible. */
+  const need2fa = process.env.NODE_ENV === 'production' || String(process.env.WD_REQUIRE_2FA || 'true') === 'true';
+  if (need2fa) {
+    const tf = await twofactor.check(userId, twoFactor);
+    if (!tf.ok) return tf;
+    q.totpCounter = tf.counter;
   }
 
   q.normalizedAddress = v.normalized || to;
@@ -166,24 +180,27 @@ async function guard({ userId, asset, network, to, amount, twoFactor, user }) {
    Holds the funds and queues the withdrawal. Idempotent on the key the
    client supplies: a retry after a dropped response returns the SAME
    withdrawal rather than making a second one. */
-async function request({ userId, asset, network, to, amount, twoFactor, user, idempotencyKey, ip }) {
+async function request({ userId, asset, network, to, amount, twoFactor, idempotencyKey, ip }) {
   const key = String(idempotencyKey || '').trim();
-  if (!key || key.length < 8) {
+  if (!key || key.length < 8 || key.length > 128) {
     return { ok: false, code: 'no_idempotency_key', message: 'A withdrawal needs an idempotency key.' };
   }
   const existing = await Withdrawal.findOne({ userId, idempotencyKey: key });
   if (existing) return { ok: true, idempotent: true, withdrawal: existing };
 
-  const g = await guard({ userId, asset, network, to, amount, twoFactor, user });
+  const g = await guard({ userId, asset, network, to, amount, twoFactor });
   if (!g.ok) return g;
 
   const amt = big(amount);
   const fee = big(g.fee);
 
-  /* Hold the funds first. If anything below fails, the release path puts
-     them back — but the window where they could be double-spent never
-     opens. */
-  const held = await hold(userId, g.asset, amt, key);
+  /* Hold the funds first, under a reference made here. It used to be the
+     client's idempotency key - but that key is the client's to choose,
+     and the ledger's unique index spans every user, so reusing a key some
+     other account had already held under made this hold "already done":
+     a withdrawal queued with nothing held behind it. */
+  const ref = 'wh_' + crypto.randomUUID();
+  const held = await hold(userId, g.asset, amt, ref);
   if (!held.ok) return held;
 
   let doc;
@@ -193,10 +210,14 @@ async function request({ userId, asset, network, to, amount, twoFactor, user, id
       asset: g.asset, network, toAddress: g.normalizedAddress,
       amount: amt.toString(), fee: fee.toString(), receives: g.receives,
       feeBasis: g.feeBasis, status: 'queued_for_signing',
-      holdRef: held.ref, requestIp: ip || '', createdAt: new Date()
+      holdRef: ref, requestIp: ip || '', createdAt: new Date()
     });
   } catch (e) {
-    await release(userId, g.asset, amt, key).catch(() => {});
+    /* This request's own hold goes back, whatever went wrong. When the
+       cause is a twin request with the same key that got there first,
+       the twin holds its own funds under its own reference, so nothing
+       of the twin's is touched here. */
+    await release(userId, g.asset, amt, ref).catch(() => {});
     if (e && e.code === DUPLICATE) {
       const again = await Withdrawal.findOne({ userId, idempotencyKey: key });
       if (again) return { ok: true, idempotent: true, withdrawal: again };
@@ -213,72 +234,79 @@ async function request({ userId, asset, network, to, amount, twoFactor, user, id
 }
 
 /* ── The ledger hold ─────────────────────────────────────────────── */
-/* Available drops, locked rises, and both legs are written as ledger
-   entries so the movement is visible rather than implied. */
+/* Money on its way out moves from the user's spendable account to their
+   'hold' account - a debit and a credit under one group, like every
+   other movement in the ledger - and from there either back (release)
+   or out to the omnibus (settle). Each step is one balanced pair, so a
+   completed withdrawal leaves the user's balance lower by its amount
+   exactly once. The old version debited once to hold and again to
+   settle, and the ledger balance fell by twice what was sent. */
+const legs = (from, to, { userId, asset, amount, type, ref, memo, fromOwner, toOwner }) => [
+  { accountId: String(from._id), userId: fromOwner || userId, asset, direction: 'debit', amount: amount.toString(),
+    balanceAfter: '0', referenceType: type, referenceId: ref, groupId: `${type}:${ref}`, memo },
+  { accountId: String(to._id), userId: toOwner || userId, asset, direction: 'credit', amount: amount.toString(),
+    balanceAfter: '0', referenceType: type, referenceId: ref, groupId: `${type}:${ref}`, memo }
+];
+/* balanceAfter is written as 0 and left there: under concurrent writes a
+   running balance stamped on an entry is only what one request saw, and
+   a figure that is sometimes wrong is worse than none. Balances come from
+   summing entries (ledger.balanceOf). */
+
 async function hold(userId, asset, amount, ref) {
-  const acc = await ledger.account(userId, asset, 'user');
-  const available = big(acc.available);
-  if (available < amount) return { ok: false, code: 'insufficient', message: 'That is more than your available balance.' };
-  const nextAvail = available - amount;
-  const nextLocked = big(acc.pending) + amount;
-  try {
-    await LedgerEntry.create([{
-      accountId: String(acc._id), userId, asset, direction: 'debit', amount: amount.toString(),
-      balanceAfter: nextAvail.toString(), referenceType: 'withdrawal_hold', referenceId: ref,
-      groupId: `withdrawal_hold:${ref}`, memo: 'held for withdrawal'
-    }]);
-  } catch (e) {
-    if (e && e.code === DUPLICATE) return { ok: true, ref, already: true };
-    throw e;
+  if (amount <= 0n) return { ok: false, code: 'amount_zero', message: 'Enter an amount.' };
+  const user = await ledger.account(userId, asset, 'user');
+  const held = await ledger.account(userId, asset, 'hold');
+  await LedgerEntry.create(legs(user, held, { userId, asset, amount, type: 'withdrawal_hold', ref, memo: 'held for withdrawal' }), { ordered: true });
+
+  /* Checked AFTER writing, against the ledger - not before, against the
+     cache. Two holds racing on one balance both used to read it, both
+     see enough, and both go through. Now each checks once its own debit
+     is in: whichever checks second sees both debits, so at most one of
+     them can pass. (Both may be turned away if they check at the same
+     instant; that is the safe way to be wrong.) */
+  const after = big(await ledger.balanceOf(userId, asset, 'user'));
+  if (after < 0n) {
+    await LedgerEntry.create(legs(held, user, { userId, asset, amount, type: 'withdrawal_hold_void', ref, memo: 'hold undone: not enough balance' }), { ordered: true });
+    await ledger.refresh(userId, asset);
+    return { ok: false, code: 'insufficient', message: 'That is more than your available balance.' };
   }
-  await WalletAccount.updateOne({ _id: acc._id },
-    { available: nextAvail.toString(), pending: nextLocked.toString(), updatedAt: new Date() });
+  await ledger.refresh(userId, asset);
   return { ok: true, ref };
 }
 
+/* Held funds back to spendable. Idempotent on the reference: the unique
+   index refuses a second release of the same hold. */
 async function release(userId, asset, amount, ref) {
-  const acc = await ledger.account(userId, asset, 'user');
-  const nextAvail = big(acc.available) + amount;
-  const nextLocked = big(acc.pending) - amount;
+  const user = await ledger.account(userId, asset, 'user');
+  const held = await ledger.account(userId, asset, 'hold');
   try {
-    await LedgerEntry.create([{
-      accountId: String(acc._id), userId, asset, direction: 'credit', amount: amount.toString(),
-      balanceAfter: nextAvail.toString(), referenceType: 'withdrawal_release', referenceId: ref,
-      groupId: `withdrawal_release:${ref}`, memo: 'withdrawal cancelled or failed'
-    }]);
+    await LedgerEntry.create(legs(held, user, { userId, asset, amount, type: 'withdrawal_release', ref, memo: 'withdrawal cancelled or failed' }), { ordered: true });
   } catch (e) {
     if (e && e.code === DUPLICATE) return { ok: true, already: true };
     throw e;
   }
-  await WalletAccount.updateOne({ _id: acc._id },
-    { available: nextAvail.toString(), pending: (nextLocked < 0n ? 0n : nextLocked).toString(), updatedAt: new Date() });
+  await ledger.refresh(userId, asset);
   return { ok: true };
 }
 
 /* Settle: the held funds leave for good once the chain has the
-   transaction. Locked drops, the omnibus takes the other side. */
+   transaction. Hold account to omnibus - the spendable balance was
+   already reduced when the funds were held, and is not touched again. */
 async function settle(doc) {
-  const acc = await ledger.account(doc.userId, doc.asset, 'user');
+  const held = await ledger.account(doc.userId, doc.asset, 'hold');
   const omni = await ledger.account('omnibus', doc.asset, 'omnibus');
-  const amount = big(doc.amount);
-  const nextLocked = big(acc.pending) - amount;
   try {
-    await LedgerEntry.create([
-      { accountId: String(acc._id), userId: doc.userId, asset: doc.asset, direction: 'debit',
-        amount: amount.toString(), balanceAfter: big(acc.available).toString(),
-        referenceType: 'withdrawal', referenceId: String(doc._id),
-        groupId: `withdrawal:${doc._id}`, memo: 'sent on chain' },
-      { accountId: String(omni._id), userId: 'omnibus', asset: doc.asset, direction: 'credit',
-        amount: amount.toString(), balanceAfter: (big(omni.available) + amount).toString(),
-        referenceType: 'withdrawal', referenceId: String(doc._id),
-        groupId: `withdrawal:${doc._id}`, memo: 'sent on chain' }
-    ]);
+    await LedgerEntry.create(legs(held, omni, {
+      userId: doc.userId, toOwner: 'omnibus', asset: doc.asset, amount: big(doc.amount),
+      type: 'withdrawal', ref: String(doc._id), memo: 'sent on chain'
+    }), { ordered: true });
   } catch (e) {
     if (!e || e.code !== DUPLICATE) throw e;
     return { ok: true, already: true };
   }
-  await WalletAccount.updateOne({ _id: acc._id }, { pending: (nextLocked < 0n ? 0n : nextLocked).toString(), updatedAt: new Date() });
-  await WalletAccount.updateOne({ _id: omni._id }, { available: (big(omni.available) + amount).toString(), updatedAt: new Date() });
+  await ledger.refresh(doc.userId, doc.asset);
+  await WalletAccount.updateOne({ _id: omni._id },
+    { available: await ledger.balanceOf('omnibus', doc.asset, 'omnibus'), updatedAt: new Date() });
   return { ok: true };
 }
 
@@ -295,6 +323,10 @@ const MOVES = {
   cancelled: [], rejected: [], failed: []
 };
 
+/* Fields a transition may carry, and nothing else - status, amounts,
+   owner and destination are never writable through here. */
+const PATCHABLE = { txHash: 1, failureReason: 1, confirmations: 1 };
+
 async function advance(id, to, patch, actor) {
   const doc = await Withdrawal.findById(id);
   if (!doc) return { ok: false, code: 'not_found' };
@@ -302,17 +334,28 @@ async function advance(id, to, patch, actor) {
   if (allowed.indexOf(to) === -1) {
     return { ok: false, code: 'bad_transition', message: `A withdrawal cannot go from ${doc.status} to ${to}.` };
   }
-  Object.assign(doc, patch || {});
-  doc.status = to;
-  if (to === 'broadcast') doc.broadcastAt = new Date();
-  if (to === 'completed') { doc.completedAt = new Date(); await settle(doc); }
-  if (to === 'cancelled' || to === 'rejected' || to === 'failed') {
-    await release(doc.userId, doc.asset, big(doc.amount), doc.holdRef || doc.idempotencyKey);
+  const set = { status: to };
+  Object.keys(patch || {}).forEach(k => { if (PATCHABLE[k]) set[k] = patch[k]; });
+  if (to === 'broadcast') set.broadcastAt = new Date();
+  if (to === 'completed') set.completedAt = new Date();
+
+  /* Conditional on the status just read. This used to read, check, and
+     save - so a user cancelling while the signer claimed the same row
+     could both win: the cancel released the funds and the signer sent
+     them anyway. Now only one move lands; the other finds the status
+     changed, changes nothing, and moves no money. */
+  const moved = await Withdrawal.findOneAndUpdate({ _id: doc._id, status: doc.status }, { $set: set }, { new: true });
+  if (!moved) {
+    return { ok: false, code: 'conflict', message: 'This withdrawal changed while that was happening. Look at it again.' };
   }
-  await doc.save();
-  await AuditLog.create([{ actor: actor || 'system', action: 'withdrawal.' + to, subject: String(doc._id),
-    detail: { asset: doc.asset, network: doc.network, txHash: doc.txHash || '' } }]);
-  return { ok: true, withdrawal: doc };
+  // Money follows the state, only after the state change has landed.
+  if (to === 'completed') await settle(moved);
+  if (to === 'cancelled' || to === 'rejected' || to === 'failed') {
+    await release(moved.userId, moved.asset, big(moved.amount), moved.holdRef || moved.idempotencyKey);
+  }
+  await AuditLog.create([{ actor: actor || 'system', action: 'withdrawal.' + to, subject: String(moved._id),
+    detail: { asset: moved.asset, network: moved.network, txHash: moved.txHash || '' } }]);
+  return { ok: true, withdrawal: moved };
 }
 
 async function cancel(userId, id) {

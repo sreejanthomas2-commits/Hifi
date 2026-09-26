@@ -139,9 +139,16 @@ idempotency really works — on production money. Run it as a single worker.
 
 - **Withdrawals.** Out of scope here, and the harder half: it needs the signing
   side, approval quorums and limits.
-- **Token contract allow-lists.** The watcher records the contract on every token
-  transfer, but nothing yet refuses an unknown one. Until it does, a token with a
-  familiar-looking symbol could be credited as the real thing.
+- ~~**Token contract allow-lists.**~~ Done: `config/custody-tokens.js` reads the
+  operator's list from `CUSTODY_TOKENS` (never the repository). A token is credited
+  only when its (network, contract) is listed, and only as the asset listed; anything
+  else is recorded as rejected. One malformed entry, or two contracts for one asset
+  with different decimals, and no token is credited at all.
+- **Token withdrawals.** Refused for now, by the web tier and again by the signer's
+  policy: the signer queue carries no contract, so a token withdrawal would have been
+  built as a native-coin transfer of the same base units.
+- **Withdrawal confirmation tracking.** Nothing moves a withdrawal past `broadcast`
+  by checking the chain, so held funds do not settle on their own.
 - **Reorg handling beyond the compensating entry.** The path exists; it has not
   been exercised against a real reorg.
 - **XRP Ledger and Solana derivation.** Both use different address schemes;

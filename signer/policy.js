@@ -16,6 +16,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { NATIVE_ASSET } = require('../config/crypto-deposit');
 
 const DEFAULTS = {
   /* Per asset, in base units. Above this a human approves, in person. */
@@ -54,6 +55,16 @@ const norm = a => String(a || '').toLowerCase();
 function decide(w, ctx) {
   const P = (ctx && ctx.policy) || load();
   const reasons = [];
+
+  /* With no contract, the transaction built is a plain transfer of the
+     network's own coin, for `amount` base units. That is only right when
+     the withdrawal IS that coin. A token withdrawal arriving without its
+     contract - which is every one the queue has ever sent - would pay
+     out the native coin instead: 100 DAI becoming 100 ETH. Refused here
+     whatever the web tier let through. */
+  if (w.network && !w.contract && NATIVE_ASSET[w.network] !== w.asset) {
+    return { action: 'refuse', why: `${w.asset} is not ${w.network}'s own coin and no token contract came with it - it would be sent as ${NATIVE_ASSET[w.network] || 'the native coin'}` };
+  }
 
   if (P.denyList.some(a => norm(a) === norm(w.to))) {
     return { action: 'refuse', why: 'the destination is on the signer\'s deny list' };

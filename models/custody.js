@@ -94,10 +94,13 @@ const LedgerEntrySchema = new mongoose.Schema({
 });
 LedgerEntrySchema.index({ referenceType: 1, referenceId: 1, direction: 1 }, { unique: true });
 
+/* kind: 'user' is what the person can spend; 'hold' is theirs but on its
+   way out in a withdrawal; 'omnibus' is the other side of every deposit
+   and payout. */
 const WalletAccountSchema = new mongoose.Schema({
   userId:    { type: String, required: true, index: true },
   asset:     { type: String, required: true },
-  kind:      { type: String, enum: ['user', 'omnibus'], default: 'user' },
+  kind:      { type: String, enum: ['user', 'hold', 'omnibus'], default: 'user' },
   available: Amount,
   pending:   Amount,
   updatedAt: { type: Date, default: Date.now }
@@ -139,6 +142,22 @@ const WithdrawalSchema = new mongoose.Schema({
 WithdrawalSchema.index({ userId: 1, idempotencyKey: 1 }, { unique: true });
 WithdrawalSchema.index({ status: 1, createdAt: 1 });
 
+/* The second factor for withdrawals. The TOTP secret is stored only
+   encrypted (lib/secretbox.js, AES-256-GCM, bound to this userId), with
+   a pending slot for an enrolment that has not been confirmed yet. The
+   last accepted counter is kept so a code cannot be used twice, and
+   failures are counted so guessing is slowed and then stopped. */
+const WithdrawalSecuritySchema = new mongoose.Schema({
+  userId:          { type: String, required: true, unique: true },
+  totpSecretEnc:   { type: String, default: '' },
+  totpPendingEnc:  { type: String, default: '' },
+  totpConfirmedAt: { type: Date, default: null },
+  lastTotpCounter: { type: Number, default: null },
+  failedAttempts:  { type: Number, default: 0 },
+  lockedUntil:     { type: Date, default: null },
+  updatedAt:       { type: Date, default: Date.now }
+});
+
 const AuditLogSchema = new mongoose.Schema({
   actor:     { type: String, required: true },
   action:    { type: String, required: true },
@@ -165,5 +184,6 @@ module.exports = {
   LedgerEntry:    model('LedgerEntry', LedgerEntrySchema, 'ledger_entries'),
   WalletAccount:  model('WalletAccount', WalletAccountSchema, 'wallet_accounts'),
   AuditLog:       model('AuditLog', AuditLogSchema, 'audit_log'),
+  WithdrawalSecurity: model('WithdrawalSecurity', WithdrawalSecuritySchema, 'withdrawal_security'),
   NetworkState:   model('NetworkState', NetworkStateSchema, 'network_state')
 };
