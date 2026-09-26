@@ -69,12 +69,27 @@ service cloud.firestore {
        address, so nobody else can read it - and nor can a session they
        have signed out everywhere. */
     match /users/{uid} {
+      /* Counts and dates the account does not get to choose: they start
+         where every account starts and the app never raises them itself,
+         so a client that tries to is refused. Real follower counts and
+         XP will be kept by a server; until then they stay put. */
+      function fixed(field, start) {
+        let d = request.resource.data;
+        return !(field in d)
+          || (resource == null ? d[field] == start
+                               : (field in resource.data && d[field] == resource.data[field]));
+      }
       allow read, delete: if isOwner(uid) && sessionOk();
       allow create, update: if isOwner(uid) && sessionOk()
         && request.resource.data.keys().hasOnly([
              'displayName', 'email', 'photoURL', 'xp', 'level',
              'joinedAt', 'followers', 'following', 'prefs', 'prefsAt'])
-        && (!('displayName' in request.resource.data) || str(request.resource.data.displayName, 80));
+        && (!('displayName' in request.resource.data) || str(request.resource.data.displayName, 80))
+        && fixed('xp', 0) && fixed('level', 1) && fixed('followers', 0) && fixed('following', 0)
+        && fixed('joinedAt', request.time)
+        // The address stored is the one the sign-in proved, not one typed in.
+        && (!('email' in request.resource.data)
+            || request.resource.data.email == request.auth.token.get('email', null));
     }
 
     /* When the account last signed out everywhere. Readable by the
@@ -107,6 +122,9 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && safeName(request.resource.data.author)
         && safeHandle(request.resource.data.handle)
+        // Anonymous posts stay on the device: every post carries its
+        // account id, so a shared one would not be anonymous.
+        && request.resource.data.handle != '@anonymous'
         && request.resource.data.body is string
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 5000
@@ -120,14 +138,29 @@ service cloud.firestore {
         && request.resource.data.shares == 0
         && request.resource.data.time == request.time;
 
-      // A like moves the count by one, up or down, and touches nothing
-      // else. (One like per person needs a likes sub-collection - the
-      // app does not keep one yet.)
+      /* One like per person. A like is a document at likes/{uid}, written
+         in the same batch as the count moves: the count may go up by one
+         only as that person's like document appears, and down by one only
+         as it disappears. It used to accept +1 from anyone, any number of
+         times. */
+      function likeDoc() { return /databases/$(database)/documents/posts/$(postId)/likes/$(request.auth.uid); }
       allow update: if signedIn() && verified() && sessionOk()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
         && request.resource.data.likes >= 0
-        && (request.resource.data.likes == resource.data.likes + 1
-            || request.resource.data.likes == resource.data.likes - 1);
+        && ((request.resource.data.likes == resource.data.likes + 1 && !exists(likeDoc()) && existsAfter(likeDoc()))
+            || (request.resource.data.likes == resource.data.likes - 1 && exists(likeDoc()) && !existsAfter(likeDoc())));
+
+      // Who liked a post is theirs to know, not everyone's.
+      match /likes/{likerId} {
+        function post() { return /databases/$(database)/documents/posts/$(postId); }
+        allow read: if isOwner(likerId);
+        allow create: if isOwner(likerId) && verified() && sessionOk()
+          && request.resource.data.keys().hasOnly(['at'])
+          && request.resource.data.at == request.time
+          && getAfter(post()).data.likes == get(post()).data.likes + 1;
+        allow delete: if isOwner(likerId) && sessionOk()
+          && getAfter(post()).data.likes == get(post()).data.likes - 1;
+      }
 
       // Only the author can delete their post - verified or not, so that
       // deleting an account always works.

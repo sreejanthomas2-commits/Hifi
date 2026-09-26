@@ -572,6 +572,27 @@ function sharePost(id) {
 }
 window.sharePost = sharePost;
 
+/* Which shared posts this account has liked, remembered on the device so
+   the heart stays filled across refreshes. The server holds the truth
+   (posts/{id}/likes/{uid}) and refuses a second like whatever this says;
+   this only saves asking it for every post. */
+const CLOUD_LIKES = 'ts_cloud_likes_v1';
+function cloudLikes() {
+  try { return (JSON.parse(localStorage.getItem(CLOUD_LIKES) || '{}') || {})[(S.user && S.user.uid) || ''] || []; }
+  catch (e) { return []; }
+}
+function rememberCloudLike(id, on) {
+  const uid = S.user && S.user.uid;
+  if (!uid) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(CLOUD_LIKES) || '{}') || {};
+    const list = (all[uid] || []).filter(x => x !== id);
+    if (on) list.push(id);
+    all[uid] = list.slice(-2000);
+    localStorage.setItem(CLOUD_LIKES, JSON.stringify(all));
+  } catch (e) { /* storage full - the server still enforces one like */ }
+}
+
 async function likePost(e, id) {
   const p = DATA.posts.find(x => x.id === id);
   if (!p) return;
@@ -601,23 +622,39 @@ async function likePost(e, id) {
     if (btn) btn.classList.add('pop');
   }
 
-  // If it's a Firestore post (string ID), update the cloud database
-  if (typeof id === 'string' && window.db && window.firebaseDoc && window.firebaseUpdateDoc) {
+  /* A shared post: one like per person. The like is a document at
+     posts/{id}/likes/{uid}, written in the same batch as the count moves,
+     and the rules only let the count move by one when that document
+     appears or disappears with it. The count used to accept +1 from
+     anyone as often as they liked. */
+  if (typeof id === 'string' && window.db && window.firebaseDoc && window.firebaseWriteBatch && window.firebaseIncrement && S.user.uid) {
     try {
       const postRef = window.firebaseDoc(window.db, 'posts', id);
+      const likeRef = window.firebaseDoc(window.db, 'posts', id, 'likes', S.user.uid);
+      const batch = window.firebaseWriteBatch(window.db);
+      if (p.liked) batch.set(likeRef, { at: window.firebaseServerTimestamp() });
+      else batch.delete(likeRef);
+      batch.update(postRef, { likes: window.firebaseIncrement(change) });
       const giveUp = new Promise((_, reject) => setTimeout(() => reject(new Error('no answer from Firestore')), 8000));
-      await Promise.race([window.firebaseUpdateDoc(postRef, {
-        likes: window.firebaseIncrement ? window.firebaseIncrement(change) : p.likes
-      }), giveUp]);
+      await Promise.race([batch.commit(), giveUp]);
+      rememberCloudLike(id, p.liked);
     } catch (err) {
       console.error("Error updating likes:", err);
       // Revert local UI if failed
       p.liked = !p.liked;
       p.likes -= change;
-      // An unconfirmed email account is refused by the shared feed's rules.
-      showToast(S.user && S.user.needsVerification
-        ? 'Confirm your email to like posts in the shared feed — Settings → Security.'
-        : 'Error liking post.');
+      /* Refused means the server already has it the other way: a like
+         from another device, or no like to take back. Show what is true. */
+      if (err && err.code === 'permission-denied' && !(S.user && S.user.needsVerification)) {
+        p.liked = change === 1;
+        rememberCloudLike(id, p.liked);
+        showToast(change === 1 ? 'You already like this post.' : 'That like was already gone.');
+      } else {
+        // An unconfirmed email account is refused by the shared feed's rules.
+        showToast(S.user && S.user.needsVerification
+          ? 'Confirm your email to like posts in the shared feed — Settings → Security.'
+          : 'Error liking post.');
+      }
       renderFeed();
     }
   } else {
@@ -781,6 +818,15 @@ async function publishPost() {
    link may have been opened since sign-in, so Firebase is asked again
    first. */
 async function shareToCloud(newPost, localPost) {
+  /* An anonymous post stays on this device. The shared feed has to know
+     who posted - the rules tie every post to its account - and anyone can
+     read that account id off the post, so "anonymous" would have been a
+     label over a name tag. It can be shared once posts are written by a
+     server that keeps the author private. */
+  if (newPost.handle === '@anonymous') {
+    showToast('Anonymous posts stay on this device for now — sharing one would reveal which account wrote it.');
+    return;
+  }
   if (S.user && S.user.needsVerification) {
     const nowOk = typeof recheckEmailVerification === 'function' && await recheckEmailVerification();
     if (!nowOk) {
@@ -818,13 +864,16 @@ function listenToGlobalFeed() {
   }
   _feedRetries = 0;
 
-  const q = window.firebaseQuery(
-    window.firebaseCollection(window.db, 'posts'),
-    window.firebaseOrderBy('time', 'desc')
-  );
+  /* The newest 100, not every post ever written: the whole collection on
+     every change was a cost that grew with the feed, and a spam run of
+     posts could spend the project's daily read quota for everyone. */
+  const q = window.firebaseLimit
+    ? window.firebaseQuery(window.firebaseCollection(window.db, 'posts'), window.firebaseOrderBy('time', 'desc'), window.firebaseLimit(100))
+    : window.firebaseQuery(window.firebaseCollection(window.db, 'posts'), window.firebaseOrderBy('time', 'desc'));
 
   window.firebaseOnSnapshot(q, (snapshot) => {
     const cloudPosts = [];
+    const liked = new Set(cloudLikes());
     snapshot.forEach((doc) => {
       const data = doc.data();
       // Written by other accounts: shapes are checked here as well as in
@@ -840,7 +889,7 @@ function listenToGlobalFeed() {
         likes: data.likes || 0,
         comments: data.comments || 0,
         shares: data.shares || 0,
-        liked: false,
+        liked: liked.has(doc.id),
         type: data.type || 'text',
         category: data.category || 'general'
       });

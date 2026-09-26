@@ -30,9 +30,34 @@ if (String(process.env.CUSTODY_ENABLED || '').toLowerCase() === 'true') {
 }
 
 // Middleware
+const { securityHeaders, cspReport, errorHandler } = require('./middleware/security');
+
+// No "X-Powered-By: Express" - naming the framework and version helps
+// nobody but someone looking up its advisories.
+app.disable('x-powered-by');
+
+/* Behind a proxy (Vercel, nginx) every request arrives from the proxy's
+   address, so per-IP rate limits would lump everyone together. Set
+   TRUST_PROXY to the number of proxies in front (1 on Vercel) and
+   Express reads the client's address from X-Forwarded-For - but only
+   that many hops, so a client cannot claim any address it likes. */
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
+
+app.use(securityHeaders);
 app.use(compression());
-app.use(cors());
-app.use(express.json());
+
+/* The app calls its own API from its own origin, which needs no CORS at
+   all. This used to answer every site on the internet with
+   Access-Control-Allow-Origin: *. Now only origins listed in CORS_ORIGINS
+   (comma-separated, for a separate front end) get CORS headers; with it
+   unset, browsers keep other sites out. */
+const corsOrigins = String(process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors({ origin: corsOrigins.length ? corsOrigins : false }));
+
+app.post('/api/csp-report',
+  express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'], limit: '16kb' }),
+  cspReport);
+app.use(express.json({ limit: '100kb' }));
 
 // Serve static frontend files from 'public' directory.
 // Assets are cache-busted via ?v= query strings, so a long cache is safe
@@ -121,10 +146,17 @@ if (process.env.CUSTODY_ENABLED === 'true' && process.env.WATCHER_ROLE === 'prim
   if (watcher.start()) console.log('Chain watcher started');
 }
 
+// An /api path nothing answered is a JSON 404, not the app's HTML page -
+// a client should be told plainly that the endpoint does not exist.
+app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
+
 // Catch-all to serve index.html for Single Page App routing
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Last: anything that threw becomes plain JSON, with the detail in the log.
+app.use(errorHandler);
 
 // Port configuration for Vercel/Local
 const PORT = process.env.PORT || 3000;
