@@ -1257,7 +1257,8 @@ const PG = (() => {
     ['wallet', 'Wallet', 'account_balance_wallet', '#FCD535'], ['send', 'Send', 'send', '#2EBD85'],
     ['receive', 'Receive', 'qr_code_2', '#3B82F6'], ['scan', 'Scan', 'qr_code_scanner', '#0EA5E9'],
     ['swap', 'Swap', 'currency_exchange', '#EC4899'], ['trade', 'Trade', 'candlestick_chart', '#8A6400'],
-    ['earn', 'Earn', 'savings', '#F0B90B'], ['p2p', 'P2P', 'swap_horiz', '#26A69A'], ['nfts', 'NFTs', 'token', '#F355DA']
+    ['earn', 'Earn', 'savings', '#F0B90B'], ['p2p', 'P2P', 'swap_horiz', '#26A69A'], ['card', 'Card', 'credit_card', '#1B8A74'],
+    ['nfts', 'NFTs', 'token', '#F355DA']
   ];
   const TITLES = Object.fromEntries([...TABS, ...LIBRARY, ...MENU].map(([k, l]) => [k, l]));
   // Which tab stays lit while a section is open.
@@ -1591,7 +1592,7 @@ const PG = (() => {
       case 'send': pay('openHub'); return;
       case 'receive': pay('openMyQR'); return;
       case 'scan': pay('openScan'); return;
-      case 'portfolio': case 'trade': case 'earn': case 'p2p':
+      case 'portfolio': case 'trade': case 'earn': case 'p2p': case 'card':
         if (typeof navigateTo === 'function') navigateTo(k); return;
       case 'app-settings': if (typeof navigateTo === 'function') navigateTo('settings'); return;
       case 'signout': if (typeof signOut === 'function') signOut(); return;

@@ -46,7 +46,8 @@
 const PAGES = {
   reels:        './pages/reels.js?v=cm1',
   cryptomarket: './pages/cryptomarket.js?v=8m8',
-  settings:     './pages/settings.js?v=dd2'
+  settings:     './pages/settings.js?v=dd2',
+  card:         './pages/card.js?v=c3'
 };
 
 /* One promise per module, so two quick taps on the same tab do not

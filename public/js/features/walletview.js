@@ -160,7 +160,7 @@ const WV = (() => {
     if (!rows.length) {
       return card('History', '<div class="wv-empty">Nothing yet. Payments, tips, swaps and transfers show up here.</div>');
     }
-    const ICONS = { spend: 'arrow_upward', receive: 'arrow_downward', transfer: 'swap_horiz', tip: 'toll', swap: 'currency_exchange' };
+    const ICONS = { spend: 'arrow_upward', receive: 'arrow_downward', transfer: 'swap_horiz', tip: 'toll', swap: 'currency_exchange', card: 'credit_card' };
     const body = rows.map(e => {
       const inbound = e.dir === 'in';
       const move = e.dir === 'move';
@@ -184,6 +184,7 @@ const WV = (() => {
     if (e.kind === 'transfer') return `${e.from} → ${e.to}`;
     if (e.kind === 'tip') return 'Tip sent';
     if (e.kind === 'swap') return e.dir === 'in' ? 'Swap received' : 'Swap paid';
+    if (e.kind === 'card') return 'Card payment';
     return e.dir === 'in' ? 'Received' : 'Sent';
   }
 

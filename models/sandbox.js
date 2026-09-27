@@ -63,7 +63,7 @@ const IdempotencyKeySchema = new mongoose.Schema({
 }, { versionKey: false });
 IdempotencyKeySchema.index({ userId: 1, scope: 1, key: 1 }, { unique: true });
 
-const TICKET_CATEGORIES = ['payment', 'p2p', 'trade', 'convert', 'deposit', 'withdrawal', 'earn', 'account', 'other'];
+const TICKET_CATEGORIES = ['payment', 'card', 'p2p', 'trade', 'convert', 'deposit', 'withdrawal', 'earn', 'account', 'other'];
 const TICKET_STATES = ['open', 'waiting_on_you', 'resolved', 'closed'];
 const SupportTicketSchema = new mongoose.Schema({
   ref:       { type: String, required: true },

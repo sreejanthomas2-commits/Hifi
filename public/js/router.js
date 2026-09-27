@@ -4,7 +4,7 @@
    on its own rather than mixed into the module conversion. */
 'use strict';
 
-import { ensurePane } from './lazy.js?v=dd2';
+import { ensurePane } from './lazy.js?v=c3';
 
 /* Through window, not the module-local binding a few lines down.
    components/mobile.js and features/discover.js both decorate
@@ -119,6 +119,7 @@ async function navigateTo(pane) {
   if (pane === 'messages') _safe('setupMessages', 'setupMessages');
   if (pane === 'earn') _safe('renderEarn', 'renderEarn');
   if (pane === 'settings') _safe('renderSettings', 'renderSettings');
+  if (pane === 'card') _safe('renderCard', 'renderCard');
 }
 
 function toggleSidebar() {

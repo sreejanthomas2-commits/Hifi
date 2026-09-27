@@ -58,7 +58,7 @@ const good = { spot: { licence: 'Test licence 001', partner: 'Test partner', cou
     check('nothing is real money', board.live, false);
     check('  not even for a fully verified person in a listed country', board.products.filter(p => p.state === 'live').length, 0);
     check('spot is practice money', stateOf(board, 'spot'), 'sandbox');
-    check('the card is unavailable', stateOf(board, 'card'), 'unavailable');
+    check('the card is a practice card', stateOf(board, 'card'), 'sandbox');
     check('transfers abroad are coming', stateOf(board, 'remit'), 'coming');
     check('live prices are real', stateOf(board, 'markets'), 'real');
     const w = board.products.find(p => p.id === 'withdraw');

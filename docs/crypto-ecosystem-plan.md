@@ -53,7 +53,7 @@ document is a proposal, and isn't built unless it says "exists".*
 | Earn | Flexible and locked staking, launchpool, copy trading, quizzes | Browser | **No:** fixed rates up to 34% with no risk wording; 6 made-up traders with invented ROI, win rate, copier count and assets | Risk disclosure, indicative vs past rates, redemption terms, a real source of yield |
 | Fiat deposit / withdrawal | Nothing | — | — | Everything |
 | Cross-border transfer | Nothing | — | — | Everything |
-| Crypto card | Nothing (the profile's "crypto card" is a balance widget) | — | — | Needs a card-issuing partner |
+| Crypto card | Practice Trending Card (see `docs/card.md`): virtual and physical cards, freeze, controls, limits, coin choice, every decline explained, refunds, reversals, reports, outages. ECB exchange rates from the server | Browser (rules) + server (status, rates) | Yes, labelled practice. Its "number" is zeros that fail every card check | A card-issuing partner, and authorisation on the server against the ledger |
 | Security Center | Spread across Settings: withdrawal 2FA, devices, sign out everywhere, re-login for sensitive changes, email confirmation | Firebase + server | Yes | Anti-phishing code, sign-in alerts, saved-address list, one activity log |
 | Transaction history | Browser history for paper money; server lists for deposits and withdrawals | Browser + server | Yes | One history across products, with ID, fee breakdown, status timeline and "Report a problem" |
 | Support | Problem reports saved on the device only | Browser | Says so | Tickets linked to transactions; a staff console |
@@ -245,8 +245,9 @@ Outside, per product and country (needs contracts):
     Under review and Action required.
   - **Rails:** payout goes through an adapter (sandbox only). The crypto and
     stablecoin rail reuses the existing send flow.
-- **Card.** The hub tile says it isn't available and what it would need. No
-  fake card number, ever.
+- **Card.** A practice card, built (`docs/card.md`). It never shows a number
+  that could pass for a real one: the practice number is twelve zeros and
+  four digits that fail the Luhn check, built when shown and never stored.
 - **Security Center.** One page gathering:
   - two-factor
   - devices and sign-in history
@@ -431,6 +432,7 @@ together. A screen on its own doesn't count.
 | **H. Cross-border transfer** | Corridors, recipients, eight-line quote, twelve statuses, tracking, sandbox payout adapter; crypto rail via Send | Which corridors to design first |
 | **I. Fiat in / out** | Provider adapter interface, signed webhooks, sandbox provider, failure, refund and reversal flows | — (a real provider later) |
 | **J. Security Center + support** | One security page, saved addresses, anti-phishing code, sign-in alerts, tickets, "Report a problem" everywhere | — |
+| **Card (practice, built)** | The Trending Card on the practice balance: rules in `features/cardcore.js`, page in `pages/card.js`, `/api/card` for status and ECB rates. Moves its authorisation to the server with Phase D | A card-issuing partner, for a real card |
 | **K. Going live, per product and country** | Licences, partners, identity vendor, signer, security audit, penetration test | Business and legal work |
 
 A to J can all be built and tested without a licence, because they run on

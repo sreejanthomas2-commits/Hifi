@@ -51,8 +51,8 @@
     { "id": "history", "name": "Transaction history", "group": "money", "icon": "receipt_long", "base": "sandbox",
       "note": "Every movement, newest first" },
 
-    { "id": "card", "name": "Trending Card", "group": "safety", "icon": "credit_card", "base": "unavailable", "regulated": true,
-      "why": "A Trending card needs a card-issuing partner, and Trending doesn't have one. There is no card, card number or waiting list yet." },
+    { "id": "card", "name": "Trending Card", "group": "safety", "icon": "credit_card", "base": "sandbox", "regulated": true,
+      "note": "Practice card: spends your practice balance at made-up shops. A real card needs a card-issuing partner, which Trending doesn't have." },
     { "id": "security", "name": "Security Center", "group": "safety", "icon": "shield_lock", "base": "real",
       "note": "Two-factor, devices, sign out everywhere" },
     { "id": "support", "name": "Help and support", "group": "safety", "icon": "support_agent", "base": "real",

@@ -128,6 +128,11 @@ app.use('/api/products', require('./routes/products'));
 // and audited for staff. Answers 503 until a database is connected.
 app.use('/api/support', require('./routes/support'));
 
+// The Trending Card: its state from the switchboard, and the day's ECB
+// exchange rates. Public and read-only. There is no endpoint that issues
+// a card or shows a card number - see routes/card.js for why.
+app.use('/api/card', require('./routes/card'));
+
 // The signer's queue. Mounted BEFORE the /api/crypto routers: a router
 // mounted on a prefix runs its middleware over every path beneath it, so
 // the user-session check on /api/crypto would otherwise answer these
