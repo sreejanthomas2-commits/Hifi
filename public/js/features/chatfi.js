@@ -185,11 +185,23 @@ const CFI = (() => {
     return c ? c.name : 'them';
   }
 
+  /* An amount exactly as typed, in this coin's decimals, or why not:
+     "1,5" and "1e3" are refused instead of read as 15 and 1000, and
+     nothing finer than the coin's smallest unit (features/sendsafe.js). */
+  function amountOf(raw, coin) {
+    if (typeof SSF === 'undefined') {
+      const n = parseFloat(raw);
+      return n > 0 && isFinite(n) ? { ok: true, number: n } : { ok: false, msg: 'Enter an amount.' };
+    }
+    return SSF.parseAmount(typeof raw === 'number' ? raw : String(raw == null ? '' : raw), SSF.decimalsFor(coin, ''), coin);
+  }
+
   /* ── 1. Send ─────────────────────────────────────────────────────── */
   function doSend(chatId, coin, amount, note) {
-    const amt = parseFloat(amount);
     if (!coin || !priceOf(coin)) return { ok: false, msg: 'Pick a coin with a price.' };
-    if (!amt || amt <= 0) return { ok: false, msg: 'Enter an amount.' };
+    const parsed = amountOf(amount, coin);
+    if (!parsed.ok) return { ok: false, msg: parsed.msg };
+    const amt = parsed.number;
     if (!hasMNY()) return { ok: false, msg: 'Accounts are still loading…' };
 
     /* Funding first, topped up from Spot if it is short — one balance
@@ -209,8 +221,10 @@ const CFI = (() => {
      the QR code and a shared link, so a request has one status wherever
      it's read. The block below is the fallback for when PAY isn't loaded. */
   function doRequest(chatId, coin, amount, note) {
-    const amt = parseFloat(amount);
     const sym = String(coin || 'USDT').toUpperCase();
+    const parsed = amountOf(amount, sym);
+    if (!parsed.ok) return { ok: false, msg: parsed.msg };
+    const amt = parsed.number;
 
     if (typeof PAY !== 'undefined' && PAY.createRequest) {
       if (PAY.ASSETS.indexOf(sym) === -1) {
@@ -273,10 +287,11 @@ const CFI = (() => {
   /* Funded up front, so claims cost you nothing further — the packet is
      already paid for and claims only decide who gets which slice. */
   function doGift(chatId, coin, amount, slots) {
-    const amt = parseFloat(amount);
     const n = Math.max(1, Math.min(20, parseInt(slots, 10) || 5));
     if (!coin || !priceOf(coin)) return { ok: false, msg: 'Pick a coin with a price.' };
-    if (!amt || amt <= 0) return { ok: false, msg: 'Enter an amount.' };
+    const parsed = amountOf(amount, coin);
+    if (!parsed.ok) return { ok: false, msg: parsed.msg };
+    const amt = parsed.number;
     if (!hasMNY()) return { ok: false, msg: 'Accounts are still loading…' };
 
     const out = MNY.spend(coin, amt, { kind: 'spend', via: 'Chat · gift packet', to: peerName(chatId) });
@@ -319,10 +334,11 @@ const CFI = (() => {
 
   /* ── 4. Split bill ───────────────────────────────────────────────── */
   function doSplit(chatId, coin, total, people, note) {
-    const t = parseFloat(total);
     const n = Math.max(2, Math.min(20, parseInt(people, 10) || 2));
     if (!coin || !priceOf(coin)) return { ok: false, msg: 'Pick a coin with a price.' };
-    if (!t || t <= 0) return { ok: false, msg: 'Enter a total.' };
+    const parsed = amountOf(total, coin);
+    if (!parsed.ok) return { ok: false, msg: parsed.msg === 'Enter an amount.' ? 'Enter a total.' : parsed.msg };
+    const t = parsed.number;
 
     push(chatId, {
       kind: 'split', me: true, coin, total: t, people: n,

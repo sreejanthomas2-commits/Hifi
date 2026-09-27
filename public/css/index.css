@@ -9968,3 +9968,14 @@ html.tp-no-shares:not(.tp-no-shares-all) .post-card.mine [data-count="shares"] {
 
 /* The tool row keeps its height however tall the panel below it gets. */
 .stu-tabs { flex-shrink: 0; }
+
+/* == SEND SAFETY (features/sendsafe.js) ============================ */
+/* The tick that confirms a memo network is being sent to without its
+   memo, and the red look-alike warning in the chat wallet. */
+.sc-ack { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0 4px; padding: 11px 12px; border-radius: 13px;
+  border: 1px solid color-mix(in srgb, var(--orange) 45%, var(--border)); background: color-mix(in srgb, var(--orange) 8%, transparent);
+  font-size: 12.5px; line-height: 1.5; color: var(--t1); cursor: pointer; }
+.sc-ack input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--brand); }
+.sc-ack em { display: block; font-style: normal; color: var(--t3); margin-top: 2px; }
+.wad-warn.hard { background: color-mix(in srgb, var(--red) 10%, transparent); border-color: color-mix(in srgb, var(--red) 34%, transparent); }
+.wad-warn.hard .material-symbols-rounded { color: var(--red); }

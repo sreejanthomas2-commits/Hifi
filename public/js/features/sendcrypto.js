@@ -39,7 +39,24 @@ const SC = (() => {
   const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const uid = () => 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  const num = v => { const n = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return Number.isFinite(n) ? n : 0; };
+  const hasSSF = () => typeof SSF !== 'undefined';
+  /* The amount exactly as typed, in this coin's decimals on the chosen
+     network (features/sendsafe.js). It used to be parseFloat with the
+     commas stripped, so "1,5" became 15 and "1e3" became 1000. Before a
+     network is picked, the coin's most precise network decides. */
+  function decimals() {
+    if (!hasSSF()) return 8;
+    if (V.net) return SSF.decimalsFor(V.sym, V.net);
+    const d = netsOf(V.sym).map(n => SSF.decimalsFor(V.sym, n.key));
+    return d.length ? Math.max(...d) : SSF.decimalsFor(V.sym, '');
+  }
+  function amountOf() {
+    if (!hasSSF()) { const n = parseFloat(V.amount); return n > 0 ? { ok: true, number: n, text: String(n) } : { ok: false, msg: 'Enter an amount.' }; }
+    return SSF.parseAmount(V.amount, decimals(), V.sym);
+  }
+  const tagOf = n => (hasSSF() && n ? SSF.checkTag(n.key, V.tag) : { ok: true, empty: !String(V.tag || '').trim(), text: String(V.tag || '').trim() });
+  // A network that routes deposits by tag or memo, sent with none: the person has to say that is right.
+  const tagAckNeeded = n => !!(n && n.tagField && tagOf(n).empty);
   const qty = v => (typeof MNY !== 'undefined' ? MNY.qty(v) : String(v));
   const hasPF = () => typeof PF !== 'undefined';
 
@@ -115,7 +132,7 @@ const SC = (() => {
     if ($('sc-sheet')) close();
     lastFocus = document.activeElement;
     V = { screen: 'coin', stack: [], sym: '', net: '', to: '', amount: o.amount ? String(o.amount) : '', tag: '',
-          speed: 'standard', q: '', err: '', recId: '' };
+          speed: 'standard', q: '', err: '', recId: '', notag: false };
     const el = document.createElement('div');
     el.id = 'sc-sheet';
     el.className = 'dep-sheet';
@@ -130,7 +147,9 @@ const SC = (() => {
       const f = e.target.closest('[data-scf]');
       if (!f) return;
       const k = f.dataset.scf;
-      V[k] = f.value;
+      V[k] = f.type === 'checkbox' ? f.checked : f.value;
+      if (k === 'notag') { const b = $('sc-handoff'); if (b) { b.classList.toggle('off', !f.checked); b.setAttribute('aria-disabled', String(!f.checked)); } return; }
+      if (k === 'tag') { patchForm(); return; }
       if (k === 'q') { paintList(); return; }
       if (k === 'to') { onAddress(); return; }
       if (k === 'amount') { patchForm(); return; }
@@ -276,10 +295,12 @@ const SC = (() => {
         <span class="sc-amt"><input type="text" inputmode="decimal" data-scf="amount" value="${esc(V.amount)}" placeholder="0" aria-label="Amount">
           <b>${esc(a.symbol)}</b></span>
       </label>
+      <div id="sc-amt-hint" class="sc-hint" role="status"></div>
 
-      ${n && n.tagField ? `<label class="dep-field sc-f"><span>${esc(n.tagField.name)} <em class="sc-opt">optional</em></span>
-        <input type="text" data-scf="tag" value="${esc(V.tag)}" placeholder="Only if the receiving exchange gives you one" autocomplete="off">
-        <em class="sc-opt">${esc(n.tagField.hint)}</em></label>` : ''}
+      ${n && n.tagField ? `<label class="dep-field sc-f"><span>${esc(n.tagField.name)} <em class="sc-opt">if the receiver gave you one</em></span>
+        <input type="text" data-scf="tag" value="${esc(V.tag)}" placeholder="Required when sending to an exchange" autocomplete="off">
+        <em class="sc-opt">Sending to an exchange? It needs this ${esc(n.tagField.name.toLowerCase())} to know the coins are yours; without it they can be stuck or lost. Leave it empty only for a personal wallet.</em></label>
+      <div id="sc-tag-hint" class="sc-hint" role="status"></div>` : ''}
 
       <div id="sc-fee-host">${feeHTML(n)}</div>
       <div id="sc-sum"></div>
@@ -344,7 +365,7 @@ const SC = (() => {
     const n = netOf(V.sym, V.net);
     const a = V.to.trim();
     const hint = $('sc-addr-hint');
-    let addrOk = false;
+    let addrOk = false, addr = null;
     if (hint) {
       if (!a) hint.innerHTML = '';
       else if (!n) {
@@ -355,19 +376,34 @@ const SC = (() => {
       } else {
         const v = checkFor(n.key, a);
         addrOk = v.ok;
+        addr = v.ok ? v : null;
         if (v.secret) { V.to = ''; const t = document.querySelector('#sc-body [data-scf="to"]'); if (t) t.value = ''; }
+        // Invisible characters copied along with it are taken out of the box too.
+        if (v.ok && v.value && v.value !== a) { V.to = v.value; const t = document.querySelector('#sc-body [data-scf="to"]'); if (t) t.value = v.value; }
         hint.innerHTML = v.ok
           ? `<span class="sc-hint-ok">${ico('check_circle')}${esc(n.label)} address${v.warn ? ' · ' + esc(v.warn) : ''}</span>`
           : `<span class="sc-hint-e">${ico('error')}${esc(v.msg)}</span>`;
       }
     }
-    const amt = num(V.amount);
+    const parsed = amountOf();
+    const amt = parsed.ok ? parsed.number : 0;
+    const min = parsed.ok && n && hasSSF() ? SSF.minimum(V.sym, n.key, parsed, addr) : {};
+    const ah = $('sc-amt-hint');
+    if (ah) {
+      ah.innerHTML = !String(V.amount || '').trim() ? ''
+        : !parsed.ok ? `<span class="sc-hint-e">${ico('error')}${esc(parsed.msg)}</span>`
+        : min.refuse ? `<span class="sc-hint-e">${ico('error')}${esc(min.refuse)}</span>`
+        : min.warn ? `<span class="sc-hint-i">${ico('info')}${esc(min.warn)}</span>` : '';
+    }
+    const tag = tagOf(n);
+    const th = $('sc-tag-hint');
+    if (th) th.innerHTML = tag.ok ? '' : `<span class="sc-hint-e">${ico('error')}${esc(tag.msg)}</span>`;
     const sum = $('sc-sum');
     if (sum && hasPF()) {
       sum.innerHTML = n && amt > 0 ? PF.summary(rows(n, amt, false)) : '';
     }
     const btn = $('sc-next');
-    const ready = !!n && addrOk && amt > 0;
+    const ready = !!n && addrOk && parsed.ok && !min.refuse && tag.ok;
     if (btn) { btn.classList.toggle('off', !ready); btn.setAttribute('aria-disabled', String(!ready)); }
   }
 
@@ -396,7 +432,7 @@ const SC = (() => {
     ];
     if (full) out.splice(0, 0, ['Network', `${esc(n.label)}${n.tag && n.tag !== n.label ? ` <small>${esc(n.tag)}</small>` : ''}`]);
     if (fee.tier && !token) {
-      out.push(['Total from your wallet', `${esc(hasPF() ? PF.coinAmt(amt + num(fee.tier.amountMax || fee.tier.amount)) : amt)} ${esc(V.sym)}`, 'total']);
+      out.push(['Total from your wallet', `${esc(hasPF() ? PF.coinAmt(amt + (parseFloat(fee.tier.amountMax || fee.tier.amount) || 0)) : amt)} ${esc(V.sym)}`, 'total']);
     }
     return out;
   }
@@ -444,14 +480,38 @@ const SC = (() => {
   }
 
   /* ── 4 · review ──────────────────────────────────────────────────── */
+  /* Everything worth saying before the hand-off, most serious first. */
+  function cautions(n, parsed) {
+    if (!hasSSF()) return [];
+    const out = [];
+    const known = records().map(r => r.to).concat(WADok() && WAD.knownAddresses ? WAD.knownAddresses() : []);
+    const alike = SSF.lookalike(V.to, known, n.key);
+    if (alike) out.push(['hard', `<b>This address looks like one you've used before, but it isn't the same.</b> ${esc(short(alike))} matches it at both ends and differs in the middle. That is how address poisoning works: an attacker plants a look-alike in your history. Check every character with the receiver.`]);
+    const again = SSF.repeatOf(records(), { asset: V.sym, net: n.key, to: V.to.trim(), amountText: parsed.text });
+    if (again) out.push(['', `You prepared this exact send ${esc(ago(again.at))}${again.status === 'sent' ? ' and marked it sent' : ''}. Sending it again pays twice.`]);
+    const mine = WADok() && WAD.ownList ? WAD.ownList().find(o => o.address.toLowerCase() === V.to.trim().toLowerCase()) : null;
+    if (mine) out.push(['', `That is one of your own addresses (${esc(mine.label || 'saved')}). Sending there moves the coins to yourself.`]);
+    const gas = SSF.feeCoinNote(V.sym, n.key);
+    if (gas) out.push(['', esc(gas)]);
+    const min = SSF.minimum(V.sym, n.key, parsed, checkFor(n.key, V.to));
+    if (min.warn) out.push(['', esc(min.warn)]);
+    return out;
+  }
+  const ago = t => {
+    const m = Math.max(1, Math.round((Date.now() - t) / 60000));
+    return m < 60 ? `${m} minute${m === 1 ? '' : 's'} ago` : m < 1440 ? `${Math.round(m / 60)} hour${Math.round(m / 60) === 1 ? '' : 's'} ago` : 'yesterday';
+  };
+
   function reviewHTML() {
     const a = assetOf(V.sym), n = netOf(V.sym, V.net);
-    const amt = num(V.amount);
+    const parsed = amountOf();
+    const amt = parsed.ok ? parsed.number : 0;
+    const ackTag = tagAckNeeded(n);
     let warn = '';
     if (hasPF() && typeof MNY !== 'undefined') {
       const f = PF.feeLine(n.key, isToken(V.sym, n.key), V.speed);
       if (f.tier) {
-        const feeUsd = num(f.tier.amountMax || f.tier.amount) * MNY.price(f.coin), amtUsd = amt * MNY.price(V.sym);
+        const feeUsd = (parseFloat(f.tier.amountMax || f.tier.amount) || 0) * MNY.price(f.coin), amtUsd = amt * MNY.price(V.sym);
         if (amtUsd > 0 && feeUsd / amtUsd >= 0.05) {
           warn = `<div class="pf-warn">${ico('warning')}<div>The network fee is about ${Math.round((feeUsd / amtUsd) * 100)}% of this send.
             A cheaper network for ${esc(V.sym)} may be listed — <button type="button" class="pf-link" data-sc="net">compare networks</button>.</div></div>`;
@@ -465,10 +525,13 @@ const SC = (() => {
       ${V.tag ? `<div class="sc-to"><span>${esc(n.tagField ? n.tagField.name : 'Memo')}</span><code>${esc(V.tag)}</code></div>` : ''}
       ${hasPF() ? PF.summary(rows(n, amt, true)) : ''}
       ${warn}
-      <div class="dep-warn hard">${ico('warning')}<span><b>Check the address once more</b>
-        The bold characters at each end should match what the receiver gave you. A blockchain transfer can't be reversed — not by you, the receiver or Trending.
-        ${n.wrapped || a.token ? ` ${esc(V.sym)} is a token on ${esc(n.label)}: make sure your wallet sends the right one — Trending doesn't publish contract addresses.` : ''}</span></div>
-      <button type="button" class="dep-btn primary wide" data-sc="handoff">${ico('account_balance_wallet')}Send from my wallet</button>`;
+      ${cautions(n, parsed).map(([cls, text]) => `<div class="dep-warn${cls ? ' ' + cls : ''}">${ico('warning')}<span>${text}</span></div>`).join('')}
+      <div class="dep-warn hard">${ico('warning')}<span><b>Check every character of the address</b>
+        Not just the ends: look-alike addresses are made to match at both ends. A blockchain transfer can't be reversed — not by you, the receiver or Trending.
+        ${n.wrapped || a.token || isToken(V.sym, n.key) ? ` ${esc(V.sym)} is a token on ${esc(n.label)}: make sure your wallet sends ${esc(V.sym)} on ${esc(n.label)} — Trending doesn't publish contract addresses.` : ''}</span></div>
+      ${ackTag ? `<label class="sc-ack"><input type="checkbox" data-scf="notag"${V.notag ? ' checked' : ''}>
+        <span>No ${esc(n.tagField.name.toLowerCase())}: the receiver is a personal wallet that doesn't need one. <em>If it's an exchange, go back and add the ${esc(n.tagField.name.toLowerCase())} it gave you, or the coins can be lost.</em></span></label>` : ''}
+      <button type="button" class="dep-btn primary wide${ackTag && !V.notag ? ' off' : ''}" id="sc-handoff" data-sc="handoff"${ackTag && !V.notag ? ' aria-disabled="true"' : ''}>${ico('account_balance_wallet')}Send from my wallet</button>`;
   }
   const chunk = a => {
     const s = String(a || '');
@@ -481,7 +544,7 @@ const SC = (() => {
   function handoffHTML() {
     const r = recOf(V.recId);
     if (!r) return errHTML('That send is no longer here.', 'close');
-    const uri = WADok() && WAD.walletURI ? WAD.walletURI(r.net, r.to, r.asset, r.amount) : r.to;
+    const uri = WADok() && WAD.walletURI ? WAD.walletURI(r.net, r.to, r.asset, r.amountText || r.amount) : r.to;
     const hasLink = uri && uri !== r.to;
     const [label, cls] = STATUS[r.status] || STATUS.todo;
     return `
@@ -499,7 +562,7 @@ const SC = (() => {
           <div id="sc-qr"></div></li>
         ${r.tag ? `<li><b>Add the ${esc(r.tagName || 'memo')}</b><code class="sc-code">${esc(r.tag)}</code>
           <button type="button" class="dep-btn sm" data-sc="copytag">${ico('content_copy')}Copy</button></li>` : ''}
-        <li><b>Enter ${esc(qty(r.amount))} ${esc(r.asset)}</b>
+        <li><b>Enter ${esc(r.amountText || qty(r.amount))} ${esc(r.asset)}</b>
           <button type="button" class="dep-btn sm" data-sc="copyamt">${ico('content_copy')}Copy amount</button>
           <span>${r.speedName ? `Pick <b>${esc(r.speedName)}</b> speed if your wallet offers one. ` : ''}Your wallet shows the exact fee before you confirm.</span></li>
       </ol>
@@ -554,7 +617,7 @@ const SC = (() => {
         return;
       case 'copyto': { const r = recOf(V.recId); if (r) copy(r.to, 'Address copied'); return; }
       case 'copytag': { const r = recOf(V.recId); if (r) copy(r.tag, 'Copied'); return; }
-      case 'copyamt': { const r = recOf(V.recId); if (r) copy(String(r.amount), 'Amount copied'); return; }
+      case 'copyamt': { const r = recOf(V.recId); if (r) copy(r.amountText || (hasSSF() ? SSF.parseAmount(r.amount, SSF.decimalsFor(r.asset, r.net), r.asset).text : String(r.amount)), 'Amount copied'); return; }
       case 'qr': return showQR();
       case 'sent': return markSent(v);
       case 'cancelrec': return cancelRec(v);
@@ -581,18 +644,36 @@ const SC = (() => {
     if (!n) { toast('Choose the network first.'); return; }
     const v = checkFor(n.key, V.to);
     if (!v.ok) { toast(v.msg || 'Check the address.'); return; }
-    if (!(num(V.amount) > 0)) { toast('Enter an amount.'); return; }
+    const parsed = amountOf();
+    if (!parsed.ok) { toast(parsed.msg); return; }
+    const min = hasSSF() ? SSF.minimum(V.sym, n.key, parsed, v) : {};
+    if (min.refuse) { toast(min.refuse); return; }
+    const tag = tagOf(n);
+    if (!tag.ok) { toast(tag.msg); return; }
+    if (v.value) V.to = v.value;
+    V.notag = false;
     // Keep the estimate warm for the review's summary.
     if (hasPF()) PF.fee(n.key, isToken(V.sym, n.key)).then(() => { if (V && V.screen === 'review') paint(); });
     go('review');
   }
 
+  /* Everything is checked once more here: this is the last step before
+     the person acts on it in their wallet, and the review could have
+     been reached with state changed underneath it. */
   function handoff() {
     const n = netOf(V.sym, V.net);
+    if (!n) { toast('Choose the network first.'); return; }
+    const v = checkFor(n.key, V.to);
+    const parsed = amountOf();
+    const tag = tagOf(n);
+    if (!v.ok) { toast(v.msg || 'Check the address.'); return; }
+    if (!parsed.ok) { toast(parsed.msg); return; }
+    if (!tag.ok) { toast(tag.msg); return; }
+    if (tagAckNeeded(n) && !V.notag) { toast(`Add the ${n.tagField.name.toLowerCase()}, or confirm the receiver doesn't need one.`); return; }
     const fee = hasPF() ? PF.feeLine(n.key, isToken(V.sym, n.key), V.speed) : {};
     const r = saveRec({
-      id: uid(), asset: V.sym, net: n.key, netLabel: n.label, to: V.to.trim(), amount: num(V.amount),
-      tag: V.tag.trim(), tagName: n.tagField ? n.tagField.name : '',
+      id: uid(), asset: V.sym, net: n.key, netLabel: n.label, to: v.value || V.to.trim(), amount: parsed.number, amountText: parsed.text,
+      tag: tag.text || '', tagName: n.tagField ? n.tagField.name : '',
       speedName: fee.tier ? fee.speed : '', feeText: fee.tier ? fee.text : '',
       explorerTx: n.explorer || '', status: 'todo', txid: '', at: Date.now()
     });

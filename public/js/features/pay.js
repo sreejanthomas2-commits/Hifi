@@ -551,7 +551,16 @@ const PAY = (() => {
     const t = q.get('t');
     if (t !== 'u' && t !== 'r') return { ok: false, raw };
 
-    const clean = s => String(s || '').replace(/[-]/g, '').slice(0, 80);
+    /* Control characters, zero-width characters and the bidirectional
+       overrides that make a name display in a different order than it is
+       spelled (U+202E is the classic way to disguise who is asking for
+       money). This used to be written as a character range whose control
+       characters had been lost, which left a class of just '-' and DEL:
+       it deleted hyphens, so "@mary-jane" arrived as "@maryjane", and let
+       every one of those characters through. */
+    const clean = s => String(s || '')
+      .replace(/[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/g, '')
+      .slice(0, 80);
     const p = {
       ok: true, type: t,
       payId: String(q.get('id') || '').replace(/\D/g, '').slice(0, 12),
@@ -593,11 +602,22 @@ const PAY = (() => {
     return 'expires in ' + Math.max(1, m) + 'm';
   }
 
+  /* An amount exactly as typed, in this coin's decimals - "1,5" and
+     "1e3" are refused rather than read as 15 and 1000 (features/sendsafe.js). */
+  function amountOf(raw, asset) {
+    if (typeof SSF === 'undefined') {
+      const n = parseFloat(raw);
+      return n > 0 && isFinite(n) ? { ok: true, number: n } : { ok: false, msg: 'Enter an amount.' };
+    }
+    return SSF.parseAmount(typeof raw === 'number' ? raw : String(raw == null ? '' : raw), SSF.decimalsFor(asset, ''), asset);
+  }
+
   function createRequest(opts) {
     const asset = String(opts.asset || 'USDT').toUpperCase();
-    const amount = parseFloat(opts.amount);
     if (!canPay(asset)) return { ok: false, msg: 'Pick a supported asset.' };
-    if (!amount || amount <= 0) return { ok: false, msg: 'Enter an amount.' };
+    const parsed = amountOf(opts.amount, asset);
+    if (!parsed.ok) return { ok: false, msg: parsed.msg };
+    const amount = parsed.number;
 
     const to = opts.to ? contactBy(opts.to) : null;
     if (opts.to && !to) return { ok: false, msg: 'Pick someone from your contacts.' };
@@ -680,16 +700,32 @@ const PAY = (() => {
   /* ── Paying ──────────────────────────────────────────────────────── */
   function pay(opts) {
     const asset = String(opts.asset || '').toUpperCase();
-    const amount = parseFloat(opts.amount);
     const to = opts.to || {};
 
     if (!canPay(asset)) return { ok: false, msg: 'Pick a supported asset.' };
-    if (!amount || amount <= 0) return { ok: false, msg: 'Enter an amount.' };
+    const parsed = amountOf(opts.amount, asset);
+    if (!parsed.ok) return { ok: false, msg: parsed.msg };
+    const amount = parsed.number;
     /* The Wallet tab's Send and Withdraw's "Send to Trending users" opened
        this with nobody on it, and confirming took the money and paid it to
        "Unknown account". A payment needs someone at the other end. */
     if (!to.handle && !to.payId) return { ok: false, msg: 'Choose who you are paying first.' };
     if (to.payId && String(to.payId) === String(myId())) return { ok: false, msg: "That's your own code — you can't pay yourself." };
+    const mine = me();
+    if (to.handle && mine && mine.handle && String(to.handle).toLowerCase() === String(mine.handle).toLowerCase()) {
+      return { ok: false, msg: "That's your own @handle — you can't pay yourself." };
+    }
+    /* Paying a request settles it, so it can be paid once. The screen
+       checked this before opening, but the payment itself did not - a
+       second tap, a second tab or the link opened again paid it twice. */
+    if (opts.rid) {
+      const req = D.recv.find(x => x.rid === opts.rid);
+      const st = req ? statusOf(req) : 'unknown';
+      if (st !== 'pending') return { ok: false, msg: st === 'paid' ? 'This request has already been paid. Nothing was sent again.' : `This request is ${st}. Nothing was sent.` };
+      if (req && (req.asset !== asset || Math.abs(Number(req.amount) - amount) > 1e-12)) {
+        return { ok: false, msg: 'The amount or coin no longer matches the request. Nothing was sent.' };
+      }
+    }
     if (balOf(asset) + 1e-12 < amount) return { ok: false, msg: `Not enough ${asset} — you hold ${qty(balOf(asset))}.` };
 
     const paid = debit(asset, amount, { to: to.name || to.handle || '', note: opts.note });
@@ -796,6 +832,7 @@ const PAY = (() => {
     const trail = (prev.trail || []).slice();
     if (!replace && prev.view && prev.view !== view) trail.push(prev.view);
     V = { ...prev, ...p, view, trail };
+    if (view === 'pay') V.paying = false;
     render();
     if (view === 'scan') startScan();
   }
@@ -1510,10 +1547,15 @@ const PAY = (() => {
     }
   }
 
+  /* One payment per press: a double tap, or Enter held down, used to be
+     able to reach pay() twice before the screen moved on. */
   function submitPay() {
+    if (!V || V.paying) return;
+    V.paying = true;
     const res = pay({ to: V.to, asset: V.asset, amount: V.amount, note: V.note, rid: V.rid });
     toast(res.msg);
     if (res.ok) go('done', { tx: res.tx, replace: true });
+    else if (V) V.paying = false;
   }
 
   function doneView() {

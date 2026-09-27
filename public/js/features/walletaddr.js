@@ -127,10 +127,10 @@ const WAD = (() => {
     evm:     /^0x[0-9a-fA-F]{40}$/,
     solana:  /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
     tron:    /^T[1-9A-HJ-NP-Za-km-z]{33}$/,
-    bitcoin: /^(bc1[a-z0-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,39})$/,
+    bitcoin: /^(bc1[a-z0-9]{11,71}|BC1[A-Z0-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,39})$/,
     xrpl:    /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/,
     dogecoin:/^[DA9][1-9A-HJ-NP-Za-km-z]{25,34}$/,
-    litecoin:/^(ltc1[a-z0-9]{11,71}|[LM3][1-9A-HJ-NP-Za-km-z]{26,33})$/,
+    litecoin:/^(ltc1[a-z0-9]{11,71}|LTC1[A-Z0-9]{11,71}|[LM3][1-9A-HJ-NP-Za-km-z]{26,33})$/,
     bitcoincash: /^((bitcoincash:)?[qp][02-9ac-hj-np-z]{41}|[13][1-9A-HJ-NP-Za-km-z]{25,33})$/,
     cardano: /^(addr1[02-9ac-hj-np-z]{50,110}|Ae2[1-9A-HJ-NP-Za-km-z]{50,70}|DdzFF[1-9A-HJ-NP-Za-km-z]{80,120})$/,
     polkadot:/^1[1-9A-HJ-NP-Za-km-z]{46,47}$/,
@@ -149,6 +149,7 @@ const WAD = (() => {
   /* A recovery phrase or a private key must never reach this app. Detected
      by shape only, and the value is dropped without being shown again. */
   function secretLooking(raw) {
+    if (typeof SSF !== 'undefined' && SSF.secretKind) return SSF.secretKind(raw);
     const t = String(raw || '').trim();
     const words = t.split(/\s+/).filter(Boolean);
     if (words.length >= 11 && words.every(w => /^[A-Za-z]{3,9}$/.test(w))) return 'phrase';
@@ -157,6 +158,8 @@ const WAD = (() => {
     if (/^xprv[0-9A-Za-z]{50,}$/.test(t)) return 'key';
     return '';
   }
+  // Invisible characters copied along with an address are dropped (utils/addrcheck.js).
+  const cleaned = raw => (typeof ADDR !== 'undefined' ? ADDR.clean(raw) : { value: String(raw || '').trim(), hidden: false });
 
   /* Which networks a pasted address could belong to. EVM addresses are the
      same on every EVM chain, so this narrows the family, never the chain. */
@@ -165,7 +168,7 @@ const WAD = (() => {
   const DETECT = ['evm', 'tron', 'bitcoin', 'litecoin', 'bitcoincash', 'cardano', 'cosmos', 'kaspa', 'ton',
     'stellar', 'algorand', 'tezos', 'hedera', 'near', 'polkadot', 'xrpl', 'dogecoin', 'solana'];
   function detectNets(address) {
-    const a = String(address || '').trim();
+    const a = cleaned(address).value;
     for (const fam of DETECT) {
       if (!SHAPE[fam].test(a)) continue;
       return NET_KEYS.filter(k => NETS[k].family === fam);
@@ -173,12 +176,18 @@ const WAD = (() => {
     return [];
   }
 
+  /* The shape says which network an address could be on; the checksum
+     (utils/addrcheck.js) says whether every character is right. A shape
+     check alone passed almost every one-character typo, and a typo is
+     an address nobody owns. Returns the cleaned address as `value`:
+     callers store that, not what was pasted. */
   function validate(netKey, address) {
-    const a = String(address || '').trim();
+    const c = cleaned(address);
+    const a = c.value;
     const n = netOf(netKey);
     if (!a) return { ok: false, msg: 'Paste an address.' };
 
-    const secret = secretLooking(a);
+    const secret = secretLooking(address);
     if (secret) {
       return {
         ok: false, secret,
@@ -189,21 +198,24 @@ const WAD = (() => {
     }
 
     if (/\s/.test(a)) return { ok: false, msg: 'An address has no spaces in it — copy it again from your wallet.' };
-    if (!SHAPE[n.family].test(a)) {
+    const ck = typeof ADDR !== 'undefined' ? ADDR.check(n.family, a) : null;
+    if (!SHAPE[n.family].test(a) && !(ck && ck.ok)) {
       const an = l => (/^[AEIOU]/i.test(l) ? 'an ' : 'a ') + l;
       const guess = detectNets(a);
       if (guess.length) {
         return { ok: false, msg: `That isn't ${an(n.label)} address — it looks like ${netOf(guess[0]).label}${guess.length > 1 ? ' (or another EVM chain)' : ''}. Pick the matching network.` };
       }
+      // The checksum check can often say more precisely what this is (an X-address, a muxed account, testnet).
+      if (ck && !ck.ok && ck.reason) return { ok: false, msg: ck.reason };
       return { ok: false, msg: `That doesn't look like ${an(n.label)} address. Copy it again from your wallet.` };
     }
 
-    // Mixed-case EVM addresses carry a checksum this prototype can't verify
-    // without a keccak implementation — say so rather than implying it passed.
-    const warn = (n.family === 'evm' && /[A-F]/.test(a) && /[a-f]/.test(a))
-      ? 'Checked the shape, not the checksum — compare the first and last characters against your wallet.'
-      : '';
-    return { ok: true, warn };
+    if (ck && !ck.ok) return { ok: false, msg: ck.reason };
+    const notes = [];
+    if (c.hidden) notes.push('Invisible characters copied with it were removed.');
+    if (ck && ck.note) notes.push(ck.note);
+    else if (!ck) notes.push('Only the format of this address could be checked — compare it character by character.');
+    return { ok: true, value: a, checksum: !!(ck && ck.checksum), kind: ck && ck.kind, dustSats: ck && ck.dustSats, warn: notes.join(' ') };
   }
 
   /* ── Store ───────────────────────────────────────────────────────── */
@@ -335,6 +347,28 @@ const WAD = (() => {
 
   const ownById = id => ownList().find(a => a.id === id) || null;
 
+  /* Every address this device has used or saved - your own, the ones
+     saved per chat, the ones you sent to or shared. A new address that
+     matches one of these at both ends but not in the middle is how
+     address poisoning works (SSF.lookalike). */
+  function knownAddresses() {
+    const out = ownList().map(a => a.address);
+    Object.keys(D.peers || {}).forEach(k => (D.peers[k] || []).forEach(p => out.push(p.address)));
+    Object.keys(D.sends || {}).forEach(k => out.push(D.sends[k].address));
+    Object.keys(D.shares || {}).forEach(k => out.push(D.shares[k].address));
+    return out.filter(Boolean);
+  }
+
+  /* The amount exactly as typed, in this coin's decimals on this network,
+     or why it can't be (features/sendsafe.js). */
+  function amountOf(amount, coin, net) {
+    if (typeof SSF === 'undefined') {
+      const n = parseFloat(amount);
+      return n > 0 ? { ok: true, number: n, text: String(n) } : { ok: false, msg: 'Enter an amount.' };
+    }
+    return SSF.parseAmount(amount, SSF.decimalsFor(coin, net), coin);
+  }
+
   function primaryOwn(netKey) {
     const list = ownList().filter(a => !a.simulated);
     if (netKey) {
@@ -350,10 +384,10 @@ const WAD = (() => {
     const v = validate(net, a);
     if (!v.ok) return v;
 
-    const dupe = ownList().find(x => x.net === net && x.address.toLowerCase() === a.toLowerCase());
+    const dupe = ownList().find(x => x.net === net && x.address.toLowerCase() === v.value.toLowerCase());
     if (dupe) return { ok: false, msg: 'That address is already saved on this network.' };
 
-    const rec = { id: uid('a_'), net, address: a, label: clean(label, MAX_LABEL) || (netOf(net).label + ' wallet'),
+    const rec = { id: uid('a_'), net, address: v.value, label: clean(label, MAX_LABEL) || (netOf(net).label + ' wallet'),
                   source: 'added', simulated: false, at: Date.now() };
     D.own.push(rec);
     if (!D.primary) D.primary = rec.id;
@@ -398,10 +432,10 @@ const WAD = (() => {
 
     const k = peerKey(chatId);
     D.peers[k] = D.peers[k] || [];
-    if (D.peers[k].some(p => p.net === net && p.address.toLowerCase() === a.toLowerCase())) {
+    if (D.peers[k].some(p => p.net === net && p.address.toLowerCase() === v.value.toLowerCase())) {
       return { ok: false, msg: 'That address is already saved for this chat.' };
     }
-    const rec = { id: uid('p_'), net, address: a, label: clean(label, MAX_LABEL) || (firstName(chatId) + '’s ' + netOf(net).label), at: Date.now() };
+    const rec = { id: uid('p_'), net, address: v.value, label: clean(label, MAX_LABEL) || (firstName(chatId) + '’s ' + netOf(net).label), at: Date.now() };
     D.peers[k].push(rec);
     save();
     return { ok: true, id: rec.id, warn: v.warn, msg: `Saved for ${firstName(chatId)}.` };
@@ -417,9 +451,12 @@ const WAD = (() => {
   /* ── URIs and QR codes ───────────────────────────────────────────── */
   /* The QR holds the plain address: every wallet app reads that, while URI
      schemes vary. The URI is used only for the "open in wallet" button, and
-     an amount is embedded only for the chain's own coin — token amounts need
-     a contract address, which this app has no business guessing. */
+     only for the chain's own coin, with the amount written exactly
+     (SSF.walletURI). A token send gets no link: without a contract address,
+     which this app has no business guessing, the link would open a send of
+     the chain's own coin - ETH instead of USDT. */
   function walletURI(netKey, address, coin, amount) {
+    if (typeof SSF !== 'undefined') return SSF.walletURI(NETS[netKey] ? netKey : 'ethereum', address, coin, amount);
     const n = netOf(netKey);
     const amt = parseFloat(amount) > 0 ? parseFloat(amount) : 0;
     const native = amt && coin === n.symbol;
@@ -455,10 +492,15 @@ const WAD = (() => {
     if (!a) return { ok: false, msg: 'Pick an address first.' };
     if (a.simulated) return { ok: false, msg: 'That is a simulated wallet — it can’t receive anything. Add or connect a real one.' };
 
-    const amt = parseFloat(amount) > 0 ? parseFloat(amount) : 0;
+    // An amount is optional here; if one is given it has to be a real one.
+    const sym = String(coin || coinsFor(a.net)[0]).toUpperCase();
+    const typed = String(amount == null ? '' : amount).trim();
+    const parsed = typed ? amountOf(typed, sym, a.net) : null;
+    if (parsed && !parsed.ok && !parsed.zero) return { ok: false, msg: parsed.msg };
+    const amt = parsed && parsed.ok ? parsed.number : 0;
     const rec = {
       id: uid('s_'), chatId: String(chatId), net: a.net, address: a.address, label: a.label,
-      coin: amt ? String(coin || coinsFor(a.net)[0]).toUpperCase() : '', amount: amt,
+      coin: amt ? sym : '', amount: amt, amountText: amt ? parsed.text : '',
       note: clean(note, MAX_NOTE), at: Date.now()
     };
     D.shares[rec.id] = rec;
@@ -482,12 +524,13 @@ const WAD = (() => {
     const net = NETS[netKey] ? netKey : 'ethereum';
     const v = validate(net, address);
     if (!v.ok) return v;
-    const amt = parseFloat(amount);
-    if (!amt || amt <= 0) return { ok: false, msg: 'Enter an amount.' };
+    const sym = String(coin || coinsFor(net)[0]).toUpperCase();
+    const amt = amountOf(amount, sym, net);
+    if (!amt.ok) return { ok: false, msg: amt.msg };
 
     const rec = {
-      id: uid('t_'), chatId: String(chatId), net, address: String(address).trim(),
-      coin: String(coin || coinsFor(net)[0]).toUpperCase(), amount: amt,
+      id: uid('t_'), chatId: String(chatId), net, address: v.value,
+      coin: sym, amount: amt.number, amountText: amt.text,
       note: clean(note, MAX_NOTE), status: 'todo', txid: '', at: Date.now()
     };
     D.sends[rec.id] = rec;
@@ -699,7 +742,7 @@ const WAD = (() => {
     const r = D.shares[sid];
     if (!r) return;
     V = { view: 'share', trail: [], origin: 'chat', cfi: null, hint: '', chatId: r.chatId, net: r.net, address: r.address, label: r.label,
-          coin: r.coin || 'USDT', amount: r.amount ? String(r.amount) : '', note: r.note || '',
+          coin: r.coin || 'USDT', amount: r.amount ? (r.amountText || (typeof SSF !== 'undefined' ? SSF.parseAmount(r.amount, SSF.decimalsFor(r.coin, r.net), r.coin).text || '' : String(r.amount))) : '', note: r.note || '',
           ownId: (ownList().find(a => a.address === r.address && a.net === r.net) || {}).id || '', err: '', warn: '' };
     render();
   }
@@ -1238,17 +1281,32 @@ const WAD = (() => {
     if (box) V.address = box.value;
     const v = validate(V.net, V.address);
     if (!v.ok) { V.err = v.msg; if (v.secret) V.address = ''; render(); return; }
-    if (!(parseFloat(V.amount) > 0)) { V.err = 'Enter an amount.'; render(); return; }
+    const amt = amountOf(V.amount, V.coin, V.net);
+    if (!amt.ok) { V.err = amt.msg; render(); return; }
+    const min = typeof SSF !== 'undefined' ? SSF.minimum(V.coin, V.net, amt, v) : {};
+    if (min.refuse) { V.err = min.refuse; render(); return; }
+    V.address = v.value;
     V.warn = v.warn || '';
-    go('review', { warn: v.warn || '' });
+    go('review', { warn: v.warn || '', minWarn: min.warn || '' });
   }
 
   function reviewView() {
     const n = netOf(V.net);
-    const amt = parseFloat(V.amount) || 0;
-    const uri = walletURI(V.net, V.address, V.coin, amt);
-    const scheme = n.family === 'tron' ? '' : uri;
+    const parsed = amountOf(V.amount, V.coin, V.net);
+    const amt = parsed.ok ? parsed.number : 0;
+    const uri = walletURI(V.net, V.address, V.coin, parsed.ok ? parsed.text : '');
+    const scheme = uri && uri !== V.address ? uri : '';
     const known = V.chatId ? peerList(V.chatId).some(p => p.address.toLowerCase() === String(V.address).toLowerCase()) : false;
+    const alike = typeof SSF !== 'undefined' ? SSF.lookalike(V.address, knownAddresses(), V.net) : null;
+    const mine = ownList().find(a => a.address.toLowerCase() === String(V.address).toLowerCase());
+    const gasNote = typeof SSF !== 'undefined' ? SSF.feeCoinNote(V.coin, V.net) : '';
+    const cautions = [
+      alike ? ['hard', '<b>This address looks like one you have used before, but it is not the same.</b> ' + esc(shortAddr(alike)) +
+        ' matches it at both ends and differs in the middle. That is how address poisoning works: check every character with the person, not just the ends.'] : null,
+      mine ? ['', 'That is one of your own addresses (' + esc(mine.label || 'saved') + '). Sending there moves the coins to yourself.'] : null,
+      gasNote ? ['', esc(gasNote)] : null,
+      V.minWarn ? ['', esc(V.minWarn)] : null
+    ].filter(Boolean);
 
     return `
       <div class="wad-review">
@@ -1262,9 +1320,10 @@ const WAD = (() => {
       </div>
 
       ${reviewSum()}
+      ${cautions.map(([cls, text]) => `<div class="wad-warn${cls ? ' ' + cls : ''}"><span class="material-symbols-rounded ms-16">warning</span><div>${text}</div></div>`).join('')}
 
       <div class="wad-check">
-        <div><span class="material-symbols-rounded ms-16">check</span> The <b>bold</b> characters at each end match what they sent you.</div>
+        <div><span class="material-symbols-rounded ms-16">check</span> <b>Every</b> character matches what they sent you, not just the ends. Look-alike addresses copy the ends.</div>
         <div><span class="material-symbols-rounded ms-16">check</span> They expect <b>${esc(V.coin)}</b> on <b>${esc(n.label)}</b>.</div>
         <div><span class="material-symbols-rounded ms-16">check</span> You confirmed the address with them somewhere other than this chat.</div>
       </div>
@@ -1304,7 +1363,8 @@ const WAD = (() => {
   function reviewSum() {
     if (typeof PF === 'undefined') return '';
     const n = netOf(V.net);
-    const amt = parseFloat(V.amount) || 0;
+    const parsed = amountOf(V.amount, V.coin, V.net);
+    const amt = parsed.ok ? parsed.number : 0;
     const token = isToken();
     if (!PF.cached(V.net, token)) PF.fee(V.net, token).then(() => { if (V && V.view === 'review') render(); });
     const fee = PF.feeLine(V.net, token, V.speed || 'standard');
@@ -1439,6 +1499,7 @@ const WAD = (() => {
 
   return {
     open, openMine, openReceive, openShare, openFor, close, go, back, f, onAddress, fromChat, toInApp, parseScan, fromScan, pickSpeed,
+    knownAddresses, amountOf,
     saveOwn, savePeer, sendToChat, setAmount, toReview, confirmSend, usePeer, ask, connectWallet,
     share, copyAddr, copyText, setPrimary, removeOwn,
     removePeer: id => removePeer(V ? V.chatId : activeChat(), id),
