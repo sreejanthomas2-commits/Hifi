@@ -36,6 +36,8 @@
    is in lazy.js, which the router imports, along with why each of the
    others had to stay — deferring the wrong one is silent, not loud. */
 
+// First, so it hears the script errors of everything after it.
+import './utils/errors.js?v=1';
 import './state.js?v=s4';
 import './data/mockDb.js?v=11m9';
 import './data/languages.js?v=s3';

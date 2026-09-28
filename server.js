@@ -78,6 +78,9 @@ app.use('/api/pay/webhooks', trendingPay.webhooks);
 app.post('/api/csp-report',
   express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'], limit: '16kb' }),
   cspReport);
+// Script errors from browsers, into this log. Its own 8kb parser, so it
+// sits before the general one.
+app.use('/api/client-errors', require('./routes/clientErrors'));
 app.use(express.json({ limit: '100kb' }));
 app.use('/api/pay', trendingPay.router);
 /* The QR reader Trending Pay's scanner falls back to, served from this app

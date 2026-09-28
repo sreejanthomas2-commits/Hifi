@@ -290,6 +290,28 @@ function readModule(rel) {
     .map(f => path.relative(root, f));
   check('no link, invite, badge issuer or trusted-domain list names it', naming.join(', '), '');
 
+  /* ── 8. Script errors reach the log, and only what finds the bug ── */
+  console.log('\nbrowser script errors are logged without the person');
+  const reported = [];
+  require('../routes/clientErrors')._setSink(l => reported.push(JSON.parse(l)));
+  const sendErr = (body, ip) => get('/api/client-errors', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body)
+  }, ip || '192.0.2.77');
+  r = await sendErr({ message: 'x is not defined\nsecond line', source: 'http://127.0.0.1:3293/js/pages/feeds.js?v=sec3#frag',
+    line: 42, col: 7, page: '/profile?token=private-search-text', stack: 'at f (http://127.0.0.1:3293/js/boot.js?v=1796000021:12:5)' });
+  check('a report is accepted', r.status, 204);
+  const rep = reported[0] || {};
+  check('  the message is one line', rep.client_error, 'x is not defined second line');
+  check('  the file without its query', rep.source, 'http://127.0.0.1:3293/js/pages/feeds.js');
+  check('  the stack keeps line and column, not the query', rep.stack, 'at f (http://127.0.0.1:3293/js/boot.js:12:5)');
+  check('  the page path without its query', rep.page, '/profile');
+  ok('  no address and no account in the line', !/192\.0\.2|alice|bob|mallory|private-search-text/.test(JSON.stringify(reported)));
+  check('a report with no message is refused', (await sendErr({ source: 'a.js' })).status, 400);
+  check('a report over 8kb is refused', (await sendErr({ message: 'm', stack: 'x'.repeat(9000) })).status, 413);
+  for (let i = 0; i < 20; i++) last = await sendErr({ message: 'flood ' + i }, '192.0.2.78');
+  check('twenty a minute from one address are taken', last.status, 204);
+  check('  the twenty-first is refused', (await sendErr({ message: 'one more' }, '192.0.2.78')).status, 429);
+
   console.log = quietLog;
   console.log(`\n${pass} passed, ${fail} failed\n`);
   [tmp('pay'), tmp('prod'), process.env.PAY_STORE_FILE].forEach(f => { try { fs.unlinkSync(f); } catch (e) {} });
