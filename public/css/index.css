@@ -7157,6 +7157,27 @@ button.hx-card:active { transform: scale(.985); }
   background: conic-gradient(from 200deg, #FFE267, #FCD535, #F0A23B, #EC6CB9, #F0C419, #FFE267) !important; }
 #pane-feeds.hx .stories-row > .story-item:first-child .story-ring { background: var(--bh) !important; }
 
+/* Everyone else's story is a four-point star, not a circle: the ring,
+   a thin gap, then the avatar cut to the same shape. Your Story stays a
+   circle, like the add button it is.
+   Both masks come from one outline (rounded tips, curved-in sides). The
+   ring is a stroke along that outline rather than a smaller copy of the
+   star, so it keeps an even width right into the tips. A mask clips
+   everything inside it as well, so the ring's mask also lets the middle
+   through; the avatar covers the gradient there, and its own mask stops
+   halfway across the gap so it never reaches the ring.
+   A star looks smaller than a circle of the same width, so it is drawn
+   at 76px against the circle's 64px. The negative margins keep it to
+   64px of height, so the names still line up, and sit it 2px higher. */
+#pane-feeds.hx .stories-row > .story-item + .story-item { width: 76px; }
+#pane-feeds.hx .stories-row > .story-item + .story-item .story-ring {
+  --star-ring: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><path id='s' d='M97.02 53.93A4.08 4.08 0 0 0 97.02 46.07C75.03 39.95 60.05 24.97 53.93 2.98A4.08 4.08 0 0 0 46.07 2.98C39.95 24.97 24.97 39.95 2.98 46.07A4.08 4.08 0 0 0 2.98 53.93C24.97 60.05 39.95 75.03 46.07 97.02A4.08 4.08 0 0 0 53.93 97.02C60.05 75.03 75.03 60.05 97.02 53.93Z'/><clipPath id='c'><use href='%23s'/></clipPath><mask id='m'><use href='%23s' fill='white' stroke='black' stroke-width='10.1'/></mask></defs><use href='%23s' fill='none' stroke='black' stroke-width='5.7' clip-path='url(%23c)'/><rect width='100' height='100' mask='url(%23m)'/></svg>");
+  width: 76px; height: 76px; margin: -8px 0 -4px; padding: 0 !important;
+  -webkit-mask: var(--star-ring) center / 100% 100% no-repeat; mask: var(--star-ring) center / 100% 100% no-repeat; }
+#pane-feeds.hx .stories-row > .story-item + .story-item .story-inner {
+  --star-fill: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><mask id='m'><path d='M97.02 53.93A4.08 4.08 0 0 0 97.02 46.07C75.03 39.95 60.05 24.97 53.93 2.98A4.08 4.08 0 0 0 46.07 2.98C39.95 24.97 24.97 39.95 2.98 46.07A4.08 4.08 0 0 0 2.98 53.93C24.97 60.05 39.95 75.03 46.07 97.02A4.08 4.08 0 0 0 53.93 97.02C60.05 75.03 75.03 60.05 97.02 53.93Z' fill='white' stroke='black' stroke-width='7.9'/></mask><rect width='100' height='100' mask='url(%23m)'/></svg>");
+  -webkit-mask: var(--star-fill) center / 100% 100% no-repeat; mask: var(--star-fill) center / 100% 100% no-repeat; }
+
 /* Balance */
 .hx-dash { display: flex; flex-direction: column; gap: var(--hx-gap); margin-bottom: var(--hx-gap); }
 .hx-acct-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
