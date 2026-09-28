@@ -78,4 +78,8 @@ function make(opts) {
   return { rates, validate };
 }
 
-module.exports = { make, validate, SOURCE };
+/* One cache for the whole server, shared by the card and Trending Pay. */
+let one = null;
+const shared = () => (one = one || make());
+
+module.exports = { make, shared, validate, SOURCE };

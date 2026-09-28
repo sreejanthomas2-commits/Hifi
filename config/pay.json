@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "note": "Trending Pay, practice mode. Balances are practice money kept by Trending's server. Fees below are Trending's practice pricing; every one is shown as its own line before confirmation, and exchange rates carry no markup.",
+  "assets": {
+    "USDT": { "name": "Tether USD", "decimals": 6, "stable": true, "perTx": "5000", "daily": "10000" },
+    "USDC": { "name": "USD Coin", "decimals": 6, "stable": true, "perTx": "5000", "daily": "10000" },
+    "BTC": { "name": "Bitcoin", "decimals": 8, "stable": false, "perTx": "0.5", "daily": "1" },
+    "ETH": { "name": "Ether", "decimals": 8, "stable": false, "perTx": "10", "daily": "20" }
+  },
+  "grant": { "USDT": "1000", "USDC": "250", "BTC": "0.01", "ETH": "0.2" },
+  "quoteSeconds": 60,
+  "reauthSeconds": 300,
+  "repeatMinutes": 10,
+  "largeUsd": "1000",
+  "requestHours": { "default": 24, "max": 168, "merchant": 0.25 },
+  "merchantFeeBps": 50,
+  "sandbox": { "reviewSeconds": 30, "partnerSeconds": { "accept": 3, "processing": 10, "complete": 25 } },
+  "crossBorder": {
+    "fundingAssets": ["USDT", "USDC"],
+    "stableRate": "1",
+    "trendingFee": { "bps": 50, "min": "0.99" },
+    "partner": "sandbox",
+    "methods": {
+      "bank": "Bank account",
+      "mobile_wallet": "Mobile wallet"
+    },
+    "corridors": [
+      { "country": "IN", "name": "India", "currency": "INR", "methods": ["bank", "mobile_wallet"], "providerFee": "0.25", "min": "5", "max": "2000", "liveEta": { "bank": "Within 1 business day", "mobile_wallet": "Within 30 minutes" } },
+      { "country": "PH", "name": "Philippines", "currency": "PHP", "methods": ["bank", "mobile_wallet"], "providerFee": "0.75", "min": "5", "max": "2000", "liveEta": { "bank": "Within 1 business day", "mobile_wallet": "Within 30 minutes" } },
+      { "country": "MX", "name": "Mexico", "currency": "MXN", "methods": ["bank"], "providerFee": "0.75", "min": "5", "max": "2000", "liveEta": { "bank": "Within 2 hours" } },
+      { "country": "ID", "name": "Indonesia", "currency": "IDR", "methods": ["bank", "mobile_wallet"], "providerFee": "0.75", "min": "5", "max": "2000", "liveEta": { "bank": "Within 1 business day", "mobile_wallet": "Within 30 minutes" } },
+      { "country": "GB", "name": "United Kingdom", "currency": "GBP", "methods": ["bank"], "providerFee": "0.50", "min": "5", "max": "2000", "liveEta": { "bank": "Within 2 hours" } },
+      { "country": "DE", "name": "Germany (euro)", "currency": "EUR", "methods": ["bank"], "providerFee": "0.50", "min": "5", "max": "2000", "liveEta": { "bank": "Within 1 business day" } },
+      { "country": "BR", "name": "Brazil", "currency": "BRL", "methods": ["bank"], "providerFee": "1.00", "min": "5", "max": "2000", "liveEta": { "bank": "Within 2 hours" } },
+      { "country": "TH", "name": "Thailand", "currency": "THB", "methods": ["bank"], "providerFee": "0.75", "min": "5", "max": "2000", "liveEta": { "bank": "Within 1 business day" } }
+    ]
+  }
+}

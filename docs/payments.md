@@ -134,7 +134,8 @@ dollar figure before you confirm.
 | Module | What changed |
 |---|---|
 | `features/chatfi.js` | sends, gift packets and splits spend through `MNY`; requests settle into Funding, the same account Pay pays into |
-| `features/pay.js` | one balance, one asset list; `debit`/`credit` go through the ledger |
+| `features/pay.js` | now the doorway to Trending Pay (see `docs/pay.md`): keeps the QR encoder, opens Trending Pay from every Pay button, and never moves browser money |
+| `features/trending-pay.js` | Trending Pay's screens; every balance, quote and status comes from `/api/pay` |
 | `features/walletview.js` | **new** — the Wallet tab, merged with Assets |
 | `features/convert.js` | **new** — the one conversion engine and its sheet |
 | `utils/engine.js` | tips; the coin list now includes anything you hold |

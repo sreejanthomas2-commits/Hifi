@@ -12,9 +12,12 @@
 const path = require('path');
 
 process.env.PORT = '3291';
+process.env.PAY_WORKER_ROLE = 'off';       // no Trending Pay background worker in a test
 process.env.CATALOG_LIVE = '0';            // no CoinGecko calls from a test
 process.env.CATALOG_FILE = path.join(require('os').tmpdir(), 'trending-test-catalog-none.json');
 delete process.env.CORS_ORIGINS;
+// Trending Pay's book goes to a throwaway file, not the project's own.
+process.env.PAY_STORE_FILE = path.join(require('os').tmpdir(), 'trending-test-server-pay-' + process.pid + '.json');
 delete process.env.NODE_ENV;
 
 let pass = 0, fail = 0;

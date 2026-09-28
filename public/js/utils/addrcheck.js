@@ -376,7 +376,7 @@ const ADDR = (() => {
      address is copied from a web page, a PDF or a chat: zero-width
      spaces and joiners, byte-order marks, and the bidirectional controls
      that can make text display in a different order than it is. */
-  const INVISIBLE = /[­؜᠎​-‏‪-‮⁠-⁤⁦-⁯﻿]/g;
+  const INVISIBLE = /[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/g;
   function clean(raw) {
     const s = String(raw == null ? '' : raw);
     const value = s.replace(INVISIBLE, '').trim();

@@ -35,7 +35,7 @@ const fx = require('../services/fx');
 
 const router = express.Router();
 const sb = switchboard.load(process.env);
-const rates = fx.make();
+const rates = fx.shared();
 
 const NEEDS = [
   'A licensed card-issuing partner and a card network',

@@ -22,3 +22,7 @@ trending-standalone.html
 # Anchored to the root: a bare data/ also matched public/js/data/, where
 # the translations and language list live, and refused to stage them.
 /data/
+
+# Trending Pay's local book (services/pay/store.js), used when no MONGO_URI
+# is set: this machine's practice ledger and its signing keys, not source.
+/.paydata/

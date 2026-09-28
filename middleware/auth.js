@@ -138,7 +138,10 @@ async function requireAuth(req, res, next) {
     return res.status(403).json({ error: 'email_unconfirmed', message: 'Confirm your email address before using the wallet.' });
   }
 
-  req.user = { id: claims.sub, admin: admins().has(claims.sub) };
+  /* authTime: when this person last proved who they are (a sign-in or a
+     re-entered password). Payments need it to be recent. */
+  req.user = { id: claims.sub, admin: admins().has(claims.sub), authTime: claims.auth_time * 1000,
+    name: typeof claims.name === 'string' ? claims.name.slice(0, 60) : null };
   next();
 }
 

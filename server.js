@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const compression = require('compression');
 const path = require('path');
-require('dotenv').config();
+// The .env beside this file, whichever folder the server is started from.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
@@ -54,10 +55,24 @@ app.use(compression());
 const corsOrigins = String(process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({ origin: corsOrigins.length ? corsOrigins : false }));
 
+// Webhooks must see the exact signed bytes, before any JSON parser.
+const trendingPay = require('./routes/pay').makeRouters({
+  worker: process.env.PAY_WORKER_ROLE !== 'off' &&
+    (process.env.NODE_ENV !== 'production' || process.env.PAY_WORKER_ROLE === 'primary')
+});
+app.use('/api/pay/webhooks', trendingPay.webhooks);
+
 app.post('/api/csp-report',
   express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'], limit: '16kb' }),
   cspReport);
 app.use(express.json({ limit: '100kb' }));
+app.use('/api/pay', trendingPay.router);
+/* The QR reader Trending Pay's scanner falls back to, served from this app
+   rather than a CDN. Sent by name from its own folder: given the full path,
+   Express refuses any path with a dot-folder in it - and this project can
+   live under one (.gemini). */
+const JSQR = require.resolve('jsqr');
+app.get('/vendor/jsQR.js', (req, res) => res.type('application/javascript').sendFile(path.basename(JSQR), { root: path.dirname(JSQR) }));
 
 // Serve static frontend files from 'public' directory.
 // Assets are cache-busted via ?v= query strings, so a long cache is safe
