@@ -1185,6 +1185,16 @@ const PG = (() => {
     dress();
   }
 
+  /* Your own page's buttons. A guest's first one is Sign in, in the brand
+     colour, rather than Share: sharing needs an account anyway, and the
+     page used to say "Sign in to unlock…" with nothing to tap. */
+  const ownButtons = () => `${guest()
+      ? `<button type="button" class="pg-btn pg-btn-go" data-pg="signin">Sign in</button>
+         <button type="button" class="pg-btn" onclick="toggleEditForm()">Edit profile</button>`
+      : `<button type="button" class="pg-btn" onclick="toggleEditForm()">Edit profile</button>
+         <button type="button" class="pg-btn" data-pg="share">Share profile</button>`}
+    <button type="button" class="pg-btn pg-btn-ic" data-pg="people" aria-label="Discover people" title="Discover people">${ico('person_add')}</button>`;
+
   /* The parts of the page that are yours and nobody else's: the crypto
      strip, your story highlights, Edit and Share, the Crypto and Library
      tabs, and the reputation chips. Hidden rather than rebuilt, so your
@@ -1201,9 +1211,8 @@ const PG = (() => {
         ? `<button type="button" class="pg-btn pg-btn-go" data-pg="follow">Follow</button>
            <button type="button" class="pg-btn" data-pg="message">Message</button>
            <button type="button" class="pg-btn" data-pg="payto">Pay</button>`
-        : `<button type="button" class="pg-btn" onclick="toggleEditForm()">Edit profile</button>
-           <button type="button" class="pg-btn" data-pg="share">Share profile</button>
-           <button type="button" class="pg-btn pg-btn-ic" data-pg="people" aria-label="Discover people" title="Discover people">${ico('person_add')}</button>`;
+        : ownButtons();
+      btns.dataset.guest = String(!other && guest());
     }
 
     const acts = pg.querySelector('.pg-top-a');
@@ -1469,6 +1478,9 @@ const PG = (() => {
     if (top) top.textContent = handle.replace(/^@/, '');
     const ph = $('profile-handle');
     if (ph && g) ph.textContent = '@guest';
+    // Signing in or out with the page open swaps Sign in for Share.
+    const btns = $('pg-btns') || document.querySelector('#pane-profile .pg-btns');
+    if (btns && mine() && btns.dataset.guest !== String(g)) { btns.innerHTML = ownButtons(); btns.dataset.guest = String(g); }
     const posts = $('profile-stat-posts');
     if (posts) posts.textContent = compact(myPosts().length);
     const loc = $('profile-location');

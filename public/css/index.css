@@ -6445,6 +6445,19 @@ body.dx-open { overflow: hidden; }
   .app-header .header-actions { grid-column: 3; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 2px; margin: 0; }
   .app-header #sf-pill { margin-right: 4px; }
 }
+
+/* Guests get Sign in where the creator-dashboard badge sits: a guest has
+   no reputation to show, and signing in used to be three taps deep on a
+   phone. With the bell it fits the 101px beside the wordmark at 375px,
+   and at 320px once the wordmark and the button both shrink. */
+.hdr-signin { display: none; align-items: center; height: 34px; padding: 0 14px; margin-right: 8px; border: 0; border-radius: 999px;
+  background: var(--brand-fill); color: var(--on-brand); font: 700 13px 'Inter', sans-serif; white-space: nowrap; cursor: pointer; }
+.hdr-signin:hover { filter: brightness(1.05); }
+.hdr-signin:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+html.is-guest .hdr-signin { display: inline-flex; }
+html.is-guest .app-header #sf-pill { display: none; }
+@media (max-width: 1023px) { .hdr-signin { height: 32px; padding: 0 9px; margin-right: 4px; font-size: 12px; } }
+@media (max-width: 340px) { .hdr-signin { padding: 0 6px; margin-right: 2px; font-size: 11px; } }
 /* The notifications panel was offset 60px to the right to clear the
    avatar beside the bell. The bell is now the last button, so the panel
    lines up with it, and on phones it spans the screen with a margin. */

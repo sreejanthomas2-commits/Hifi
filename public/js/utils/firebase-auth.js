@@ -30,6 +30,10 @@
 
   // ── AUTH STATE LISTENER ──
   function handleAuthStateChange(user) {
+    /* Only this answer is final: S.user starts out as a guest before
+       Firebase has looked. So the header's Sign in button (html.is-guest)
+       waits for it, and a returning member never sees it flash. */
+    document.documentElement.classList.toggle('is-guest', !user);
     if (user) {
       // User is signed in
       console.log('✅ User signed in:', user.displayName || user.email);
