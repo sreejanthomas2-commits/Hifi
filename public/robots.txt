@@ -1,0 +1,6 @@
+# Everything a visitor can see may be crawled; the API may not.
+# Add "Sitemap: https://<your-domain>/sitemap.xml" once the site has its
+# own domain - a sitemap has to use full addresses.
+User-agent: *
+Allow: /
+Disallow: /api/
