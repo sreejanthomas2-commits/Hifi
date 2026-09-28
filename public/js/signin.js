@@ -18,6 +18,8 @@
 
 'use strict';
 
+import { LEGAL, LEGAL_VERSION } from './data/legal.js?v=1';
+
 (() => {
   let creating = false;
   const get = id => document.getElementById(id);
@@ -27,18 +29,58 @@
   const VIEWS = ['auth-main-view', 'auth-phone-view', 'auth-otp-view', 'auth-loading-view'];
   const COPY = {
     'auth-main-view':  ['GOOD TO SEE YOU AGAIN', 'Welcome back.', 'Your feed, your people and your wallet are where you left them.'],
+    'auth-create':     ['FIRST TIME HERE', 'Join your universe.', 'One account for the feed, the wallet and everything between.'],
     'auth-phone-view': ['SIGN IN WITH YOUR PHONE', 'What is your number?', 'We will text you a six-digit code. No password to remember.'],
     'auth-otp-view':   ['ONE LAST STEP', 'Check your messages.', 'Enter the six digits we just sent you.']
   };
   function show(id) {
     VIEWS.forEach(v => get(v)?.classList.toggle('hidden', v !== id));
-    const copy = COPY[id];
+    // The main view has two faces. Reopening the modal used to put the
+    // sign-in heading over a form still set to create an account.
+    const copy = COPY[id === 'auth-main-view' && creating ? 'auth-create' : id];
     if (copy) {
       get('ts-eyebrow').textContent = copy[0];
       get('signin-title').innerHTML = copy[1].replace(/\.$/, '<span>.</span>');
       get('ts-subtitle').textContent = copy[2];
     }
   }
+
+  /* ── Terms, privacy and age ──────────────────────────────────────── */
+  /* The texts open over the sign-in page. The dialog lives inside
+     #auth-modal for its colours; showModal() still puts it on top. Keys
+     stop at the dialog, because this page reads Escape as "browse as
+     guest". */
+  function showLegal(key) {
+    const doc = LEGAL[key];
+    if (!doc) return;
+    let d = get('ts-legal');
+    if (!d) {
+      d = document.createElement('dialog');
+      d.id = 'ts-legal';
+      d.className = 'ts-legal';
+      d.setAttribute('aria-labelledby', 'ts-legal-title');
+      d.addEventListener('keydown', e => e.stopPropagation());
+      d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
+      get('auth-modal').appendChild(d);
+    }
+    d.innerHTML = `<div class="ts-legal-body"><h3 id="ts-legal-title">${doc[0]}</h3>${doc[1].split('\n\n').map(p => '<p>' + p + '</p>').join('')}</div>
+      <div class="ts-legal-foot"><span>Version ${LEGAL_VERSION}</span><button type="button" class="ts-submit" data-close>Close</button></div>`;
+    d.showModal();
+  }
+  get('auth-modal').addEventListener('click', e => {
+    const b = e.target.closest('[data-legal]');
+    if (b) { e.preventDefault(); showLegal(b.dataset.legal); }
+  });
+
+  /* What was agreed to, when and how, kept on this device. Recorded when
+     the person acts: a provider button, or the form sent. A copy on the
+     account itself needs a field the database rules do not allow yet. */
+  const agreed = how => {
+    try { localStorage.setItem('ts_consent', JSON.stringify({ v: LEGAL_VERSION, at: new Date().toISOString(), how })); } catch (e) {}
+  };
+  document.querySelector('#auth-modal .ts-providers')?.addEventListener('click', e => {
+    if (e.target.closest('.ts-prov')) agreed('continue');
+  });
 
   /* Firebase reports the cause in error.code. Anything that is the
      project's configuration rather than the person's typing says so,
@@ -80,13 +122,12 @@
 
   get('ts-mode').addEventListener('click', () => {
     creating = !creating;
-    get('ts-eyebrow').textContent = creating ? 'FIRST TIME HERE' : 'GOOD TO SEE YOU AGAIN';
-    get('signin-title').innerHTML = creating ? 'Join your universe<span>.</span>' : 'Welcome back<span>.</span>';
-    get('ts-subtitle').textContent = creating
-      ? 'One account for the feed, the wallet and everything between.'
-      : 'Your feed, your people and your wallet are where you left them.';
+    show('auth-main-view');
     get('ts-submit').innerHTML = creating ? 'Create account <span>↗</span>' : 'Sign in <span>↗</span>';
-    get('ts-mode').textContent = creating ? 'Sign in instead' : 'Create an account';
+    // It used to read "New to Trending? Sign in instead" while creating.
+    get('ts-mode-q').textContent = creating ? 'Already have an account?' : 'New to Trending?';
+    get('ts-mode').textContent = creating ? 'Sign in' : 'Create an account';
+    get('ts-consent-row').hidden = !creating;
     get('auth-password').autocomplete = creating ? 'new-password' : 'current-password';
     get('ts-reset').hidden = creating;
     feedback('');
@@ -96,7 +137,13 @@
     event?.preventDefault();
     feedback('');
     if (!get('gmail-login-form').reportValidity()) return;
+    if (creating && !get('ts-consent').checked) {
+      feedback('Tick the box to confirm you are 18 or older and agree to the Terms and the Privacy notice.');
+      get('ts-consent').focus();
+      return;
+    }
     if (!ready()) { feedback('Sign-in is still connecting. Please try again in a moment.'); return; }
+    agreed(creating ? 'checkbox' : 'continue');
     const submit = get('ts-submit');
     submit.disabled = true;
     submit.textContent = creating ? 'Creating account…' : 'Signing in…';

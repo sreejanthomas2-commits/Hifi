@@ -292,6 +292,29 @@ body:has(#auth-modal:not(.hidden)) .app-wrapper { pointer-events: none; }
 .ts-signup { text-align: center; font-size: 12px; color: var(--ts-t2); margin: 16px 0 18px; }
 .ts-signup button { margin-left: 3px; }
 
+/* Terms, privacy and age: the checkbox when creating an account, the line
+   under the providers, and the texts themselves over the page. */
+#auth-modal .ts-consent { display: flex; align-items: flex-start; gap: 9px; margin: 14px 0 0; cursor: pointer;
+  font-size: 11.5px; font-weight: 500; line-height: 1.5; color: var(--ts-t2); }
+#auth-modal .ts-consent[hidden] { display: none; }
+.ts-consent input { flex: none; width: 16px; height: 16px; margin: 1px 0 0; accent-color: var(--ts-fill-dk); cursor: pointer; }
+.ts-consent .ts-text-btn, .ts-legal-line .ts-text-btn { font-size: inherit; }
+.ts-legal-line { text-align: center; font-size: 10.5px; line-height: 1.55; color: var(--ts-t3); margin: 14px 0 0; }
+
+/* margin: auto puts back the centring index.css's "* { margin: 0 }" takes
+   from every dialog. */
+.ts-legal { width: min(560px, calc(100vw - 32px)); max-height: min(82vh, 720px); margin: auto; padding: 0; display: none; flex-direction: column;
+  border: 1px solid var(--ts-line); border-radius: 18px; background: var(--ts-field); color: var(--ts-t1); box-shadow: 0 30px 70px #0000005e; }
+.ts-legal[open] { display: flex; }
+.ts-legal::backdrop { background: #0b0a10a6; }
+.ts-legal-body { overflow: auto; padding: 22px 24px 8px; }
+.ts-legal-body h3 { font-size: 19px; font-weight: 650; letter-spacing: -.4px; margin: 0 0 12px; }
+.ts-legal-body p { font-size: 13px; line-height: 1.62; color: var(--ts-t2); margin: 0 0 12px; }
+.ts-legal-body b { color: var(--ts-t1); font-weight: 650; }
+.ts-legal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px 18px;
+  border-top: 1px solid var(--ts-line); font-size: 11px; color: var(--ts-t3); }
+.ts-legal-foot .ts-submit { width: auto; padding: 0 22px; height: 40px; }
+
 .ts-wallet { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--ts-line); padding-top: 16px; }
 .ts-wallet > .material-symbols-rounded { font-size: 22px; color: #8c829e; }
 .ts-wallet div { flex: 1; }

@@ -114,5 +114,5 @@ import './features/discover.js?v=s3';
 import './features/notes.js?v=y1';
 import './main.js?v=s3';
 import '../interactions.js?v=s3';
-import './signin.js?v=sec1';
+import './signin.js?v=sec2';
 import './utils/a11y.js?v=a2';

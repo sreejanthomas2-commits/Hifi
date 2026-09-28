@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
   <link rel="stylesheet" href="css/index.css?v=212">
-<link rel="stylesheet" href="css/signin.css?v=23">
+<link rel="stylesheet" href="css/signin.css?v=24">
 </head>
 <body>
 
@@ -334,6 +334,12 @@
        <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
        <button type="button" id="ts-show" aria-label="Show password" aria-pressed="false"><span class="material-symbols-rounded">visibility</span></button>
       </div>
+      <!-- Creating an account: a clear yes to the terms and to being 18+.
+           The buttons inside open the texts; they do not tick the box. -->
+      <label class="ts-consent" id="ts-consent-row" hidden>
+       <input type="checkbox" id="ts-consent">
+       <span>I'm 18 or older, and I agree to the <button type="button" class="ts-text-btn" data-legal="terms">Terms</button> and the <button type="button" class="ts-text-btn" data-legal="privacy">Privacy notice</button>.</span>
+      </label>
       <p id="ts-auth-feedback" role="status"></p>
       <button type="submit" class="ts-submit" id="ts-submit">Sign in <span>↗</span></button>
      </form>
@@ -363,7 +369,11 @@
       </button>
      </div>
 
-     <p class="ts-signup">New to Trending? <button type="button" class="ts-text-btn" id="ts-mode">Create an account</button></p>
+     <!-- Google, Apple and a phone number create an account the first
+          time they are used, so this covers them in both modes. -->
+     <p class="ts-legal-line">By continuing, you agree to the <button type="button" class="ts-text-btn" data-legal="terms">Terms</button> and the <button type="button" class="ts-text-btn" data-legal="privacy">Privacy notice</button>, and confirm you're 18 or older.</p>
+
+     <p class="ts-signup"><span id="ts-mode-q">New to Trending?</span> <button type="button" class="ts-text-btn" id="ts-mode">Create an account</button></p>
 
      <div class="ts-wallet">
       <span class="material-symbols-rounded">account_balance_wallet</span>
@@ -926,7 +936,7 @@
     window.db = null;
     window.firebaseAuth = null;
   </script>
-  <script type="module" src="js/boot.js?v=1796000018"></script>
+  <script type="module" src="js/boot.js?v=1796000019"></script>
   <!-- Not async: this block calls into the app (renderFeed, handleAuth,
        $id), so it has to run after boot.js has published the globals.
        Module scripts without async run in document order. -->
