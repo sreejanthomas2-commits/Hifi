@@ -28,6 +28,7 @@ const mongoose = require('mongoose');
 const { Withdrawal, AuditLog } = require('../models/custody');
 const { NETWORKS } = require('../config/crypto-deposit');
 const withdraw = require('../services/withdraw');
+const { seclog } = require('../lib/seclog');
 
 const router = express.Router();
 
@@ -35,13 +36,15 @@ const router = express.Router();
    the row returns to the queue rather than being stuck forever. */
 const CLAIM_MS = Number(process.env.SIGNER_CLAIM_MS || 10 * 60 * 1000);
 
+/* Both sides are hashed first, so the comparison always runs over 32
+   bytes: comparing the raw strings had to stop early on a length
+   mismatch, which told a caller how long the real token was. */
 function tokenOk(req) {
   const want = process.env.SIGNER_TOKEN || '';
   if (!want) return false;
   const given = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const a = Buffer.from(given), b = Buffer.from(want);
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+  const h = s => crypto.createHash('sha256').update(s).digest();
+  return crypto.timingSafeEqual(h(given), h(want)) && given.length > 0;
 }
 
 router.use((req, res, next) => {
@@ -49,6 +52,7 @@ router.use((req, res, next) => {
     return res.status(503).json({ error: 'signer_unconfigured', message: 'No signer is connected to this deployment.' });
   }
   if (!tokenOk(req)) {
+    seclog('signer.denied', req);
     AuditLog.create([{ actor: 'unknown', action: 'signer.auth.failed', detail: { ip: req.ip } }]).catch(() => {});
     return res.status(401).json({ error: 'unauthenticated' });
   }

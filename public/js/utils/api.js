@@ -361,6 +361,17 @@ document.addEventListener('DOMContentLoaded', () => {
   scheduleCryptoPoll();
 });
 
+/* A link from someone else's feed may only open a web page. An RSS item,
+   or the rss2json bridge it passes through, could carry javascript: or
+   data:, which would run inside Trending when tapped - escaping the text
+   does not stop that, because the scheme itself is valid HTML. */
+function httpUrl(u) {
+  try {
+    const x = new URL(String(u || ''));
+    return x.protocol === 'https:' || x.protocol === 'http:' ? x.href : '';
+  } catch (e) { return ''; }
+}
+
 // Fetch live news using Google News RSS converted via RSS2JSON
 /* ── CRYPTO HEADLINES ──────────────────────────────────────────────
    The Cryptoverse news strip used to run through Google News search,
@@ -380,10 +391,15 @@ window.fetchCryptoNews = async function(limit) {
   const MAX_AGE = 20 * 60 * 1000;
   const want = limit || 8;
 
+  // Checked again on the way out: a copy saved before links were checked
+  // must not hand one back.
   const cached = () => {
     try {
       const c = JSON.parse(localStorage.getItem(KEY) || 'null');
-      return (c && Array.isArray(c.items) && c.items.length) ? c : null;
+      if (!c || !Array.isArray(c.items)) return null;
+      c.items = c.items.map(a => ({ ...a, url: httpUrl(a && a.url), thumbnail: httpUrl(a && a.thumbnail) }))
+        .filter(a => a.url && typeof a.title === 'string' && a.title);
+      return c.items.length ? c : null;
     } catch (e) { return null; }
   };
 
@@ -400,11 +416,11 @@ window.fetchCryptoNews = async function(limit) {
         id: source + ':' + (it.guid || it.link),
         title: String(it.title || '').trim(),
         excerpt: String(it.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 170),
-        url: it.link,
+        url: httpUrl(it.link),
         source,
-        author: it.author || source,
+        author: typeof it.author === 'string' && it.author ? it.author : source,
         publishedAt: (isNaN(when) ? new Date() : when).toISOString(),
-        thumbnail: it.thumbnail || (it.enclosure && it.enclosure.link) || ''
+        thumbnail: httpUrl(it.thumbnail || (it.enclosure && it.enclosure.link))
       };
     }).filter(a => a.title && a.url);
   };
@@ -477,16 +493,18 @@ window.fetchLiveNews = async function(query) {
     }
 
     if (data && data.status !== 'error' && data.items && data.items.length > 0) {
-      return data.items.map((item, index) => ({
+      const src = item => (typeof item.source === 'string' && item.source) || 'Global News';
+      const live = data.items.map((item, index) => ({
         id: `news-${Date.now()}-${index}`,
-        title: item.title,
-        excerpt: item.description ? item.description.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : 'Click to read more.',
-        url: item.link,
-        author: item.source || 'Global News',
-        source: item.source || 'Global News',
+        title: String(item.title || ''),
+        excerpt: item.description ? String(item.description).replace(/<[^>]+>/g, '').substring(0, 120) + '...' : 'Click to read more.',
+        url: httpUrl(item.link),
+        author: src(item),
+        source: src(item),
         publishedAt: item.pubDate,
-        thumbnail: item.thumbnail || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80'
-      }));
+        thumbnail: httpUrl(item.thumbnail) || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80'
+      })).filter(a => a.url && a.title);
+      if (live.length) return live;
     }
     console.warn('News API rate limit hit or no items returned. Using fallback data.');
     return getFallbackNews();

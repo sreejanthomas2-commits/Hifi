@@ -15,7 +15,18 @@
    ║      Policy                the window but keeps Google/Apple      ║
    ║                            sign-in pop-ups working                ║
    ║    Strict-Transport-       in production only (it would pin a     ║
-   ║      Security              dev box to HTTPS)                      ║
+   ║      Security              dev box to HTTPS); two years, with     ║
+   ║                            subdomains, preload-ready              ║
+   ║    Cache-Control no-store  on /api by default: a response with    ║
+   ║                            someone's balances in it is never kept ║
+   ║                            by a browser or a proxy. Public routes ║
+   ║                            that want caching say so themselves.   ║
+   ║    Cross-Origin-Resource-  same-origin on /api: another site      ║
+   ║      Policy                cannot pull API answers into its page  ║
+   ║                                                                   ║
+   ║  The page itself is served by Vercel, not Express, so vercel.json ║
+   ║  carries the same headers; scripts/sync-vercel-headers.js copies  ║
+   ║  them there and scripts/test-security.js checks they match.       ║
    ║                                                                   ║
    ║  Content-Security-Policy starts REPORT-ONLY. The app still has    ║
    ║  inline handlers and scripts, so a strict policy would break it;  ║
@@ -40,7 +51,9 @@ const CSP = [
   // Coin logos, avatars and link previews come from many places.
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.googleapis.com https://api.coingecko.com https://api.binance.com wss://stream.binance.com " +
+  // A source with no port only matches the scheme's default (443 for wss),
+  // and the live market feed (features/marketdata.js) connects on 9443.
+  "connect-src 'self' https://*.googleapis.com https://api.coingecko.com https://api.binance.com wss://stream.binance.com wss://stream.binance.com:9443 " +
     "https://api.rss2json.com https://api.alternative.me https://cdn.jsdelivr.net " +
     "https://huggingface.co https://*.huggingface.co https://*.hf.co",
   // Firebase's sign-in iframe and reCAPTCHA. Mini apps are srcdoc frames.
@@ -61,9 +74,15 @@ function securityHeaders(req, res, next) {
     'camera=(self), microphone=(self), geolocation=(self), payment=(), usb=(), serial=(), hid=(), bluetooth=()');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    // "preload" only states consent; the domain joins browsers' built-in
+    // list when its owner submits it at hstspreload.org.
+    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
   res.setHeader(process.env.CSP_ENFORCE === 'true' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only', CSP);
+  if (typeof req.path === 'string' && (req.path === '/api' || req.path.startsWith('/api/'))) {
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  }
   next();
 }
 

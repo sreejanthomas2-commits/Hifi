@@ -41,8 +41,13 @@ app.disable('x-powered-by');
    address, so per-IP rate limits would lump everyone together. Set
    TRUST_PROXY to the number of proxies in front (1 on Vercel) and
    Express reads the client's address from X-Forwarded-For - but only
-   that many hops, so a client cannot claim any address it likes. */
+   that many hops, so a client cannot claim any address it likes.
+   On Vercel it is 1 without being told: Vercel sets VERCEL=1 and replaces
+   X-Forwarded-For with the address the request really came from. Before
+   this, every visitor there shared the proxy's address, so one person
+   reaching a per-address limit reached it for everyone. */
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
+else if (process.env.VERCEL) app.set('trust proxy', 1);
 
 app.use(securityHeaders);
 app.use(compression());
@@ -54,6 +59,14 @@ app.use(compression());
    unset, browsers keep other sites out. */
 const corsOrigins = String(process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({ origin: corsOrigins.length ? corsOrigins : false }));
+
+/* A ceiling per address over the whole API, public routes included: 1,200
+   requests a minute unless API_RATE_MAX says otherwise. Counted in this
+   process's memory, so on a serverless host each instance counts on its
+   own - a floor under the hosting's own firewall, not a replacement. */
+app.use('/api', require('./middleware/ratelimit').perIp({
+  scope: 'api', windowMs: 60 * 1000, max: Number(process.env.API_RATE_MAX) || 1200
+}));
 
 // Webhooks must see the exact signed bytes, before any JSON parser.
 const trendingPay = require('./routes/pay').makeRouters({

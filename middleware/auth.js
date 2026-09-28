@@ -33,6 +33,7 @@
 'use strict';
 
 const jwt = require('jsonwebtoken');
+const { seclog } = require('../lib/seclog');
 
 const projectId = () => process.env.FIREBASE_PROJECT_ID || '';
 /* This project's Firestore database is the one named "default" - not the
@@ -123,10 +124,17 @@ async function requireAuth(req, res, next) {
 
   let claims;
   try { claims = await verifyIdToken(token); }
-  catch (e) { return res.status(401).json({ error: 'bad_session', message: 'That session is not valid. Sign in again.' }); }
+  catch (e) {
+    // A forged, expired or foreign token. Logged by address - the token
+    // names nobody we can trust.
+    seclog('auth.rejected', req, { reason: 'bad_session' });
+    return res.status(401).json({ error: 'bad_session', message: 'That session is not valid. Sign in again.' });
+  }
 
   try {
     if (await sessionEnded(claims, token)) {
+      seclog('auth.rejected', { ip: req.ip, method: req.method, baseUrl: req.baseUrl, path: req.path, user: { id: claims.sub } },
+        { reason: 'session_ended' });
       return res.status(401).json({ error: 'session_ended', message: 'This session was signed out on every device. Sign in again.' });
     }
   } catch (e) {
@@ -146,7 +154,12 @@ async function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.user || !req.user.admin) return res.status(403).json({ error: 'forbidden' });
+  if (!req.user || !req.user.admin) {
+    seclog('admin.denied', req);
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  // Every staff request is on the record, allowed or not.
+  seclog('admin.access', req, { action: req.method });
   next();
 }
 

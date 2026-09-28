@@ -387,15 +387,27 @@ class MongoStore {
 /* ══ Choosing ════════════════════════════════════════════════════════ */
 const DEFAULT_FILE = path.join(__dirname, '..', '..', '.paydata', 'pay-book.json');
 
+/* In production the keys that sign payment codes and check the partner's
+   events come from the environment, never from the book: a key kept in
+   the same database as the payments it protects is in every copy and
+   backup of that database, and whoever holds one could forge a code or a
+   "paid out" event. At least 32 characters each. */
+const SIGNING_KEYS = ['PAY_QR_SECRET', 'PAY_SANDBOX_WEBHOOK_SECRET'];
+const missingKeys = e => SIGNING_KEYS.filter(k => String(e[k] || '').length < 32);
+
 function open(env, deps) {
   const e = env || process.env;
   // No live-money adapter exists yet. An environment switch cannot turn
   // minted practice balances or the sandbox partner into real funds.
   if (e.PAY_MODE && e.PAY_MODE !== 'practice') return null;
   if (e.NODE_ENV === 'production' && e.PAY_MODE !== 'practice') return null;
+  if (e.NODE_ENV === 'production' && missingKeys(e).length) {
+    console.error('Trending Pay is off: set ' + missingKeys(e).join(' and ') + ' (32+ random characters each) in the environment.');
+    return null;
+  }
   if (e.MONGO_URI) return new MongoStore((deps && deps.connection) || require('mongoose').connection);
   if (e.NODE_ENV === 'production') return null;
   return new FileStore({ file: e.PAY_STORE_FILE || DEFAULT_FILE });
 }
 
-module.exports = { open, FileStore, MongoStore, PayError, fail, MINT, SYSTEM, UNIQUE, COLLECTIONS, matches, DUP };
+module.exports = { open, FileStore, MongoStore, PayError, fail, MINT, SYSTEM, UNIQUE, COLLECTIONS, matches, DUP, SIGNING_KEYS };

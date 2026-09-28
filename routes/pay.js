@@ -33,6 +33,7 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { idempotent, KEY } = require('../middleware/idempotency');
 const { limit } = require('../middleware/ratelimit');
 const { send } = require('../lib/problem');
+const { seclog } = require('../lib/seclog');
 const { open } = require('../services/pay/store');
 const { makePay } = require('../services/pay/engine');
 const { makeDirectory } = require('../services/pay/directory');
@@ -82,7 +83,8 @@ function makeRouters(opts) {
       own_account: 400, bad_request: 400, bad_amount: 400, below_minimum: 400,
       quote_expired: 409, quote_used: 409, quote_modified: 409, confirm_repeat: 409, confirm_lookalike: 409, recipient_changed: 409,
       request_invalid: 409, over_limit: 409, insufficient_funds: 409,
-      rate_unavailable: 503, directory_unavailable: 503, partner_unavailable: 503, database_unavailable: 503, transactions_unavailable: 503 }[code];
+      rate_unavailable: 503, directory_unavailable: 503, partner_unavailable: 503, database_unavailable: 503, transactions_unavailable: 503,
+      pay_unavailable: 503 }[code];
     if (!status) {
       if (!(e instanceof Error) || !code) console.error('[pay]', e && e.name, e && e.message);   // never the request itself
       return send(res, 'server_error');
@@ -164,7 +166,9 @@ function makeRouters(opts) {
   router.post('/admin/reviews/:id', admin, run(async req => {
     const d = (req.body || {}).decision;
     if (!['approve', 'reject'].includes(d)) { const e = new Error('Decide approve or reject.'); e.code = 'bad_request'; throw e; }
-    return pay.view(await pay.decideReview(req.params.id, d, req.user.id), req.user.id);
+    const out = pay.view(await pay.decideReview(req.params.id, d, req.user.id), req.user.id);
+    seclog('admin.action', req, { action: 'pay.review.' + d, subject: String(req.params.id).slice(0, 40) });
+    return out;
   }));
   router.get('/admin/reconcile', admin, run(() => pay.reconcile()));
 
@@ -178,6 +182,8 @@ function makeRouters(opts) {
       const out = await pay.webhook(req.params.partner, Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '', req.headers);
       res.json(out);
     } catch (e) {
+      // A bad signature is someone trying to pass as the payout partner.
+      if (e && e.code === 'bad_signature') seclog('webhook.rejected', req, { reason: 'bad_signature', scope: String(req.params.partner).slice(0, 20) });
       res.status(e && e.code === 'bad_signature' ? 401 : e && e.code === 'not_found' ? 404 : e && e.code === 'bad_request' ? 400 : 500)
         .json({ error: (e && e.code) || 'server_error' });
     }

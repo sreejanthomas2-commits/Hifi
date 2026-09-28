@@ -101,6 +101,9 @@ function makePay(deps) {
   /* ── Secrets that sign codes and verify partners ───────────────── */
   async function secret(name, envName) {
     if (env[envName]) return env[envName];
+    // Only a practice book on a developer's machine may make its own key;
+    // production must be given one (store.js open() refuses to start without).
+    if (env.NODE_ENV === 'production') fail('pay_unavailable', 'Trending Pay is missing a signing key on this server. Nothing was changed.');
     const had = await store.read(u => u.get('meta', 'secret:' + name));
     if (had) return had.value;
     return store.tx(async u => {

@@ -6,12 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "test:pay": "node --test scripts/test-pay.js",
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "test:security": "node scripts/test-security.js"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -19,8 +16,5 @@
     "jsonwebtoken": "^9.0.3",
     "jsqr": "1.4.0",
     "mongoose": "^9.6.3"
-  },
-  "devDependencies": {
-    "vite": "^5.0.0"
   }
 }

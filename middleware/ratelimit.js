@@ -15,6 +15,7 @@
 'use strict';
 
 const { send } = require('../lib/problem');
+const { seclog } = require('../lib/seclog');
 
 function limit({ scope, windowMs, max, now }) {
   const clock = now || Date.now;
@@ -39,6 +40,7 @@ function limit({ scope, windowMs, max, now }) {
     if (list.length >= max) {
       const retryAfter = Math.max(1, Math.ceil((list[0] + windowMs - t) / 1000));
       hits.set(who, list);
+      seclog('rate_limited', req, { scope });
       return send(res, 'rate_limited', { retryAfter });
     }
     list.push(t);
@@ -47,4 +49,36 @@ function limit({ scope, windowMs, max, now }) {
   };
 }
 
-module.exports = { limit };
+/* A coarse ceiling per address over the whole API, in front of every
+   route. It blunts a flood from one place and is nowhere near normal
+   use; the per-action limits above stay the real ones. Fixed windows and
+   one counter per address, so a flood costs a number, not a list. Needs
+   the client's real address - see "trust proxy" in server.js. */
+function perIp({ scope, windowMs, max, now }) {
+  const clock = now || Date.now;
+  const counts = new Map();              // address -> { start, n }
+  let sweptAt = 0;
+  return function ipLimit(req, res, next) {
+    const t = clock();
+    if (t - sweptAt >= windowMs) {
+      sweptAt = t;
+      for (const [ip, c] of counts) if (t - c.start >= windowMs) counts.delete(ip);
+    }
+    const ip = req.ip || 'unknown';
+    let c = counts.get(ip);
+    if (!c || t - c.start >= windowMs) {
+      if (counts.size >= 100000) counts.clear();     // a memory ceiling, not a policy
+      c = { start: t, n: 0 };
+      counts.set(ip, c);
+    }
+    c.n++;
+    if (c.n > max) {
+      const retryAfter = Math.max(1, Math.ceil((c.start + windowMs - t) / 1000));
+      seclog('rate_limited', req, { scope });
+      return send(res, 'rate_limited', { retryAfter });
+    }
+    next();
+  };
+}
+
+module.exports = { limit, perIp };
