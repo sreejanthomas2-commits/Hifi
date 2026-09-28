@@ -98,7 +98,7 @@ function syncProfileIdentity() {
   } else {
     set('profile-location', u.location || 'Location not set');
     const link = $id('profile-link');
-    if (link) link.textContent = u.link || `trending.app/${handle.replace('@','')}`;
+    if (link) link.textContent = u.link || `${location.host}/#@${handle.replace('@','')}`;
   }
 }
 
@@ -182,7 +182,7 @@ function getProfileTemplate() {
               <span class="pme-metaitem" id="profile-location-wrap"><span>·</span><span id="profile-location">San Francisco, CA</span></span>
             </div>
             <div class="profile-bio pg-bio" id="profile-bio">Digital creator &amp; tech enthusiast. Building the future one post at a time.</div>
-            <div class="pg-linkrow">${ico('link')}<a href="#" id="profile-link" data-pg="link">trending.app/alex</a></div>
+            <div class="pg-linkrow">${ico('link')}<a href="#" id="profile-link" data-pg="link">Add a link</a></div>
             <div class="pg-chips">
               <span class="pg-chip">${ico('shield')}<b id="profile-rep">98%</b> reputation</span>
               <span class="pg-chip">${ico('auto_awesome')}<b id="profile-ai-trust">99%</b> AI trust</span>
@@ -1533,7 +1533,7 @@ const PG = (() => {
     const u = user();
     if (guest()) { toast('Sign in to share your profile.'); if (typeof openAuthModal === 'function') openAuthModal(); return; }
     const h = String(u.handle || '').replace(/^@/, '');
-    const url = `https://trending.app/${encodeURIComponent(h)}`;
+    const url = `${location.origin}${location.pathname}#@${encodeURIComponent(h)}`;
     const name = `${u.fname || ''} ${u.lname || ''}`.trim() || '@' + h;
     if (navigator.share) {
       try { await navigator.share({ title: `${name} on Trending`, text: `Follow @${h} on Trending`, url }); return; }
@@ -1633,6 +1633,30 @@ const PG = (() => {
 })();
 
 window.PG = PG;
+
+/* Profile links: #@handle opens that person's page. Shared profile links
+   point here, at whichever site the app is running on, not at a domain
+   it does not own. The feed that says who has posted arrives a moment
+   after load, so a handle nobody knows yet is tried again for a few
+   seconds before giving up. */
+function openProfileLink() {
+  const m = /^#@([a-z0-9_.]{1,30})$/i.exec(location.hash || '');
+  if (!m) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  const h = '@' + m[1];
+  const mine = (typeof S !== 'undefined' && S.user) ? String(S.user.handle || '').toLowerCase() : '';
+  if (mine === h.toLowerCase()) { if (typeof navigateTo === 'function') navigateTo('profile'); return; }
+  let tries = 0;
+  (function attempt() {
+    if (PG.openUser(h)) return;
+    if (window.SR && SR.openProfile && SR.openProfile(h)) return;
+    if (++tries < 7) { setTimeout(attempt, 800); return; }
+    if (typeof showToast === 'function') showToast(`No profile for ${h} yet.`);
+  })();
+}
+window.addEventListener('hashchange', openProfileLink);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(openProfileLink, 400));
+else setTimeout(openProfileLink, 400);
 
 /* ── Global bridge ───────────────────────────────────────────────────
    This file is an ES module now, so its top-level names are private

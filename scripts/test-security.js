@@ -278,6 +278,18 @@ function readModule(rel) {
   ok(`across all ${lines.length} lines: no account id, full address, token or query`,
     !/alice|bob|mallory|203\.0\.113\.10|198\.51\.100\.7|Bearer|eyJ|private-search-text/.test(all));
 
+  /* ── 7. Links lead here ────────────────────────────────────────── */
+  // trending.app is somebody else's live site. A share link, invite,
+  // badge issuer or "official domain" entry naming it sends people there.
+  console.log('\nlinks lead to this site, not to trending.app');
+  const root = path.join(__dirname, '..');
+  const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(d =>
+    d.isDirectory() ? walk(path.join(dir, d.name)) : /\.(js|html)$/.test(d.name) ? [path.join(dir, d.name)] : []);
+  const naming = [...walk(path.join(root, 'public')), ...walk(path.join(root, 'routes'))]
+    .filter(f => /(['"`]|\/\/|did:web:|@)trending\.app/.test(fs.readFileSync(f, 'utf8')))
+    .map(f => path.relative(root, f));
+  check('no link, invite, badge issuer or trusted-domain list names it', naming.join(', '), '');
+
   console.log = quietLog;
   console.log(`\n${pass} passed, ${fail} failed\n`);
   [tmp('pay'), tmp('prod'), process.env.PAY_STORE_FILE].forEach(f => { try { fs.unlinkSync(f); } catch (e) {} });

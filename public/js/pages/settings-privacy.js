@@ -390,14 +390,14 @@ export default function register(SET) {
 
   DO.copylink = async () => {
     const h = String(SET._.myHandle()).replace(/^@/, '');
-    const url = 'https://trending.app/' + encodeURIComponent(h);
+    const url = location.origin + location.pathname + '#@' + encodeURIComponent(h);
     try { await navigator.clipboard.writeText(url); toast('Profile link copied'); }
     catch (e) { toast(url); }
   };
 
   DO.shareprofile = async () => {
     const h = String(SET._.myHandle()).replace(/^@/, '');
-    const url = 'https://trending.app/' + encodeURIComponent(h);
+    const url = location.origin + location.pathname + '#@' + encodeURIComponent(h);
     if (navigator.share) {
       try { await navigator.share({ title: SET._.myName() + ' on Trending', text: 'Follow @' + h + ' on Trending', url }); return; }
       catch (e) { if (e && e.name === 'AbortError') return; }

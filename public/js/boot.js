@@ -36,7 +36,7 @@
    is in lazy.js, which the router imports, along with why each of the
    others had to stay — deferring the wrong one is silent, not loud. */
 
-import './state.js?v=s3';
+import './state.js?v=s4';
 import './data/mockDb.js?v=11m9';
 import './data/languages.js?v=s3';
 import './data/i18n.js?v=ch1';
@@ -52,7 +52,7 @@ import './features/prefs.js?v=sec1';
 import './features/payflow.js?v=pf1';
 import './components/ui.js?v=s3';
 import './components/theme.js?v=s3';
-import './router.js?v=c3';
+import './router.js?v=c4';
 import './components/mobile.js?v=sec1';
 import './pages/feeds.js?v=sec3';
 import './features/token-markets.js?v=s3';
@@ -72,9 +72,9 @@ import './pages/homecrypto.js?v=dd2';
 import './pages/homehub.js?v=dd2';
 import './pages/communityhub.js?v=y1';
 import './features/highlights.js?v=s3';
-import './pages/profile.js?v=c1';
+import './pages/profile.js?v=c2';
 import './pages/messages.js?v=sec0';
-import './pages/telegram.js?v=ci1';
+import './pages/telegram.js?v=ci2';
 import './pages/messenger.js?v=ci1';
 import './pages/modals.js?v=sec0';
 import './pages/web3hub.js?v=4m8';
@@ -102,7 +102,7 @@ import './features/cryptofeed.js?v=s3';
 import './features/commune.js?v=s3';
 import './pages/communehub.js?v=s3';
 import './pages/communestudio.js?v=s3';
-import './features/communeplus.js?v=s3';
+import './features/communeplus.js?v=s4';
 import './pages/communeplus-hub.js?v=s3';
 import './pages/communeplus-community.js?v=s3';
 import './pages/communeplus-tools.js?v=s3';

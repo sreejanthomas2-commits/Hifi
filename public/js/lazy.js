@@ -46,7 +46,7 @@
 const PAGES = {
   reels:        './pages/reels.js?v=cm1',
   cryptomarket: './pages/cryptomarket.js?v=8m8',
-  settings:     './pages/settings.js?v=dd2',
+  settings:     './pages/settings.js?v=dd3',
   card:         './pages/card.js?v=c3'
 };
 

@@ -593,7 +593,9 @@ const CPM = (() => {
     const body = {
       type: ['VerifiableCredential', cred.kind === 'skill' ? 'SkillCredential' : cred.kind === 'event' ? 'AttendanceCredential' : cred.kind === 'pass' ? 'MembershipPass' : 'AchievementCredential'],
       title: cred.title, kind: cred.kind, icon: cred.icon || 'military_tech',
-      issuer: c ? 'did:web:trending.app:community:' + c.id : 'did:web:trending.app',
+      // did:web names the site that issued the badge: this one, with a
+      // port's colon escaped as the method requires.
+      issuer: 'did:web:' + encodeURIComponent(location.host) + (c ? ':community:' + c.id : ''),
       issuerName: c ? c.name : 'Trending',
       subject: did(), holder: me().handle, cid: cred.cid || null, ref: cred.ref || null,
       issued: Date.now(), transferable: false
@@ -1654,8 +1656,10 @@ const CPM = (() => {
      22 · 23 · 24  On-device AI — moderator, assistant, search
      ══════════════════════════════════════════════════════════════════ */
 
+  // location.hostname is this site, on whatever domain it is served from.
+  // trending.app is somebody else's, so a link to it gets the brand check.
   const OFFICIAL = ['uniswap.org', 'aave.com', 'lido.fi', 'curve.finance', 'jup.ag', 'opensea.io', 'blur.io', 'metamask.io', 'phantom.app', 'coinbase.com',
-    'binance.com', 'ledger.com', 'trezor.io', 'safe.global', 'arbitrum.io', 'chain.link', 'ethereum.org', 'bitcoin.org', 'solana.com', 'github.com', 'trending.app',
+    'binance.com', 'ledger.com', 'trezor.io', 'safe.global', 'arbitrum.io', 'chain.link', 'ethereum.org', 'bitcoin.org', 'solana.com', 'github.com', location.hostname,
     'ethereum-magicians.org', 'ethresear.ch', 'etherscan.io', 'solscan.io', 'l2beat.com', 'defillama.com', 'discord.com', 'discord.gg', 'telegram.org',
     'mirror.xyz', 'farcaster.xyz', 'lens.xyz', 'zora.co', 'thegraph.com', 'walletconnect.network', 'rabby.io', 'rainbow.me'];
   const BRANDS = ['uniswap', 'metamask', 'opensea', 'coinbase', 'binance', 'phantom', 'ledger', 'trezor', 'aave', 'lido', 'arbitrum', 'ethereum', 'solana', 'trending', 'discord', 'telegram'];

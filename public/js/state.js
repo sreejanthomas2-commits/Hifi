@@ -7,7 +7,7 @@
 const S = {
   pane:  'feeds',
   theme: 'dark',
-  user:  { fname:'Guest', lname:'User', handle:'Sign In', email:'guest@trending.app', bio:'Welcome to Trending! Connect your wallet or sign in to edit your profile and start creating.', level:1, xp:0 },
+  user:  { fname:'Guest', lname:'User', handle:'Sign In', email:'', bio:'Welcome to Trending! Connect your wallet or sign in to edit your profile and start creating.', level:1, xp:0 },
   cart:  [],
   macros: { water:0, protein:0, cal:0 },
   selectedMuscle: 'chest',

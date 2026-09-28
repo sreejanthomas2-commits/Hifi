@@ -120,7 +120,9 @@ function fetchSafe(rawUrl, accept, maxBytes, redirectsLeft = LIMITS.redirects) {
     const lib = url.protocol === 'https:' ? https : http;
     const req = lib.request(url, {
       method: 'GET',
-      headers: { 'User-Agent': 'TrendingLinkPreview/1.0 (+https://trending.app)', Accept: accept, 'Accept-Encoding': 'identity' },
+      // No "+https://…" contact link: trending.app, which it used to name,
+      // belongs to somebody else.
+      headers: { 'User-Agent': 'TrendingLinkPreview/1.0', Accept: accept, 'Accept-Encoding': 'identity' },
       timeout: LIMITS.timeoutMs,
       // Connect to the address that was checked, not whatever DNS says next.
       lookup: (hostname, opts, cb) => {

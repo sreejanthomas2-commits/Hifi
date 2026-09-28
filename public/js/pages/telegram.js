@@ -330,7 +330,7 @@ const TG = (() => {
     const c = activeChat();
     if (!c) return;
     const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const link = `https://trending.app/join/${slug}`;
+    const link = `${location.origin}${location.pathname}#join=${slug}`;
     if (navigator.clipboard) navigator.clipboard.writeText(link).catch(() => {});
     toast(`Invite link copied — ${link}`);
   }
