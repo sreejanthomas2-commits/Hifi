@@ -39,7 +39,7 @@
 import registerAccount from './settings-account.js?v=sec2';
 import registerPrivacy from './settings-privacy.js?v=st2';
 import registerApp from './settings-app.js?v=st1';
-import registerCrypto from './settings-crypto.js?v=dd2';
+import registerCrypto from './settings-crypto.js?v=dd3';
 
 const SET = (() => {
 

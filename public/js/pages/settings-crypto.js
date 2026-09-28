@@ -18,6 +18,9 @@
 
 'use strict';
 
+// The same words the sign-in screen links to, with the version agreed to.
+import { LEGAL, LEGAL_VERSION } from '../data/legal.js?v=1';
+
 export default function register(SET) {
 
   const { reg, DO, esc, toast, ask, empty, money, when, guest, P } = SET._;
@@ -673,7 +676,7 @@ export default function register(SET) {
         row({ icon: 'delete_sweep', label: 'Clear your activity', to: 'activity' })
       ]),
       sec('Documents', [
-        row({ icon: 'policy', label: 'Privacy policy', act: 'legal', arg: 'privacy', chev: true }),
+        row({ icon: 'policy', label: 'Privacy notice', act: 'legal', arg: 'privacy', chev: true }),
         row({ icon: 'cookie', label: 'Cookies and storage', act: 'legal', arg: 'cookies', chev: true })
       ])
     ].join('')
@@ -720,7 +723,7 @@ export default function register(SET) {
       ]),
       sec('Legal', [
         row({ icon: 'gavel', label: 'Terms of service', act: 'legal', arg: 'terms', chev: true }),
-        row({ icon: 'policy', label: 'Privacy policy', act: 'legal', arg: 'privacy', chev: true }),
+        row({ icon: 'policy', label: 'Privacy notice', act: 'legal', arg: 'privacy', chev: true }),
         row({ icon: 'menu_book', label: 'Community guidelines', act: 'legal', arg: 'guidelines', chev: true }),
         row({ icon: 'code_blocks', label: 'Open-source licences', act: 'legal', arg: 'licences', chev: true })
       ]),
@@ -731,23 +734,11 @@ export default function register(SET) {
     ].join('')
   });
 
-  const LEGAL = {
-    terms: ['Terms of service',
-      'Trending is provided as it is. You keep the rights to what you post, and you give Trending permission to show it to the people you chose to show it to.\n\nThe trading desk, Earn, P2P, memberships and tips are <b>simulated</b>. No money changes hands, nothing is charged, and a simulated balance has no value and cannot be withdrawn.\n\nCrypto deposits and sends move real coins between wallets you control. Trending is not a custodian, does not hold your coins, and never signs or broadcasts a transaction.'],
-    privacy: ['Privacy policy',
-      'Almost everything Trending knows about you is stored on this device. When you sign in, your profile and your settings are also kept on your account so a second device matches the first.\n\nTrending never stores a recovery phrase, a private key, a password or a card number. The AI features run on this device.\n\nYou can download everything this device holds, at any time, from Settings → Account Centre.'],
-    guidelines: ['Community guidelines',
-      'Be someone other people are glad to find here.\n\nNo harassment, no hate, no sexual content involving minors, no incitement to violence.\n\nOn crypto specifically: no fake giveaways, no impersonating a project or an exchange, and never ask anyone for a recovery phrase or a private key. Anyone asking for one is trying to rob you, without exception.'],
-    cookies: ['Cookies and storage',
-      'Trending uses your browser’s own storage to keep your posts, drafts, settings and paper balances on this device. It does not set advertising cookies and does not track you across other websites.\n\nClearing your browser’s site data for Trending erases all of it, which is why the download option exists.'],
-    licences: ['Open-source licences',
-      'Trending is built on open-source work. Material Symbols is licensed under Apache 2.0. Firebase is used for sign-in and profile sync under its own terms. Market data comes from CoinGecko, network fees from each chain’s public endpoints, and Bitcoin fee estimates from mempool.space.\n\nThank you to everyone whose work this is built on.']
-  };
-
   DO.legal = k => {
     const g = LEGAL[k];
     if (!g) return;
-    SET.sheet(g[0], `<div class="st-prose">${g[1].split('\n\n').map(p2 => '<p>' + p2 + '</p>').join('')}</div>
+    const version = k === 'terms' || k === 'privacy' ? `<p class="st-note">Version ${LEGAL_VERSION}</p>` : '';
+    SET.sheet(g[0], `<div class="st-prose">${g[1].split('\n\n').map(p2 => '<p>' + p2 + '</p>').join('')}</div>${version}
       <button type="button" class="btn btn-primary w100 mt12" data-st="closesheet">Close</button>`);
   };
 
