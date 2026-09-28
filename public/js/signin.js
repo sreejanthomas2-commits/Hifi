@@ -304,7 +304,13 @@ import { LEGAL, LEGAL_VERSION } from './data/legal.js?v=1';
     sendCode();
   }
 
-  window.TSAuth = { apple, phone, back, sendCode, verifyCode, resend, show };
+  // "Create account" elsewhere in the app opens straight onto the form.
+  function openCreate() {
+    if (typeof openAuthModal === 'function') openAuthModal();
+    if (!creating) get('ts-mode').click();
+  }
+
+  window.TSAuth = { apple, phone, back, sendCode, verifyCode, resend, show, openCreate };
 
   /* ── Modal plumbing ──────────────────────────────────────────────── */
   if (location.hash === '#signin') openAuthModal();

@@ -738,8 +738,40 @@ const HX = (() => {
   function paintDash() {
     const d = $('hx-dash');
     if (!d) return;
-    d.innerHTML = acctHTML() + promoHTML() + `<div class="hx-duos">${p2pHTML()}${sendHTML()}</div>`;
+    d.innerHTML = helloHTML() + acctHTML() + promoHTML() + `<div class="hx-duos">${p2pHTML()}${sendHTML()}</div>`;
     fitBal();
+  }
+
+  /* ── 0. Hello, for guests ────────────────────────────────────────── */
+  /* Someone who has just tapped "Browse as guest" meets a six-figure
+     PAPER balance and an Add Funds button, with nothing to say what the
+     app is. This card says it, and is the way to an account. It is
+     always in the markup and shown only under html.is-guest, which is
+     set from Firebase's answer, so signing in or out needs no repaint.
+     Dismissed like the promos. */
+  function helloHTML() {
+    if (U.dismissed.includes('hello')) return '';
+    return `<section class="hx-card hx-hello" aria-labelledby="hx-hello-t">
+      <div class="hx-promo-h">
+        <span class="hx-promo-t">Welcome to Trending</span>
+        <button type="button" class="hx-x" onclick="HX.dismiss('hello')" aria-label="Dismiss"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <h2 class="hx-hello-t" id="hx-hello-t">Post it. Trend it. <span>Send it.</span></h2>
+      <p class="hx-hello-s">A social app with crypto built in. The money here is practice money, so you can learn without risking any.</p>
+      <ul class="hx-hello-l">
+        <li><span class="material-symbols-rounded" aria-hidden="true">edit_square</span>Post, follow creators and chat</li>
+        <li><span class="material-symbols-rounded" aria-hidden="true">candlestick_chart</span>Trade, earn and pay with practice money</li>
+        <li><span class="material-symbols-rounded" aria-hidden="true">account_balance_wallet</span>Connect your own wallet to see its balance, read-only</li>
+      </ul>
+      <div class="hx-hello-b">
+        <button type="button" class="hx-cta" onclick="HX.join()">Create account</button>
+        <button type="button" class="hx-promo-cta" onclick="HX.join(true)">Sign in</button>
+      </div>
+    </section>`;
+  }
+  function join(signIn) {
+    if (!signIn && window.TSAuth && TSAuth.openCreate) TSAuth.openCreate();
+    else if (typeof openAuthModal === 'function') openAuthModal();
   }
   /* A big balance next to Add Funds: shrink the figure rather than cut it. */
   function fitBal() {
@@ -790,7 +822,7 @@ const HX = (() => {
     paint, onPriceTick, filterPosts, emptyFeed,
     repaint: () => { if (document.getElementById('hx-dash')) paintDash(); },
     search, scan, acct, unit, hide, addFunds, closeFunds, receive, connect, openWallet,
-    dismiss, promo, openStocks, openP2P, send, coin, allMarkets, mkt, feed, toFeed, follow, compose,
+    dismiss, promo, join, openStocks, openP2P, send, coin, allMarkets, mkt, feed, toFeed, follow, compose,
     get state() { return U; }
   };
 })();
