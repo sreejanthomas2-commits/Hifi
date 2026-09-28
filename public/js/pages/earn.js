@@ -536,7 +536,7 @@ const EN = (() => {
         ${copying
           ? '<button class="btn btn-ghost btn-sm en-cta" disabled>Copying</button>'
           : `<div class="en-copy-form">
-               <input class="en-input" type="number" step="any" placeholder="${MIN_COPY} min" id="en-alloc-${t.id}">
+               <input class="en-input" type="number" step="any" placeholder="${MIN_COPY} min" id="en-alloc-${t.id}" aria-label="USDT to copy ${esc(t.name)} with">
                <button class="btn btn-primary btn-sm" onclick="EN.startCopyFrom('${t.id}')">Copy</button>
              </div>`}
       </div>`;
@@ -604,7 +604,7 @@ const EN = (() => {
         <div class="en-row-s">Min ${qty(p.min)} ${esc(p.coin)} · you hold ${qty(bal)}</div>
         ${termsHTML(p)}
         ${live ? `<div class="en-copy-form">
-          <input class="en-input" type="number" step="any" placeholder="${qty(p.min)} min" id="en-stake-${p.id}">
+          <input class="en-input" type="number" step="any" placeholder="${qty(p.min)} min" id="en-stake-${p.id}" aria-label="${esc(p.coin)} to stake">
           <button class="btn btn-primary btn-sm" onclick="EN.stakeFrom('${p.id}')">Stake</button>
         </div>` : '<div class="en-row-s tc-3">No live price — unavailable</div>'}
       </div>`;
@@ -675,7 +675,7 @@ const EN = (() => {
         <div class="en-bar"><i style="width:${(pool.raised * 100).toFixed(0)}%"></i></div>
         <div class="en-row-s">${(pool.raised * 100).toFixed(0)}% of ${pool.total.toLocaleString()} ${esc(pool.sym)} allocated · ${pool.days} days · you hold ${qty(bal)} ${esc(pool.stakeCoin)}</div>
         <div class="en-copy-form">
-          <input class="en-input" type="number" step="any" placeholder="Amount in ${esc(pool.stakeCoin)}" id="en-pool-${pool.id}">
+          <input class="en-input" type="number" step="any" placeholder="Amount in ${esc(pool.stakeCoin)}" id="en-pool-${pool.id}" aria-label="${esc(pool.stakeCoin)} to farm ${esc(pool.sym)} with">
           <button class="btn btn-primary btn-sm" onclick="EN.joinPoolFrom('${pool.id}')">Farm</button>
         </div>
       </div>`;

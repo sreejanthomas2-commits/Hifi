@@ -837,7 +837,7 @@ const TR = (() => {
             ${[['all','All assets'],['crypto','Crypto'],['stocks','Tokenized stocks']].map(([v,n]) => '<option value="'+v+'" '+(assetFilter===v?'selected':'')+'>'+n+'</option>').join('')}
           </select>
           <p class="fs11 tc-3">Spot · No leverage. USDC/USD1 use converted reference prices. To fund these pairs, buy USDC or USD1 with your paper USDT first. <button type="button" class="tr-link" onclick="TR.resetAccount()">Reset paper account</button></p>
-          <input class="input tr-search" placeholder="Search ${pairs().length} pairs…" oninput="TR.setSearch(this.value)" value="${esc(search)}">
+          <input class="input tr-search" aria-label="Search pairs" placeholder="Search ${pairs().length} pairs…" oninput="TR.setSearch(this.value)" value="${esc(search)}">
           <button class="tr-watch-filter${watchOnly ? ' active' : ''}" onclick="TR.toggleWatchOnly()">
             ${watchOnly ? '★ Watchlist only' : '☆ Show watchlist only'}
           </button>
@@ -884,19 +884,19 @@ const TR = (() => {
               </div>
 
               ${orderType === 'stop' ? `
-                <label class="form-label">Stop price (${QUOTE})</label>
+                <label class="form-label" for="tr-stop">Stop price (${QUOTE})</label>
                 <input class="input mb8" id="tr-stop" type="number" step="any" inputmode="decimal" value="${stopDefault}">` : ''}
 
               ${orderType !== 'market' ? `
-                <label class="form-label">Limit price (${QUOTE})</label>
+                <label class="form-label" for="tr-price">Limit price (${QUOTE})</label>
                 <input class="input mb8" id="tr-price" type="number" step="any" inputmode="decimal" value="${orderType === 'stop' ? stopDefault : pairPrice(sym)}" oninput="TR.previewCost()">` : ''}
 
               ${orderType === 'stop' ? `<p class="tr-hint">When the price ${side === 'buy' ? 'rises' : 'falls'} to the stop, a limit order goes on the book at the limit price. Use a sell stop below the market to limit a loss, or a buy stop above it to catch a breakout.</p>` : ''}
 
-              <label class="form-label">Amount (${esc(tick(sym))})</label>
+              <label class="form-label" for="tr-qty">Amount (${esc(tick(sym))})</label>
               <input class="input" id="tr-qty" type="number" step="any" inputmode="decimal" placeholder="0.00" oninput="TR.fromQty()">
 
-              <label class="form-label tr-total-l">Total (${QUOTE})</label>
+              <label class="form-label tr-total-l" for="tr-total">Total (${QUOTE})</label>
               <input class="input" id="tr-total" type="number" step="any" inputmode="decimal" placeholder="0.00" oninput="TR.fromTotal()">
 
               <div class="tr-quick">
