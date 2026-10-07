@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "test:pay": "node --test scripts/test-pay.js",
-    "test:security": "node scripts/test-security.js"
+    "test:security": "node scripts/test-security.js",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-trending-rules \"node --test tests/firestore.rules.test.js\""
   },
   "dependencies": {
     "compression": "^1.8.1",
@@ -16,5 +17,10 @@
     "jsonwebtoken": "^9.0.3",
     "jsqr": "1.4.0",
     "mongoose": "^9.6.3"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^12.19.0",
+    "firebase-tools": "^15.32.1"
   }
 }
