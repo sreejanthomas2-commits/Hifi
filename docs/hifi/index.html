@@ -1,0 +1,1373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HiFi — Your Digital Universe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="hifi.css">
+</head>
+<!-- "How HiFi works" (how-hifi-works.pdf, 16 pages) is inserted after page 3
+     when the PDF is built; data-insert-* keeps every page number right. -->
+<body data-insert-at="3" data-insert-n="16">
+
+<!-- ═════════════════════════ 1 · COVER ═════════════════════════ -->
+<section class="page cover" data-bare data-toc="HiFi — Your Digital Universe">
+  <div class="glow"></div>
+  <svg style="position:absolute;right:-52mm;top:-24mm;width:160mm;height:160mm;opacity:.95" viewBox="0 0 400 400" fill="none">
+    <defs>
+      <linearGradient id="cg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF5A1F"/><stop offset=".5" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFC21A"/></linearGradient>
+    </defs>
+    <ellipse cx="200" cy="200" rx="190" ry="72" stroke="rgba(255,255,255,.14)" transform="rotate(-24 200 200)"/>
+    <ellipse cx="200" cy="200" rx="150" ry="150" stroke="rgba(255,255,255,.07)"/>
+    <ellipse cx="200" cy="200" rx="122" ry="44" stroke="url(#cg)" stroke-width="1.6" transform="rotate(30 200 200)"/>
+    <ellipse cx="200" cy="200" rx="185" ry="110" stroke="rgba(255,255,255,.10)" stroke-dasharray="3 6" transform="rotate(12 200 200)"/>
+    <circle cx="200" cy="200" r="56" fill="url(#cg)"/>
+    <text x="200" y="222" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="62" fill="#fff">₿</text>
+    <circle cx="352" cy="138" r="9" fill="#FFC21A"/>
+    <circle cx="84" cy="262" r="7" fill="#FF8A00"/>
+    <circle cx="300" cy="300" r="5" fill="#fff" opacity=".8"/>
+    <circle cx="120" cy="96" r="4" fill="#fff" opacity=".6"/>
+    <circle cx="262" cy="90" r="6" fill="#FF5A1F"/>
+  </svg>
+  <div class="inner">
+    <div class="logo"><img src="hifi-logo.png" alt="HiFi"></div>
+    <div style="margin-top:40mm">
+      <div style="font-size:9pt;letter-spacing:.2em;text-transform:uppercase;color:#FFC21A;font-weight:700;margin-bottom:5mm">The full and final guide · November 2026</div>
+      <h1 class="big">HiFi<br><span>Your Digital<br>Universe</span></h1>
+      <p class="sub">Social, chat, communities and crypto in one app. Part 1 walks through every screen. Part 2 covers what happens beyond the screens: crypto in chat and in communities, how people earn while they use HiFi, security from end to end, the app on a phone, and the plan for HiFi's own blockchain and coin.</p>
+    </div>
+    <div style="margin-top:auto">
+      <div class="pills" style="margin-bottom:9mm">
+        <span>Crypto in chat</span><span>Community crypto</span><span>Earn while you use it</span><span>Security, end to end</span><span>HiFi on mobile</span><span>HiFi Chain &amp; HIFI coin</span>
+      </div>
+      <div class="meta">
+        <div><b>Part 1</b>How HiFi works · pages 4–19</div>
+        <div><b>Part 2</b>Beyond the screens · pages 20–46</div>
+        <div><b>Edition</b>Final · 47 pages</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 2 · CONTENTS ═════════════════════════ -->
+<section class="page" data-sec="Contents" data-toc="Contents">
+  <div class="kicker">Contents</div>
+  <h1>What's inside</h1>
+  <p class="lead">This final edition brings two documents together. Part 1 is <b>How HiFi works</b>, the guide to every screen with screenshots and flow charts. Part 2, <b>Beyond the screens</b>, adds everything Part 1 did not cover.</p>
+
+  <div class="parth"><b>Part 1 · How HiFi works</b><span>Screens, flows and what is real today</span><span class="pr">4–19</span></div>
+  <div class="toc two colflow">
+    <a><span class="no">·</span><span class="ti">Cover and overview: what HiFi is</span><span class="pg">4</span></a>
+    <a><span class="no">1</span><span class="ti">Getting in: the opening page</span><span class="pg">6</span></a>
+    <a><span class="no">2</span><span class="ti">The map of the app</span><span class="pg">7</span></a>
+    <a><span class="no">3</span><span class="ti">Home, stories, posts and story shapes</span><span class="pg">8</span></a>
+    <a><span class="no">4</span><span class="ti">Search, Explore and Shorty</span><span class="pg">10</span></a>
+    <a><span class="no">5</span><span class="ti">Chat, notes and communities</span><span class="pg">11</span></a>
+    <a><span class="no">6</span><span class="ti">Profile and notifications</span><span class="pg">12</span></a>
+    <a><span class="no">7</span><span class="ti">HiFi Web3 Wallet</span><span class="pg">13</span></a>
+    <a><span class="no">8</span><span class="ti">HiFi Pay</span><span class="pg">14</span></a>
+    <a><span class="no">9</span><span class="ti">HiFi Crypto Card</span><span class="pg">15</span></a>
+    <a><span class="no">10</span><span class="ti">Markets, Trade and P2P</span><span class="pg">16</span></a>
+    <a><span class="no">11</span><span class="ti">Assets, Earn and Settings</span><span class="pg">17</span></a>
+    <a><span class="no">12</span><span class="ti">How HiFi is built</span><span class="pg">18</span></a>
+    <a><span class="no">13</span><span class="ti">Safety and what comes next</span><span class="pg">19</span></a>
+  </div>
+
+  <div class="parth"><b>Part 2 · Beyond the screens</b><span>New in this final edition</span><span class="pr">20–46</span></div>
+  <div class="toc">
+    <a href="#p-chatcrypto"><span class="no">14</span><span class="ti">Crypto in chat <span class="chip newc">New</span><small>Send, request, gift packets, split bills, price cards, alerts, slash commands, Crypto Desk</small></span><span class="pg" data-pg="p-chatcrypto"></span></a>
+    <a href="#p-community"><span class="no">15</span><span class="ti">Communities in depth<small>Spaces, channels, roles, Community Studio, Commune Hub+</small></span><span class="pg" data-pg="p-community"></span></a>
+    <a href="#p-comcrypto"><span class="no">16</span><span class="ti">Community crypto features <span class="chip newc">New</span><small>Token gates, passes, bounties, governance, treasury, launchpad, crypto checkout</small></span><span class="pg" data-pg="p-comcrypto"></span></a>
+    <a href="#p-earn"><span class="no">17</span><span class="ti">Earn while you use HiFi <span class="chip newc">New</span><small>Thirteen ways to earn, the creator economy in numbers, the road to real payouts</small></span><span class="pg" data-pg="p-earn"></span></a>
+    <a href="#p-security"><span class="no">18</span><span class="ti">Security, end to end <span class="chip newc">New</span><small>Seven layers, your account, your money, end-to-end encrypted chats and calls</small></span><span class="pg" data-pg="p-security"></span></a>
+    <a href="#p-mobile"><span class="no">19</span><span class="ti">HiFi on mobile <span class="chip newc">New</span><small>Install and navigate, then five walkthroughs with phone screens</small></span><span class="pg" data-pg="p-mobile"></span></a>
+    <a href="#p-chain"><span class="no">20</span><span class="ti">The future: HiFi Chain and the HIFI coin <span class="chip newc">New</span><small>Why our own chain, how HIFI runs the app, architecture, token proposal, stages</small></span><span class="pg" data-pg="p-chain"></span></a>
+    <a href="#p-roadmap"><span class="no">21</span><span class="ti">Roadmap<small>From what works today to HiFi Chain</small></span><span class="pg" data-pg="p-roadmap"></span></a>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 3 · ABOUT THIS EDITION ═════════════════════════ -->
+<section class="page" id="p-about" data-sec="About this edition" data-toc="About this edition">
+  <div class="kicker">About this edition</div>
+  <h1>One app for your whole digital life</h1>
+  <p class="lead">HiFi brings together what people usually spread across several apps: a social feed and short video, a messenger, communities, a Web3 wallet with markets, and payments. One sign-in, one wallet, one inbox, one history.</p>
+
+  <h2>How this document is put together</h2>
+  <div class="g2">
+    <div class="card"><div class="top"><h3><span class="ic"><i data-i="doc"></i></span>Part 1 · How HiFi works</h3><span class="tiny">pages 4–19</span></div><p>The guide to every screen, from the opening page to Settings, with screenshots and flow charts of the most important journeys: signing in, the map of the app, the wallet, paying someone, and a P2P sale.</p></div>
+    <div class="card"><div class="top"><h3><span class="ic"><i data-i="sparkle"></i></span>Part 2 · Beyond the screens</h3><span class="tiny">pages 20–46</span></div><p>What Part 1 did not cover: crypto in chat, communities and their crypto features, how people earn, security from end to end, the app on a phone, and the plan for HiFi Chain and the HIFI coin.</p></div>
+  </div>
+
+  <h2>How to read the labels</h2>
+  <table class="t">
+    <tr><th style="width:23%">Label</th><th>What it means</th><th style="width:16%">Used in</th></tr>
+    <tr><td><span class="chip real">Real</span></td><td>Works for real today: accounts and sign-in, live prices, news and exchange rates, connecting your own wallet.</td><td>Parts 1 and 2</td></tr>
+    <tr><td><span class="chip prac">Practice</span></td><td>Works end to end with practice money. It behaves like the real thing, with live prices, fees and receipts, but no real money moves. Screens say "Practice" wherever this applies.</td><td>Parts 1 and 2</td></tr>
+    <tr><td><span class="chip device">This device</span></td><td>Works today, saved in your browser. Sharing it between people and devices is the next big step.</td><td>Parts 1 and 2</td></tr>
+    <tr><td><span class="chip ready">Ready</span></td><td>Built and tested on the HiFi server, and kept switched off until the licence, partner or hardware it needs exists.</td><td>Part 2</td></tr>
+    <tr><td><span class="chip plan">Planned</span></td><td>Designed and written down, not built yet. Each plan names the conditions that have to be true first.</td><td>Part 2</td></tr>
+  </table>
+
+  <h2>Our honesty rule</h2>
+  <div class="g23">
+    <div>
+      <p>A HiFi screen never claims something the app does not do. When a screen was found showing something untrue, it was fixed or removed, even when the untrue version looked better:</p>
+      <ul class="b">
+        <li>an <b>"end-to-end encrypted"</b> badge on chats that were not encrypted was taken down, and Settings now says exactly where chats are kept;</li>
+        <li><b>made-up P2P merchants</b> and escrow that released itself 2.6 seconds after "Paid" were replaced by seller-only release, a countdown and disputes;</li>
+        <li><b>Earn rates up to 34%</b> with no risk wording now say "indicative" and explain the risk and redemption terms.</li>
+      </ul>
+      <p>This document keeps the same rule: every feature carries its real label, next to the feature.</p>
+    </div>
+    <div class="quote">"Never trust a balance calculated only by the browser. The server decides every balance and every status."<small>HiFi's rule for money</small></div>
+  </div>
+  <p class="small muted mt1">Screenshots in Part 1 show a demo copy of the app with sample people and practice money; all names are made up. Phone screens in Part 2 are drawn illustrations of the same app.</p>
+</section>
+
+<!-- ═════════════ Part 1 (how-hifi-works.pdf, 16 pages) is inserted here ═════════════ -->
+
+<!-- ═════════════════════════ 20 · PART 2 OPENER ═════════════════════════ -->
+<section class="page cover" id="p-part2" data-bare data-toc="Part 2 · Beyond the screens">
+  <div class="glow"></div>
+  <div class="inner">
+    <div class="logo"><img src="hifi-logo.png" alt="HiFi" style="height:15mm"></div>
+    <div style="margin-top:28mm">
+      <div style="font-size:9pt;letter-spacing:.2em;text-transform:uppercase;color:#FFC21A;font-weight:700;margin-bottom:4mm">Part 2</div>
+      <h1 class="big" style="font-size:50pt">Beyond<br><span>the screens</span></h1>
+      <p class="sub">Part 1 showed what each screen looks like. Part 2 explains what the screens do together: how money moves inside conversations and communities, how people earn, how HiFi keeps accounts and money safe, how the app works on a phone, and where HiFi goes next.</p>
+    </div>
+    <div style="margin-top:auto">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3mm 8mm;font-size:10pt">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>14 · Crypto in chat</span><b data-pg="p-chatcrypto"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>18 · Security, end to end</span><b data-pg="p-security"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>15 · Communities in depth</span><b data-pg="p-community"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>19 · HiFi on mobile</span><b data-pg="p-mobile"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>16 · Community crypto features</span><b data-pg="p-comcrypto"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>20 · HiFi Chain and the HIFI coin</span><b data-pg="p-chain"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>17 · Earn while you use HiFi</span><b data-pg="p-earn"></b></div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.15);padding:2mm 0"><span>21 · Roadmap</span><b data-pg="p-roadmap"></b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ CRYPTO IN CHAT 1 ═════════════════════════ -->
+<section class="page" id="p-chatcrypto" data-sec="14 · Crypto in chat" data-toc="14 Crypto in chat" data-level="1">
+  <div class="band">
+    <div class="kicker">14 · Crypto in chat <span class="new">New</span></div>
+    <h1>Money moves where the conversation is</h1>
+    <p class="lead">People talk about money in chats: who owes what, splitting dinner, a birthday gift, the price of Bitcoin. HiFi puts eight crypto tools behind the coin button in any chat. All of them use the same wallet as the rest of the app, so chat never keeps its own idea of your balance.</p>
+  </div>
+  <div class="row mb2"><span class="chip prac">Practice</span><span class="small muted">Works today with practice money. Send and request use the same flow as HiFi Pay (page 14), so you review the amount, coin, recipient, route, every fee and the total before you approve.</span></div>
+  <div class="g4">
+    <div class="card"><div class="ic mb1"><i data-i="send"></i></div><h3>1 · Send</h3><p>Send coin to the person you are chatting with, without leaving the chat. It draws on Funding first and tops up from Spot if it has to, and says when it does.</p></div>
+    <div class="card"><div class="ic mb1"><i data-i="receive"></i></div><h3>2 · Request</h3><p>Ask for an amount. The other person sees the same review screen and pays with one tap; the card shows when it is paid.</p></div>
+    <div class="card"><div class="ic red mb1"><i data-i="gift"></i></div><h3>3 · Gift packet</h3><p>Fund a packet up front and choose the number of slots. Members of the chat each claim a random share; claims cost you nothing more.</p></div>
+    <div class="card"><div class="ic mb1"><i data-i="split"></i></div><h3>4 · Split bill</h3><p>Enter the total and how many people, including you. Each person pays their share, and the card shows who has paid.</p></div>
+    <div class="card"><div class="ic gold mb1"><i data-i="chart"></i></div><h3>5 · Price card</h3><p>Drop a live quote for any coin into the conversation. Typing a $coin such as $BTC also turns it into a tappable chip.</p></div>
+    <div class="card"><div class="ic mb1"><i data-i="bell"></i></div><h3>6 · Price alert</h3><p>"Tell me when BTC goes above 90,000." Set the alert without leaving the chat.</p></div>
+    <div class="card"><div class="ic mb1"><i data-i="slash"></i></div><h3>7 · Slash commands</h3><p>The same tools from the message box: type /send, /request, /gift, /split, /price, /alert or /tip.</p></div>
+    <div class="card"><div class="ic dark mb1"><i data-i="bot"></i></div><h3>8 · Crypto Desk</h3><p>A bot conversation in your chat list that answers coin prices and market questions from the live feed.</p></div>
+  </div>
+
+  <h2>Slash commands</h2>
+  <div class="g23">
+    <table class="t compact">
+      <tr><th>Type this</th><th>What happens</th></tr>
+      <tr><td><code>/price BTC</code></td><td>Share a live quote</td></tr>
+      <tr><td><code>/send 10 USDT [note]</code></td><td>Send from your balance</td></tr>
+      <tr><td><code>/request 25 USDT</code></td><td>Ask for a payment</td></tr>
+      <tr><td><code>/gift 50 USDT 5</code></td><td>Fund a gift packet with 5 slots</td></tr>
+      <tr><td><code>/split 120 USDT 4</code></td><td>Split a bill four ways</td></tr>
+      <tr><td><code>/alert BTC above 90000</code></td><td>Arm a price alert</td></tr>
+      <tr><td><code>/tip</code></td><td>Send a quick 1 USDT tip</td></tr>
+    </table>
+    <div>
+      <div class="card soft mb2"><h3><span class="i" data-i="coin"></span>Coins you can use</h3><p>Quick tips offer <b>USDT, TREND, BTC, ETH, SOL and DOGE</b>. Send and request work with any coin that has a live price.</p></div>
+      <div class="card soft"><h3><span class="i" data-i="shieldok"></span>A command never leaks</h3><p>When what you type is a command, the raw "/send 10 USDT" is never posted as a message. You get the review screen instead.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ CRYPTO IN CHAT 2 ═════════════════════════ -->
+<section class="page" id="p-chatcrypto2" data-sec="14 · Crypto in chat" data-toc="How a chat payment works" data-level="2">
+  <div class="kicker">14 · Crypto in chat <span class="new">New</span></div>
+  <h1>How a chat payment works</h1>
+  <p class="lead">From tapping the coin button to both people seeing the payment, a chat payment goes through five steps. Each step is there to stop a mistake or a scam.</p>
+  <div class="g32">
+    <div class="vsteps">
+      <div class="vstep"><div class="k">1</div><div><b>Tap the coin button, choose Send</b><span>Or type /send. The panel opens over the conversation, already addressed to the person you are chatting with.</span></div></div>
+      <div class="vstep"><div class="k">2</div><div><b>Pick the coin and the amount</b><span>You see what you can spend and its value at the live price. A coin with no live price cannot be sent by value.</span></div></div>
+      <div class="vstep"><div class="k">3</div><div><b>Read the review, then approve</b><span>Who receives it, the amount, the coin, the route, every fee and the total, as in HiFi Pay's flow on page 14.</span></div></div>
+      <div class="vstep"><div class="k">4</div><div><b>The payment is settled once</b><span>The same payment cannot go twice, even if your connection drops and the app retries. One line is added to your History.</span></div></div>
+      <div class="vstep"><div class="k">5</div><div><b>A card appears for both of you</b><span>The payment card shows in the thread with its status, and the receipt is in History.</span></div></div>
+    </div>
+    <div>
+      <div class="note good mb2"><b class="t">The rules crypto in chat keeps</b>
+        <ul class="tick small">
+          <li><b>One wallet.</b> Chat, HiFi Pay, tips and rewards share one balance and one History.</li>
+          <li><b>Live price required.</b> A value is never guessed from an old or missing price.</li>
+          <li><b>Nothing smaller than a coin's smallest unit</b>, so every amount is real.</li>
+          <li><b>A daily ceiling on money coming in</b> from paid requests and split shares ($5,000 a day in practice), so Request can never act as a money printer.</li>
+          <li><b>Wallet addresses only appear</b> if that person shared one in that chat.</li>
+          <li><b>No recovery phrase, ever.</b> HiFi never asks for one in chat, and nobody from support ever will.</li>
+        </ul>
+      </div>
+      <div class="card"><h3><span class="i" data-i="idcard"></span>Crypto in chat details</h3><p class="small">Tap a person's name at the top of the chat: send, request, their Pay ID, the wallet addresses they shared, and your recent payments with them. In a group: split a bill or send a gift packet.</p></div>
+    </div>
+  </div>
+
+  <h2>Safety checks that come from HiFi Pay</h2>
+  <div class="g3">
+    <div class="card soft"><h3><span class="i" data-i="server"></span>The server decides</h3><p>Balances and statuses come from the HiFi server, never from the browser. A chat card is not proof of payment; the receipt in History is.</p></div>
+    <div class="card soft"><h3><span class="i" data-i="qr"></span>Signed requests</h3><p>Payment requests and QR codes are signed by the server, so an edited or forged request is refused.</p></div>
+    <div class="card soft"><h3><span class="i" data-i="alert"></span>Look-alike names</h3><p>HiFi checks the name and shows who you are paying, and warns when a handle looks like someone else's.</p></div>
+  </div>
+
+  <h2>Coming next for crypto in chat</h2>
+  <table class="t">
+    <tr><th style="width:24%">Step</th><th>What changes</th><th style="width:15%">Label</th></tr>
+    <tr><td><b>Everything on the server</b></td><td>Gift packets, split bills and alerts join send and request on the server, with the same retry protection and History</td><td><span class="chip plan">Planned</span></td></tr>
+    <tr><td><b>Encrypted payment cards</b></td><td>Payment cards travel inside end-to-end encrypted messages and carry a signed receipt (page <span data-ref="p-e2e2"></span>)</td><td><span class="chip plan">Planned</span></td></tr>
+    <tr><td><b>Real money</b></td><td>Switched on per country once identity checks and a licensed payment partner are in place</td><td><span class="chip plan">Planned</span></td></tr>
+    <tr><td><b>HIFI in chat</b></td><td>Tips and gift packets in HIFI on HiFi Chain, with network fees covered by HiFi (page <span data-ref="p-chain2"></span>)</td><td><span class="chip plan">Planned</span></td></tr>
+  </table>
+</section>
+
+<!-- ═════════════════════════ COMMUNITIES IN DEPTH ═════════════════════════ -->
+<section class="page" id="p-community" data-sec="15 · Communities in depth" data-toc="15 Communities in depth" data-level="1">
+  <div class="band">
+    <div class="kicker">15 · Communities in depth</div>
+    <h1>CommuneHub: communities that run themselves</h1>
+    <p class="lead">Part 1 showed how to find, join and start a community (page 11). Inside, a community holds spaces, spaces hold channels, and everything runs under roles and permissions.</p>
+  </div>
+  <div class="row mb2"><span class="chip device">This device</span><span class="small muted">Messages, posts, events and roles are yours and saved on this device; sharing them between people is the next big step (page 19).</span></div>
+
+  <div class="g23">
+    <div>
+      <h3><span class="i" data-i="layers"></span>The shape of a community</h3>
+      <div class="stack mt1">
+        <div class="srow"><div class="sl">Community</div><div class="sb"><div><b>Home · Feed · Chat · Voice · Live</b>Discussions, Events, Members, About</div></div></div>
+        <div class="srow"><div class="sl">Spaces</div><div class="sb"><div><b>Groups of channels</b>e.g. "Start here", "Builders", "Off-topic"</div></div></div>
+        <div class="srow"><div class="sl">Channels</div><div class="sb"><div><b>Text</b>chat, threads</div><div><b>Voice &amp; stage</b>talk, present</div><div><b>Boards</b>posts, polls</div><div><b>News</b>announcements</div></div></div>
+      </div>
+      <h3 class="mt3"><span class="i" data-i="shield"></span>Roles and permissions</h3>
+      <p class="small">Every button asks the same question: may this person do this here? Permissions include viewing, posting, attaching files, reacting, threads, speaking, camera, going live, events, boards, invites and mentioning everyone. Roles have levels, so <b>a moderator can act on a member but never on an admin</b>.</p>
+    </div>
+    <div class="card soft">
+      <h3><span class="i" data-i="sliders"></span>Community Studio: the owner's side</h3>
+      <table class="t compact">
+        <tr><td><b>Overview, Analytics</b></td><td>what is happening; seeded demo numbers labelled apart from real activity</td></tr>
+        <tr><td><b>Channels, Roles, Members</b></td><td>a channel you create appears at once; a permission switched off stops the button working</td></tr>
+        <tr><td><b>Moderation, AI</b></td><td>AutoMod words really block a message; reports and logs</td></tr>
+        <tr><td><b>Memberships, Monetization</b></td><td>paid entry, tiers, marketplace, tips, crowdfunding</td></tr>
+        <tr><td><b>Rewards, Governance, Web3</b></td><td>missions, votes, gates, passes, credentials</td></tr>
+        <tr><td><b>Integrations, Settings</b></td><td>mini apps, the Open Community API, branding</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h2>Commune Hub+: everything beyond the basics</h2>
+  <div class="g3">
+    <div class="card"><h3><span class="ic"><i data-i="trend"></i></span>Discovery</h3><p>For You, Rising, Following, Nearby interests and Trend Radar, beside Discover, Joined, Trending and Categories. Posts can go viral into HiFi's Trending.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="idcard"></i></span>Passport</h3><p>A portable identity across communities: reputation, contribution score, levels, skills, badges and proofs that anyone can check.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="flag"></i></span>Missions</h3><p>Tasks such as introducing yourself, answering in #help or voting. Finishing them earns badges, which can unlock roles and gated spaces.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="book"></i></span>Knowledge and Collabs</h3><p>A knowledge base of articles, plus collaborations and joint events between communities.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="sparkle"></i></span>AI that stays on your device</h3><p>An AI moderator, assistant and search that run on the device. No text leaves the browser.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="apps"></i></span>Mini apps</h3><p>Small apps inside a community, run in a sealed frame with no network access. Posting from an app always asks you first.</p></div>
+  </div>
+  <p class="small muted mt2"><b>Creating a community</b> takes five steps: basics → look (photo or icon, colour, banner) → access and membership → channels, rules and links → review.</p>
+</section>
+
+<!-- ═════════════════════════ COMMUNITY CRYPTO 1 ═════════════════════════ -->
+<section class="page" id="p-comcrypto" data-sec="16 · Community crypto features" data-toc="16 Community crypto features" data-level="1">
+  <div class="band">
+    <div class="kicker">16 · Community crypto features <span class="new">New</span></div>
+    <h1>Crypto inside communities</h1>
+    <p class="lead">Communities are where crypto is most useful: people pool money, reward work, decide together and back new projects. Every HiFi community gets a crypto layer, and it is always optional. <b style="color:#fff">Members who never connect a wallet lose nothing.</b></p>
+  </div>
+
+  <h2 style="margin-top:0">The community crypto stack</h2>
+  <div class="stack">
+    <div class="srow"><div class="sl">Identity</div><div class="sb"><div><b>Membership pass</b>free, non-transferable</div><div><b>Credentials</b>badges earned in missions</div><div><b>Passport</b>portable reputation</div></div></div>
+    <div class="srow"><div class="sl">Access</div><div class="sb"><div><b>Token-gated spaces</b>open to wallets, balances, pass holders or credential holders</div><div><b>Gated topics</b>e.g. #alpha needs 250 of the community token</div></div></div>
+    <div class="srow"><div class="sl">Money in</div><div class="sb"><div><b>Paid memberships</b>pay in crypto or by card, UPI, wallet</div><div><b>Marketplace</b>crypto checkout</div><div><b>Tips</b>to members</div><div><b>Crowdfunding</b>campaigns</div></div></div>
+    <div class="srow"><div class="sl">Rewards</div><div class="sb"><div><b>Community token</b>issued in Asset Lab</div><div><b>Bounties</b>paid in the token</div><div><b>Rewards pool</b>funded in TREND</div></div></div>
+    <div class="srow"><div class="sl">Decisions</div><div class="sb"><div><b>Proposals</b>For, Against, Abstain</div><div><b>Four voting modes</b>one member one vote to wallet-verified</div><div><b>Verifiable history</b>a hash chain anyone can recompute</div></div></div>
+    <div class="srow"><div class="sl">Growth</div><div class="sb"><div><b>Treasury</b>the community's funds</div><div><b>Launchpad</b>back new crypto projects</div><div><b>Asset Lab</b>issue tokens and passes without code</div></div></div>
+  </div>
+
+  <h2>Every feature and its label</h2>
+  <table class="t compact">
+    <tr><th style="width:24%">Feature</th><th>What it does</th><th style="width:15%">Label</th><th style="width:7%">Page</th></tr>
+    <tr><td><b>Token-gated spaces</b></td><td>Channels that open only for members who meet a condition</td><td><span class="chip device">This device</span></td><td class="num" data-ref="p-comcrypto2"></td></tr>
+    <tr><td><b>Membership passes</b></td><td>Free, numbered, non-transferable passes with perks</td><td><span class="chip device">This device</span></td><td class="num" data-ref="p-comcrypto2"></td></tr>
+    <tr><td><b>Community tokens, Asset Lab</b></td><td>Issue, mint, transfer and burn tokens, collectibles and passes</td><td><span class="chip prac">Practice</span></td><td class="num" data-ref="p-comcrypto2"></td></tr>
+    <tr><td><b>Bounties, rewards pool</b></td><td>Pay members for real work in the community's token or TREND</td><td><span class="chip prac">Practice</span></td><td class="num" data-ref="p-comcrypto2"></td></tr>
+    <tr><td><b>Paid memberships</b></td><td>Tiers, trials, renewals and refunds, paid in crypto or other ways</td><td><span class="chip prac">Practice</span></td><td class="num" data-ref="p-comcrypto3"></td></tr>
+    <tr><td><b>Marketplace checkout</b></td><td>Sell digital resources and accept crypto</td><td><span class="chip prac">Practice</span></td><td class="num" data-ref="p-comcrypto3"></td></tr>
+    <tr><td><b>Governance</b></td><td>Proposals, quorum, four voting modes, verifiable history</td><td><span class="chip device">This device</span></td><td class="num" data-ref="p-comcrypto3"></td></tr>
+    <tr><td><b>Treasury, crowdfunding, launchpad</b></td><td>Pool, raise and invest money together</td><td><span class="chip prac">Practice</span></td><td class="num" data-ref="p-comcrypto3"></td></tr>
+  </table>
+  <div class="note honest mt1"><b class="t">Nothing here is on a blockchain yet</b>Community tokens, passes, treasuries and votes are records inside HiFi today, and money is practice money: nothing is charged and no payment details are collected. On HiFi Chain they become real on-chain assets (page <span data-ref="p-chain"></span>).</div>
+</section>
+
+<!-- ═════════════════════════ COMMUNITY CRYPTO 2 ═════════════════════════ -->
+<section class="page" id="p-comcrypto2" data-sec="16 · Community crypto features" data-toc="Access and rewards" data-level="2">
+  <div class="kicker">16 · Community crypto features <span class="new">New</span></div>
+  <h1>Access and rewards</h1>
+  <p class="lead">Who can enter which room, and how members are paid for helping. Owners set it all up in Community Studio → Web3, and members see "you can enter" or "locked for you" on each gated space.</p>
+
+  <div class="g2">
+    <div>
+      <h3><span class="ic"><i data-i="lock"></i></span>Token-gated spaces</h3>
+      <table class="t compact mt1">
+        <tr><th>Opens for</th><th>How it checks</th></tr>
+        <tr><td><b>Any connected wallet</b></td><td>The member connected a wallet; no balance needed</td></tr>
+        <tr><td><b>A native balance</b></td><td>The wallet holds at least a set amount of ETH, POL or BNB</td></tr>
+        <tr><td><b>The membership pass</b></td><td>The member claimed this community's pass</td></tr>
+        <tr><td><b>A credential</b></td><td>The member earned a specific badge here</td></tr>
+      </table>
+      <p class="small muted mt1">A connected wallet only ever shares its public address, through the wallet's own approval screen.</p>
+    </div>
+    <div>
+      <h3><span class="ic"><i data-i="badge"></i></span>Membership passes</h3>
+      <p class="small">Free to claim, numbered (pass #128), and <b>non-transferable</b>: they cannot be sold or sent on. A pass carries perks the community chooses, lands in your Passport, and can be the key to gated spaces and votes. Passes are membership records, not investments.</p>
+      <h3 class="mt2"><span class="ic"><i data-i="chat"></i></span>Crypto rooms</h3>
+      <p class="small">Each crypto community has a room with topics: <b>General</b>, <b>Announcements</b> (read-only), <b>Alpha</b> (needs 250 of the community's token), <b>Dev</b> and <b>Support</b>. Members earn the token by completing bounties.</p>
+    </div>
+  </div>
+
+  <h2>Bounties: paid for real work</h2>
+  <div class="g23">
+    <table class="t compact">
+      <tr><th>Example bounty</th><th class="num">Reward</th><th>Effort</th></tr>
+      <tr><td>Write a walkthrough for a first-time contributor</td><td class="num">120</td><td>Medium</td></tr>
+      <tr><td>Reproduce and confirm the open testnet bug</td><td class="num">60</td><td>Small</td></tr>
+      <tr><td>Translate the docs landing page</td><td class="num">200</td><td>Medium</td></tr>
+      <tr><td>Host a community call and post the notes</td><td class="num">350</td><td>Large</td></tr>
+    </table>
+    <div class="card soft"><p class="small">Rewards are paid in the <b>community's own token</b>, plus experience points. Owners assign bounties from Community Studio and every assignment is written to the moderation log. Community tokens have no market price yet, so they are kept apart from your Assets rather than shown as $0.00.</p></div>
+  </div>
+
+  <h2>Rewards pools and community tokens</h2>
+  <div class="g2">
+    <div class="card"><h3><span class="ic gold"><i data-i="trophy"></i></span>Rewards pool</h3><p>Anyone can fund a community's rewards pool in TREND, and members claim a share. A community can also ask for a minimum TREND balance to enter.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="sparkle"></i></span>Asset Lab</h3><p>Issue <b>collectibles, membership tokens, access passes and community tokens</b> from templates, without writing a contract. Mint, transfer, burn, and see what you hold. The target chain is recorded: Ethereum, Solana, Polygon, Base, Arbitrum or BNB Chain. <span class="chip prac">Practice</span> nothing is deployed to a chain yet.</p></div>
+  </div>
+  <div class="note plain mt2"><b class="t">How the pieces connect</b>An asset issued in Asset Lab is the same object a gated space checks and a weighted vote counts. Earn a token from a bounty, and it can open #alpha and add weight to your vote.</div>
+</section>
+
+<!-- ═════════════════════════ COMMUNITY CRYPTO 3 ═════════════════════════ -->
+<section class="page" id="p-comcrypto3" data-sec="16 · Community crypto features" data-toc="Paying, funding and deciding together" data-level="2">
+  <div class="kicker">16 · Community crypto features <span class="new">New</span></div>
+  <h1>Paying, funding and deciding together</h1>
+  <p class="lead">How money comes into a community, how members back projects, and how the community decides what to do with it.</p>
+
+  <div class="g2">
+    <div class="card">
+      <div class="top"><h3><span class="ic"><i data-i="card"></i></span>Paid memberships</h3><span class="chip prac">Practice</span></div>
+      <ul class="b">
+        <li>Free to join, or a paid membership to join, with optional paid tiers</li>
+        <li>Monthly or yearly, a free trial, upgrades, scheduled downgrades</li>
+        <li>Cancel any time and keep access until the period ends; a <b>7-day refund window</b></li>
+        <li>A lapsed membership really removes posting rights and tier roles</li>
+        <li>Pay by card, UPI, Apple Pay or Google Pay, or <b>crypto: USDT, BTC, ETH, XRP, USD1 and more</b>; prices in USD, INR, EUR, GBP or AED</li>
+        <li>Members who joined before a community went paid keep their access</li>
+      </ul>
+      <p class="tiny">Checkout is a demonstration: it never shows a card, UPI or wallet field and charges nothing.</p>
+    </div>
+    <div class="card">
+      <div class="top"><h3><span class="ic"><i data-i="store"></i></span>Marketplace with crypto checkout</h3><span class="chip prac">Practice</span></div>
+      <p>Trusted members (level 30 and up, or managers) sell digital resources such as templates, guides and presets, with a licence (personal, commercial or CC BY 4.0), and can tick <b>Accept crypto</b>.</p>
+      <div class="note good small"><b class="t">How a crypto checkout stays safe</b>Your own wallet shows the exact amount and the seller's address before anything moves, and you approve it there. HiFi never holds the funds, never asks for a recovery phrase and never signs for you. Check the first and last six characters of the address. Paying outside the checkout breaks the rules.</div>
+    </div>
+  </div>
+
+  <h2>Governance: decisions anyone can check</h2>
+  <div class="g23">
+    <table class="t compact">
+      <tr><th>Voting mode</th><th>Who counts, and how much</th></tr>
+      <tr><td><b>One member, one vote</b></td><td>Everyone who joined before voting opened</td></tr>
+      <tr><td><b>Reputation-weighted</b></td><td>Weight = 1 + √reputation, capped at 10 so no one dominates</td></tr>
+      <tr><td><b>Pass holders</b></td><td>Only members who hold the community's pass</td></tr>
+      <tr><td><b>Wallet-verified</b></td><td>Optional; weight grows slowly with balance and is capped at 5. Wallets are never required to join</td></tr>
+    </table>
+    <div class="card soft small">
+      <p>Proposals offer <b>For, Against and Abstain</b>. By default a vote runs for 5 days, needs a quorum of 40 votes, and passes with a For majority above 50%.</p>
+      <p><b>Verifiable history:</b> every step (proposal opened, vote cast, result) is a SHA-256 digest in a hash chain. Anyone can recompute it, so a changed record shows.</p>
+    </div>
+  </div>
+
+  <h2>Treasury, crowdfunding and launchpad</h2>
+  <div class="g3">
+    <div class="card"><h3><span class="ic"><i data-i="bank"></i></span>Treasury</h3><p>The community's funds, shown in Community Studio → Monetization next to marketplace sales, tips and money raised.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="heart"></i></span>Crowdfunding</h3><p>Campaigns with a goal, a progress bar and a backer count, started by moderators for things the community wants to build.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="rocket"></i></span>Launchpad</h3><p>Back new crypto projects from a $50 ticket. Your share is priced from the round's valuation and held in the community until the token exists on a market.</p></div>
+  </div>
+  <p class="tiny mt2">Launchpad projects shown today are demo projects. A real launchpad is only switched on where the law allows it, with the licences it needs. Tips to members are paid in USDT and appear in History.</p>
+</section>
+
+<!-- ═════════════════════════ EARN 1 ═════════════════════════ -->
+<section class="page" id="p-earn" data-sec="17 · Earn while you use HiFi" data-toc="17 Earn while you use HiFi" data-level="1">
+  <div class="band">
+    <div class="kicker">17 · Earn while you use HiFi <span class="new">New</span></div>
+    <h1>Thirteen ways to earn</h1>
+    <p class="lead">In most social apps the platform keeps the value people create. HiFi works the other way round: creators keep 90% of the rewards their posts generate, everyday contributions earn a small reward, and communities can pay their members for real work.</p>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="top"><h3><span class="i" data-i="star"></span>Creator rewards</h3><span class="chip prac">Practice</span></div><p>Likes, comments, reposts and subscribes on your posts and Shorty videos generate TREND. You keep 90%.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="sparkle"></span>Social-to-earn</h3><span class="chip prac">Practice</span></div><p>Small rewards for posting, commenting, polls, joining communities, a daily check-in and surfacing good content, with daily caps.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="heart"></span>Tips</h3><span class="chip prac">Practice</span></div><p>Fans tip you from posts, the Shorty player, chats and community rooms, in USDT, TREND, BTC, ETH, SOL or DOGE.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="badge"></span>Subscriptions</h3><span class="chip prac">Practice</span></div><p>Offer Supporter, Insider and Patron tiers at $3, $9 and $25 a month, each with its own perks.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="groups"></span>Paid memberships</h3><span class="chip prac">Practice</span></div><p>Charge to join your community, or for premium tiers, monthly or yearly, paid in crypto or other ways.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="store"></span>Marketplace sales</h3><span class="chip prac">Practice</span></div><p>Sell templates, guides and presets inside a community, with a licence, and accept crypto.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="flag"></span>Bounties</h3><span class="chip prac">Practice</span></div><p>Complete a community task, such as a translation or a guide, and get paid in the community's token.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="trophy"></span>Missions and badges</h3><span class="chip device">This device</span></div><p>Finish missions to earn badges that unlock roles, gated spaces and voting weight.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="gift"></span>Gift packets and splits</h3><span class="chip prac">Practice</span></div><p>Claim your share of a gift packet in a group chat, and get paid back when you split a bill.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="learn"></span>Learn &amp; Earn</h3><span class="chip prac">Practice</span></div><p>Answer short quizzes about crypto and receive 5 USDT for each correct answer.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="percent"></span>Staking and launchpools</h3><span class="chip prac">Practice</span></div><p>Put idle coins to work. Rates are indicative, the risk is explained, and so are the redemption terms.</p></div>
+    <div class="card"><div class="top"><h3><span class="i" data-i="swap"></span>P2P merchant</h3><span class="chip prac">Practice</span></div><p>Post ads to buy and sell crypto for local money and earn the spread. The coin waits in escrow (page 16).</p></div>
+    <div class="card span3" style="display:grid;grid-template-columns:1fr auto;gap:3mm;align-items:center"><div><h3 style="margin:0"><span class="i" data-i="rocket"></span>13 · Crowdfunding</h3><p>Raise money from your community for something you want to build, with a goal, a progress bar and a backer count.</p></div><span class="chip prac">Practice</span></div>
+  </div>
+  <div class="note honest mt3"><b class="t">Today every reward is practice money</b>Rewards are paid in TREND, HiFi's practice reward token, or in practice USDT. The mechanics are built; paying out real value needs the server ledger, identity checks and licensed partners, and for HIFI, HiFi Chain (page <span data-ref="p-earn3"></span>). No reward is guaranteed, and HiFi never says "earn up to".</div>
+</section>
+
+<!-- ═════════════════════════ EARN 2 ═════════════════════════ -->
+<section class="page" id="p-earn2" data-sec="17 · Earn while you use HiFi" data-toc="The creator economy in numbers" data-level="2">
+  <div class="kicker">17 · Earn while you use HiFi <span class="new">New</span></div>
+  <h1>The creator economy, in numbers</h1>
+  <p class="lead">Rates are deliberately small, so a busy feed does not print absurd numbers, and daily caps make sure the reward is for contributing, not for spamming.</p>
+
+  <div class="g2">
+    <div>
+      <h3><span class="i" data-i="heart"></span>What engagement on your post generates</h3>
+      <table class="t compact mt1">
+        <tr><th>When someone…</th><th class="num">Reward (TREND)</th></tr>
+        <tr><td>likes your post</td><td class="num">0.002</td></tr>
+        <tr><td>comments on it</td><td class="num">0.01</td></tr>
+        <tr><td>reposts it (paid once per post)</td><td class="num">0.02</td></tr>
+        <tr><td>subscribes to you</td><td class="num">0.5</td></tr>
+      </table>
+      <p class="small mt2"><b>The split</b></p>
+      <div class="bar"><div style="width:90%;background:var(--grad)">Creator 90%</div><div style="width:10%;background:var(--ink)">10%</div></div>
+      <p class="small muted mt1">The platform's 10% is shown to you for transparency. Rewards collect in your creator pool, and you can claim them once the pool reaches 0.01 TREND.</p>
+    </div>
+    <div>
+      <h3><span class="i" data-i="sparkle"></span>Social-to-earn, with daily caps</h3>
+      <table class="t compact mt1">
+        <tr><th>Action</th><th class="num">Reward</th><th class="num">Cap a day</th><th class="num">Most a day</th></tr>
+        <tr><td>Publish a post</td><td class="num">0.50</td><td class="num">10</td><td class="num">5.00</td></tr>
+        <tr><td>Write a comment</td><td class="num">0.20</td><td class="num">15</td><td class="num">3.00</td></tr>
+        <tr><td>Create a poll</td><td class="num">0.40</td><td class="num">5</td><td class="num">2.00</td></tr>
+        <tr><td>Join a community</td><td class="num">0.30</td><td class="num">5</td><td class="num">1.50</td></tr>
+        <tr><td>Daily check-in</td><td class="num">1.00</td><td class="num">1</td><td class="num">1.00</td></tr>
+        <tr><td>Surface good content</td><td class="num">0.10</td><td class="num">20</td><td class="num">2.00</td></tr>
+        <tr class="tot"><td>Most you can earn in a day</td><td></td><td></td><td class="num">14.50</td></tr>
+      </table>
+      <p class="tiny mt1">Amounts in TREND. Once a cap is reached, that action stops paying until tomorrow.</p>
+    </div>
+  </div>
+
+  <h2>Reputation: earned from contribution, not follower count</h2>
+  <div class="g23">
+    <div>
+      <div class="bar" style="height:9mm">
+        <div style="width:20%;background:#9AA0B8">Newcomer</div>
+        <div style="width:20%;background:#E3A21A">Contributor</div>
+        <div style="width:20%;background:#FF8A00">Trusted</div>
+        <div style="width:20%;background:#FF5A1F">Pillar</div>
+        <div style="width:20%;background:var(--ink)">Luminary</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,20%);font-size:7.4pt;color:var(--muted);margin-top:1mm"><span>from 0</span><span>from 40</span><span>from 120</span><span>from 300</span><span>from 700 points</span></div>
+      <p class="small muted mt2">Your tier shows on your profile and in communities, and it is what reputation-weighted votes count (page <span data-ref="p-comcrypto3"></span>).</p>
+    </div>
+    <table class="t compact">
+      <tr><th>Points for</th><th class="num">Points</th></tr>
+      <tr><td>Receiving a tip</td><td class="num">8</td></tr>
+      <tr><td>Publishing a post</td><td class="num">6</td></tr>
+      <tr><td>Subscribing to a creator</td><td class="num">5</td></tr>
+      <tr><td>Creating a poll, gaining a follower</td><td class="num">4</td></tr>
+      <tr><td>Joining a community</td><td class="num">3</td></tr>
+      <tr><td>Commenting, giving a tip</td><td class="num">2</td></tr>
+      <tr><td>Check-in, repost</td><td class="num">1</td></tr>
+    </table>
+  </div>
+
+  <h2>Subscriptions a creator can offer</h2>
+  <div class="g3">
+    <div class="card"><div class="top"><h3>Supporter</h3><b>$3<span class="tiny"> /month</span></b></div><ul class="tick small"><li>Supporter badge</li><li>Subscriber-only posts</li></ul></div>
+    <div class="card"><div class="top"><h3>Insider</h3><b>$9<span class="tiny"> /month</span></b></div><ul class="tick small"><li>Everything in Supporter</li><li>Private community access</li><li>Monthly AMA</li></ul></div>
+    <div class="card"><div class="top"><h3>Patron</h3><b>$25<span class="tiny"> /month</span></b></div><ul class="tick small"><li>Everything in Insider</li><li>Direct messages</li><li>Name in credits</li></ul></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ EARN 3 ═════════════════════════ -->
+<section class="page" id="p-earn3" data-sec="17 · Earn while you use HiFi" data-toc="Earning paths and the road to real payouts" data-level="2">
+  <div class="kicker">17 · Earn while you use HiFi <span class="new">New</span></div>
+  <h1>Earning paths, and the road to real payouts</h1>
+  <p class="lead">Different people earn in different ways. Here is where each kind of HiFi user starts, and what has to happen before rewards become real money.</p>
+
+  <div class="g3">
+    <div class="card"><h3><span class="ic gold"><i data-i="camera"></i></span>Creators</h3><ul class="b small"><li>Post and make Shorty videos: engagement pays 90% to you</li><li>Turn on tips and subscription tiers</li><li>Sell resources in a community marketplace</li></ul></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="groups"></i></span>Community owners</h3><ul class="b small"><li>Charge for membership or premium tiers</li><li>Run crowdfunding for community projects</li><li>Fund bounties to get work done</li></ul></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="hand"></i></span>Contributors</h3><ul class="b small"><li>Complete bounties for the community token</li><li>Finish missions for badges and roles</li><li>Daily social-to-earn within the caps</li></ul></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="learn"></i></span>Learners</h3><ul class="b small"><li>Learn &amp; Earn quizzes</li><li>Practise trading at live prices with no risk</li><li>Follow creators who teach</li></ul></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="swap"></i></span>Traders</h3><ul class="b small"><li>Become a P2P merchant and earn the spread</li><li>Staking and launchpools, with risk shown</li><li>Copy trading, with real records only</li></ul></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="chat"></i></span>Everyone</h3><ul class="b small"><li>Claim gift packets in group chats</li><li>Get paid back for split bills</li><li>Daily check-in</li></ul></div>
+  </div>
+
+  <h2>From practice to real payouts</h2>
+  <div class="steps">
+    <div class="step"><div class="k">1</div><b>Server ledger</b>Rewards move from the browser to the server, so nobody can edit a balance in their browser.</div>
+    <div class="step"><div class="k">2</div><b>Fair-play checks</b>Fake engagement and bot accounts are detected and their rewards cancelled.</div>
+    <div class="step"><div class="k">3</div><b>Identity checks</b>Anyone taking money out completes identity checks with a licensed provider.</div>
+    <div class="step"><div class="k">4</div><b>Licensed partners</b>Payouts go through a regulated partner in each country.</div>
+    <div class="step"><div class="k">5</div><b>HIFI on HiFi Chain</b>HIFI replaces practice TREND for rewards (page <span data-ref="p-chain"></span>).</div>
+  </div>
+
+  <h2>Fair-play rules</h2>
+  <div class="g2">
+    <ul class="tick small">
+      <li><b>Daily caps</b> on every social-to-earn action.</li>
+      <li><b>A repost pays once</b>: undoing and reposting does not pay twice.</li>
+      <li><b>Money coming in from chat</b> has a daily ceiling.</li>
+      <li><b>Reputation comes from contribution</b>, not from buying followers.</li>
+    </ul>
+    <ul class="tick small">
+      <li><b>Honest words</b>: rates are "indicative", past rates are "past", nothing is "guaranteed".</li>
+      <li><b>Risk wording</b> and redemption terms on every staking product.</li>
+      <li><b>Real records only</b>: copy trading lists real accounts with their real record.</li>
+      <li><b>Practice is labelled</b> on every reward, receipt and balance.</li>
+    </ul>
+  </div>
+  <div class="note plain mt3"><b class="t">Taxes</b>Real earnings are taxable in most countries, and you are responsible for your own taxes. In India, for example, gains on virtual digital assets are taxed at 30%, and a 1% TDS applies to transfers. Before real payouts start, HiFi will provide annual statements to help with reporting. This is general information, not tax advice.</div>
+</section>
+
+<!-- ═════════════════════════ SECURITY 1 ═════════════════════════ -->
+<section class="page" id="p-security" data-sec="18 · Security, end to end" data-toc="18 Security, end to end" data-level="1">
+  <div class="band">
+    <div class="kicker">18 · Security, end to end <span class="new">New</span></div>
+    <h1>Seven layers, from your phone to the chain</h1>
+    <p class="lead">Security in HiFi is not one feature. It is a chain of checks from your device to the blockchain, and each link assumes the one before it might fail.</p>
+  </div>
+  <div class="layers">
+    <div class="layer"><div class="lh"><span>Layer 1</span><b>Your device</b></div><div class="lb"><span class="tag">Never asks for a recovery phrase</span><span class="tag">Wallet connect reads the public address only</span><span class="tag">Card details shown for 30 s, never stored</span><span class="tag">In-app dialogs, not browser pop-ups</span><span class="tag">Chats stay on the device</span></div></div>
+    <div class="layer"><div class="lh"><span>Layer 2</span><b>The connection</b></div><div class="lb"><span class="tag">HTTPS enforced for two years (HSTS)</span><span class="tag">Framing blocked, so no fake overlays</span><span class="tag">No content sniffing</span><span class="tag">Strict referrer</span><span class="tag">Camera, mic and location for HiFi only</span><span class="tag">Account data never cached</span><span class="tag">Content Security Policy</span></div></div>
+    <div class="layer"><div class="lh"><span>Layer 3</span><b>Sign-in</b></div><div class="lb"><span class="tag">Every sign-in token checked by the server</span><span class="tag">Google's published keys, audience, issuer, expiry</span><span class="tag">Sign out of every device</span><span class="tag">Unconfirmed email cannot touch a wallet</span><span class="tag">Fails closed: no setting means no access</span></div></div>
+    <div class="layer"><div class="lh"><span>Layer 4</span><b>Every request</b></div><div class="lb"><span class="tag">Rate limits per person and per address</span><span class="tag">Retry-safe money requests</span><span class="tag">Fields checked on the server</span><span class="tag">One error shape that says whether funds are safe</span></div></div>
+    <div class="layer"><div class="lh"><span>Layer 5</span><b>Money</b></div><div class="lb"><span class="tag">Double-entry ledger</span><span class="tag">Practice and live books never mix</span><span class="tag">Risk scoring</span><span class="tag">Compliance checks closed by default</span><span class="tag">Audit log</span></div></div>
+    <div class="layer"><div class="lh"><span>Layer 6</span><b>Signing</b></div><div class="lb"><span class="tag">A separate signing machine</span><span class="tag">It pulls work; nothing can push to it</span><span class="tag">Re-checks every withdrawal itself</span><span class="tag">Keys in hardware it cannot read</span></div></div>
+    <div class="layer"><div class="lh"><span>Layer 7</span><b>Watching</b></div><div class="lb"><span class="tag">Security log of refused sessions, limits and bad signatures</span><span class="tag">No personal data: hashed IDs, shortened addresses</span><span class="tag">A flood cannot flood the log</span></div></div>
+  </div>
+  <div class="g3 mt3">
+    <div class="card soft"><div class="top"><h3>Layers 1–5, 7</h3><span class="chip real">Real</span></div><p>Running in HiFi and its server today.</p></div>
+    <div class="card soft"><div class="top"><h3>Layer 6</h3><span class="chip ready">Ready</span></div><p>Built; waits for signing hardware and live custody.</p></div>
+    <div class="card soft"><div class="top"><h3>Encrypted chats</h3><span class="chip plan">Planned</span></div><p>End-to-end encryption, pages <span data-ref="p-e2e"></span>–<span data-ref="p-e2e2"></span>.</p></div>
+  </div>
+  <p class="tiny mt2">Part 1 (page 18) reports the automatic test run: 23 test suites, 1,423 checks, all passing.</p>
+</section>
+
+<!-- ═════════════════════════ SECURITY 2 ═════════════════════════ -->
+<section class="page" id="p-security2" data-sec="18 · Security, end to end" data-toc="Protecting your account" data-level="2">
+  <div class="kicker">18 · Security, end to end <span class="new">New</span></div>
+  <h1>Protecting your account</h1>
+  <p class="lead">Most accounts are lost through a stolen session, a phishing page or a fake support agent. Each protection below is aimed at one of those.</p>
+  <div class="g2">
+    <div class="card"><div class="top"><h3><span class="ic green"><i data-i="idcard"></i></span>Sign-in the server checks itself</h3><span class="chip real">Real</span></div>
+      <p>The app sends the sign-in token it already holds, and the HiFi server checks it the way Firebase documents for any server: the right signature from Google's published keys, the right project and issuer, not expired. Then two things the token alone cannot say: was this session ended by <b>"sign out of every device"</b>, and is the email confirmed?</p></div>
+    <div class="card"><div class="top"><h3><span class="ic green"><i data-i="key"></i></span>Two-factor for withdrawals</h3><span class="chip ready">Ready</span></div>
+      <ul class="b"><li>An authenticator app code (TOTP) on every withdrawal</li><li>The secret is sealed with AES-256-GCM and bound to your account, so a copied secret will not work on another account</li><li>5 wrong codes lock it for 15 minutes; each code works once</li><li>Turning two-factor off needs a valid code</li><li>Withdrawals stay closed for 24 hours after two-factor is set up or changed</li></ul></div>
+    <div class="card"><div class="top"><h3><span class="ic green"><i data-i="eye"></i></span>Prove it is you, at the right moments</h3><span class="chip real">Real</span></div>
+      <p>Showing card details, unfreezing a card, raising a limit or turning a control back on asks for your password or a fresh Google or Apple sign-in. <b>Protective actions ask nothing</b>: freezing a card or reporting it lost is instant, because a thief gains nothing from them and you may be in a hurry.</p></div>
+    <div class="card"><div class="top"><h3><span class="ic green"><i data-i="laptop"></i></span>Devices, sessions and alerts</h3><span class="chip real">Real</span></div>
+      <p>See your devices and login activity, sign out everywhere, and turn on <b>new login alerts</b> (a sign-in from a device the account has not seen) and <b>security alerts</b> (password changes and new login methods).</p></div>
+    <div class="card"><div class="top"><h3><span class="ic green"><i data-i="eyeoff"></i></span>Zero-knowledge keys</h3><span class="chip real">Real</span></div>
+      <p>Recovery phrases and private keys are never sent to HiFi. There is deliberately <b>no "import by recovery phrase"</b> screen: a page asking for one cannot be told apart from a phishing page, and a real wallet never needs one to connect.</p></div>
+    <div class="card"><div class="top"><h3><span class="ic green"><i data-i="alert"></i></span>Phishing defences</h3><span class="chips"><span class="chip real">Real</span><span class="chip plan">Planned</span></span></div>
+      <p>Framing is blocked, so no site can lay a fake HiFi over the real one. HiFi Pay warns about look-alike handles, and sending warns about look-alike addresses and network mismatches. <b>Planned:</b> a personal anti-phishing code shown in every HiFi email and in the app.</p></div>
+  </div>
+  <div class="quote mt3">"HiFi never asks for a recovery phrase or a private key, and nobody from support ever will. Anyone who does is not us."<small>Settings → Security</small></div>
+  <div class="note plain mt2"><b class="t">Coming in the Security Center</b><span class="chip plan">Planned</span> Two-factor and passkeys at sign-in (Settings says "not built yet" today; two-factor exists for withdrawals), the anti-phishing code, a saved-address list where a new address can only be used after 24 hours, limits, and one activity log, all on one page.</div>
+</section>
+
+<!-- ═════════════════════════ SECURITY 3 ═════════════════════════ -->
+<section class="page" id="p-security3" data-sec="18 · Security, end to end" data-toc="Protecting your money" data-level="2">
+  <div class="kicker">18 · Security, end to end <span class="new">New</span></div>
+  <h1>Protecting your money</h1>
+  <p class="lead">The rules for money assume that anything can fail: the connection, the browser, even the web server. A withdrawal has to pass every check below, and the signing machine repeats the important ones itself.</p>
+
+  <h3><span class="i" data-i="send"></span>The journey of a withdrawal</h3>
+  <div class="steps wrap4 mt1" style="font-size:7.8pt">
+    <div class="step"><div class="k">1</div><b>Request</b>amount, coin, address</div>
+    <div class="step"><div class="k">2</div><b>Address check</b>network and checksum, on the server</div>
+    <div class="step"><div class="k">3</div><b>Fee quote</b>read from the chain</div>
+    <div class="step"><div class="k">4</div><b>Two-factor</b>a fresh code</div>
+    <div class="step"><div class="k">5</div><b>Risk score</b>allow, hold or block</div>
+    <div class="step"><div class="k">6</div><b>Funds held</b>then queued</div>
+    <div class="step"><div class="k">7</div><b>Signer re-checks</b>its own rules and limits</div>
+    <div class="step"><div class="k">8</div><b>Broadcast</b>only the hash comes back</div>
+  </div>
+
+  <div class="g2 mt3">
+    <div>
+      <h3><span class="i" data-i="alert"></span>Risk scoring</h3>
+      <p class="small">Does this action look like it is being done <i>to</i> someone? Each signal adds points:</p>
+      <table class="t compact">
+        <tr><th>Signal</th><th class="num">Points</th></tr>
+        <tr><td>A new device, then money out soon after</td><td class="num">+40</td></tr>
+        <tr><td>Many actions in a short time</td><td class="num">+30</td></tr>
+        <tr><td>Two-factor changed in the last day</td><td class="num">+30</td></tr>
+        <tr><td>A destination never used before</td><td class="num">+25</td></tr>
+        <tr><td>A large amount for this account</td><td class="num">+25</td></tr>
+      </table>
+      <div class="bar mt2"><div style="width:50%;background:var(--built)">Under 50 · allow</div><div style="width:30%;background:#E59A00">50–79 · hold</div><div style="width:20%;background:var(--red)">80+ · block</div></div>
+      <p class="tiny mt1">A held action tells you why. Every reason is kept, so a hold can always explain itself.</p>
+    </div>
+    <div>
+      <h3><span class="i" data-i="refresh"></span>The same payment cannot go twice</h3>
+      <p class="small">Every money request carries a one-time key. If the connection drops and the app tries again, the server recognises the key:</p>
+      <table class="t compact">
+        <tr><td>Same key, same request, finished</td><td>the first answer again, not a second payment</td></tr>
+        <tr><td>Same key, still running</td><td>"in progress", nothing new starts</td></tr>
+        <tr><td>Same key, different request</td><td>refused</td></tr>
+      </table>
+      <h3 class="mt2"><span class="i" data-i="layers"></span>Two books that never touch</h3>
+      <p class="small">Every account and every ledger line belongs to the <b>practice</b> book or the <b>live</b> book, and the ledger refuses any movement between them. Practice money can never become money you can withdraw.</p>
+    </div>
+  </div>
+
+  <div class="g2 mt2">
+    <div class="card soft"><div class="top"><h3><span class="i" data-i="shieldok"></span>Compliance, closed by default</h3><span class="chip ready">Ready</span></div><p>Identity checks, sanctions screening, transaction monitoring and Travel Rule data are slots in the server. An empty slot refuses every live action. There is no "skip compliance" switch, and the server never trusts a level or country the app sends.</p></div>
+    <div class="card soft"><div class="top"><h3><span class="i" data-i="cpu"></span>Why the signer is separate</h3><span class="chip ready">Ready</span></div><p>The web server can approve a withdrawal and hold the funds, but it cannot sign one. The signer runs on another machine, listens on no port and asks a hardware device for the signature. Someone who breaks into the web server can add a row to a queue, and nothing more.</p></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ SECURITY 4 · E2E ═════════════════════════ -->
+<section class="page" id="p-e2e" data-sec="18 · Security, end to end" data-toc="End-to-end encryption for chats and calls" data-level="2">
+  <div class="kicker">18 · Security, end to end · End-to-end encryption <span class="new">New</span></div>
+  <h1>End-to-end encryption for chats and calls</h1>
+  <p class="lead">With end-to-end encryption, a message is locked on the sender's phone and only unlocked on the receiver's. HiFi's servers carry it, but cannot read it, and neither can anyone who breaks into them.</p>
+  <div class="note honest mb3"><b class="t"><span class="chip plan">Planned</span> &nbsp;Where this stands today</b>Today chats are kept only in your browser: they are never sent to HiFi's servers, and they are <b>not</b> end-to-end encrypted. Settings says exactly that. This design switches on as chats move to servers for delivery and multi-device sync, so that no message ever reaches a HiFi server in a readable form.</div>
+
+  <h3><span class="i" data-i="lock"></span>How a message travels</h3>
+  <svg viewBox="0 0 600 150" style="width:100%;margin:1.5mm 0 2mm">
+    <defs><linearGradient id="eg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FFC21A"/></linearGradient>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0B0E1A"/></marker></defs>
+    <rect x="6" y="20" width="150" height="110" rx="14" fill="#fff" stroke="#0B0E1A" stroke-width="1.5"/>
+    <text x="81" y="44" text-anchor="middle" font-size="12" font-weight="800">Your phone</text>
+    <text x="81" y="64" text-anchor="middle" font-size="9" fill="#565C73">"See you at 8?"</text>
+    <rect x="26" y="76" width="110" height="24" rx="12" fill="url(#eg)"/><text x="81" y="92" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">Locked here</text>
+    <text x="81" y="118" text-anchor="middle" font-size="8" fill="#565C73">private key never leaves</text>
+    <rect x="225" y="20" width="150" height="110" rx="14" fill="#0B0E1A"/>
+    <text x="300" y="44" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">HiFi relay</text>
+    <text x="300" y="66" text-anchor="middle" font-size="9" fill="#FFC21A" font-family="JetBrains Mono">7f3a·c91e·04bd·…</text>
+    <text x="300" y="88" text-anchor="middle" font-size="8.5" fill="#B9BDD3">sees locked bytes and</text>
+    <text x="300" y="100" text-anchor="middle" font-size="8.5" fill="#B9BDD3">delivery time only</text>
+    <text x="300" y="118" text-anchor="middle" font-size="8.5" fill="#FF8A8A" font-weight="700">cannot read it</text>
+    <rect x="444" y="20" width="150" height="110" rx="14" fill="#fff" stroke="#0B0E1A" stroke-width="1.5"/>
+    <text x="519" y="44" text-anchor="middle" font-size="12" font-weight="800">Their phone</text>
+    <rect x="464" y="56" width="110" height="24" rx="12" fill="url(#eg)"/><text x="519" y="72" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">Unlocked here</text>
+    <text x="519" y="98" text-anchor="middle" font-size="9" fill="#565C73">"See you at 8?"</text>
+    <text x="519" y="118" text-anchor="middle" font-size="8" fill="#565C73">new key for every message</text>
+    <line x1="160" y1="75" x2="219" y2="75" stroke="#0B0E1A" stroke-width="1.5" marker-end="url(#ar)"/>
+    <line x1="379" y1="75" x2="438" y2="75" stroke="#0B0E1A" stroke-width="1.5" marker-end="url(#ar)"/>
+  </svg>
+
+  <h3><span class="i" data-i="layers"></span>Built from published, audited protocols, not home-made cryptography</h3>
+  <table class="t compact mt1">
+    <tr><th style="width:24%">Part</th><th>What it does</th><th style="width:26%">Standard</th></tr>
+    <tr><td><b>Device keys</b></td><td>Each phone or computer makes its own identity keys. The private key never leaves the device.</td><td>Curve25519 / Ed25519</td></tr>
+    <tr><td><b>Starting a chat</b></td><td>Two devices agree on a secret, even if one is offline, with a post-quantum layer so recorded messages stay safe from future quantum computers.</td><td>PQXDH (X3DH + ML-KEM), as used by Signal</td></tr>
+    <tr><td><b>Every message</b></td><td>A new key per message. A stolen key cannot read old messages, and the conversation heals itself after a break-in.</td><td>Double Ratchet</td></tr>
+    <tr><td><b>Groups and communities</b></td><td>Efficient group keys that scale to large groups and change when someone leaves.</td><td>MLS, IETF RFC 9420</td></tr>
+    <tr><td><b>Photos, video, voice notes</b></td><td>Each file is locked with its own key, which travels inside the encrypted message.</td><td>AES-256-GCM</td></tr>
+    <tr><td><b>Voice and video calls</b></td><td>Real calls between people, with keys agreed end to end; the signalling server cannot hear or see them.</td><td>SRTP keys agreed end to end</td></tr>
+  </table>
+  <p class="tiny mt1">HiFi would use maintained, independently audited open-source libraries for these protocols, such as libsignal and OpenMLS, rather than writing its own.</p>
+</section>
+
+<!-- ═════════════════════════ SECURITY 5 · E2E 2 ═════════════════════════ -->
+<section class="page" id="p-e2e2" data-sec="18 · Security, end to end" data-toc="Verifying, recovering and paying privately" data-level="2">
+  <div class="kicker">18 · Security, end to end · End-to-end encryption <span class="new">New</span></div>
+  <h1>Verifying, recovering and paying privately</h1>
+  <p class="lead">Encryption is only as good as the keys behind it. These are the parts that let you check who you are talking to, keep your history across phones, and send money inside an encrypted chat.</p>
+  <div class="g3">
+    <div class="card"><h3><span class="ic"><i data-i="qr"></i></span>Safety codes</h3><p>Compare a 60-digit code, or scan each other's QR code in chat details, to confirm nobody is in the middle. HiFi warns you when a contact's key changes.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="laptop"></i></span>Several devices</h3><p>Each device has its own keys. A new device is linked by scanning a QR code from one you already use, never by a password alone.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="storage"></i></span>Encrypted backups</h3><p>Backups are locked with a key only you hold, such as a passphrase or passkey. HiFi cannot read or reset it, so a forgotten key means a lost backup.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="clock"></i></span>Disappearing messages</h3><p>Already a per-chat setting today. With encryption, both devices enforce the timer.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="eyeoff"></i></span>Less metadata</h3><p>Sealed sender: the server delivers a message without learning who sent it. Finding contacts uses private lookup, and logs are kept to a minimum.</p></div>
+    <div class="card"><h3><span class="ic"><i data-i="flag"></i></span>Reporting abuse</h3><p>You can forward the messages you choose to moderators. Reporting is your choice; HiFi does not scan the content of encrypted chats.</p></div>
+  </div>
+
+  <h2>Crypto inside an encrypted chat</h2>
+  <div class="g2">
+    <div class="card soft"><p>The <b>payment card</b> travels inside the encrypted message, so nobody else can see the note or who it was for. The <b>payment itself</b> is still decided by HiFi's ledger, or by HiFi Chain later, and the card carries a <b>signed receipt</b>. A forged "I paid you" card fails the signature check and shows as unverified.</p></div>
+    <table class="t compact">
+      <tr><th>Once encryption is on, HiFi servers…</th><th class="num">See it?</th></tr>
+      <tr><td>Message text, photos, video, voice notes</td><td class="num"><span class="chip warn" style="color:var(--red);background:#FDE8EA">No</span></td></tr>
+      <tr><td>Call audio and video</td><td class="num"><span class="chip" style="color:var(--red);background:#FDE8EA">No</span></td></tr>
+      <tr><td>Who sent a message (sealed sender)</td><td class="num"><span class="chip device">Minimised</span></td></tr>
+      <tr><td>That a message was delivered, and when</td><td class="num"><span class="chip real">Yes</span></td></tr>
+      <tr><td>Payment amounts (the ledger must)</td><td class="num"><span class="chip real">Yes</span></td></tr>
+      <tr><td>Posts in public communities</td><td class="num"><span class="chip real">Yes, public</span></td></tr>
+    </table>
+  </div>
+
+  <h2>Rollout plan</h2>
+  <div class="steps">
+    <div class="step"><div class="k">1</div><b>Message server</b>Chats move to servers, encrypted from the first day.</div>
+    <div class="step"><div class="k">2</div><b>One-to-one chats</b>Device keys, safety codes, key-change warnings.</div>
+    <div class="step"><div class="k">3</div><b>Groups and rooms</b>MLS for groups and private community rooms.</div>
+    <div class="step"><div class="k">4</div><b>Calls</b>Real voice and video calls, end to end.</div>
+    <div class="step"><div class="k">5</div><b>Backups, devices</b>Encrypted backups and linked devices.</div>
+    <div class="step"><div class="k">6</div><b>Independent audit</b>An outside audit, with the report and a whitepaper published.</div>
+  </div>
+  <p class="small muted mt2">Large public community channels stay public by design, and are labelled as public so nobody mistakes them for private rooms.</p>
+</section>
+
+<!-- ═════════════════════════ MOBILE 1 ═════════════════════════ -->
+<section class="page" id="p-mobile" data-sec="19 · HiFi on mobile" data-toc="19 HiFi on mobile" data-level="1">
+  <div class="band">
+    <div class="kicker">19 · HiFi on mobile <span class="new">New</span></div>
+    <h1>HiFi on your phone</h1>
+    <p class="lead">HiFi is designed phone-first. Open it in your phone's browser, add it to your home screen, and it opens full screen with its own icon, like any other app. Part 1 showed the screens on a computer; this chapter shows them on a phone.</p>
+  </div>
+  <div class="g32">
+    <div>
+      <h3><span class="i" data-i="phone"></span>Install it in ten seconds</h3>
+      <table class="t compact mt1 mb2">
+        <tr><td style="width:24%"><b>Android</b></td><td>Open HiFi in Chrome → menu <b>⋮</b> → <b>Install app</b> or <b>Add to Home screen</b></td></tr>
+        <tr><td><b>iPhone</b></td><td>Open HiFi in Safari → <b>Share</b> → <b>Add to Home Screen</b></td></tr>
+      </table>
+      <div class="row mb2"><span class="chip real">Real</span><span class="small">Installable web app with its own icon and full-screen window</span></div>
+      <div class="row mb3"><span class="chip plan">Planned</span><span class="small">Native apps in the Google Play Store and Apple App Store</span></div>
+
+      <h3><span class="i" data-i="apps"></span>The bottom bar</h3>
+      <p class="small">Five main pages, plus Search and More. Everything else, including Crypto Market, Trade, P2P, Assets and Earn, is one tap away under <b>More</b>, together with your account. Settings are in the ☰ menu on your profile.</p>
+      <table class="t compact">
+        <tr><td style="width:24%"><span class="i" data-i="home"></span> <b>Home</b></td><td>balance, quick actions, stories, feed</td></tr>
+        <tr><td><span class="i" data-i="search"></span> <b>Search</b></td><td>one search for coins, creators, hashtags, posts</td></tr>
+        <tr><td><span class="i" data-i="shorty"></span> <b>Shorty</b></td><td>short videos, full screen</td></tr>
+        <tr><td><span class="i" data-i="chat"></span> <b>Chat</b></td><td>every conversation, Notes, crypto in chat</td></tr>
+        <tr><td><span class="i" data-i="groups"></span> <b>Community</b></td><td>your communities and discovery</td></tr>
+        <tr><td><span class="i" data-i="person"></span> <b>Profile</b></td><td>you, your money summary, ☰ Settings</td></tr>
+        <tr><td><span class="i" data-i="apps"></span> <b>More</b></td><td>markets, trading, P2P, assets, earn</td></tr>
+      </table>
+    </div>
+    <div class="pcol" style="width:auto;align-items:flex-end">
+      <div class="phone">
+        <div class="scr">
+          <div class="ahdr"><span class="w"></span><span class="acts"><i data-i="bell"></i><i data-i="menu"></i></span></div>
+          <div class="sbody">
+            <div class="m-card"><div class="m-s">Total balance · Practice</div><div class="m-big">$1,250.40</div></div>
+            <div class="m-line" style="width:70%"></div><div class="m-line" style="width:50%"></div>
+            <div class="m-img" style="height:20mm"></div>
+          </div>
+          <div class="m-scrim"></div>
+          <div class="m-sheet" style="bottom:9.6mm">
+            <div class="grab"></div>
+            <div class="m-row"><span class="m-av s" style="background:#FF8A00">AV</span><div><div class="m-t">Asha Varma</div><div class="m-s">@asha · View profile</div></div></div>
+            <div class="m-grid3" style="margin-top:1mm">
+              <div class="m-tile"><i data-i="chart"></i>Crypto Market</div>
+              <div class="m-tile"><i data-i="trend"></i>Trade</div>
+              <div class="m-tile"><i data-i="swap"></i>P2P</div>
+              <div class="m-tile"><i data-i="wallet"></i>Assets</div>
+              <div class="m-tile"><i data-i="percent"></i>Earn</div>
+              <div class="m-tile"><i data-i="card"></i>Card</div>
+            </div>
+          </div>
+          <div class="pnav" data-on="more" style="position:relative;z-index:5"></div>
+        </div>
+      </div>
+      <div class="pcap" style="width:54mm"><b><span class="k">↑</span>The More sheet</b><span>Markets, Trade, P2P, Assets and Earn, plus your account at the top.</span></div>
+    </div>
+  </div>
+
+  <h2>Made for touch</h2>
+  <div class="g4 small">
+    <div class="card soft"><b>In-app dialogs</b><br>No browser pop-ups that look like system errors.</div>
+    <div class="card soft"><b>Keyboard aware</b><br>The bottom bar steps aside while you type.</div>
+    <div class="card soft"><b>Tap, not hover</b><br>Tap a community message for its tools.</div>
+    <div class="card soft"><b>Big targets</b><br>Buttons at least 44 px tall, easy to hit.</div>
+    <div class="card soft"><b>Light and dark</b><br>Every screen works in both, or follows your phone.</div>
+    <div class="card soft"><b>Notches and edges</b><br>Content stays clear of the notch and home bar.</div>
+    <div class="card soft"><b>Screen readers</b><br>Status changes are announced.</div>
+    <div class="card soft"><b>203 languages</b><br>35 fully translated, right-to-left included.</div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ MOBILE 2 · GET STARTED ═════════════════════════ -->
+<section class="page" id="p-mobile2" data-sec="19 · HiFi on mobile" data-toc="Getting started" data-level="2">
+  <div class="kicker">19 · HiFi on mobile · Walkthrough 1 of 5</div>
+  <h1>Getting started</h1>
+  <p class="lead">Sign up, land on Home, and find your money summary on your profile. Part 1 shows the same journey as a flow chart on page 6.</p>
+  <div class="phones">
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="sbody" style="justify-content:flex-start;gap:2mm;padding-top:5mm">
+          <div style="text-align:center"><img src="hifi-logo-ink.png" style="height:10mm"></div>
+          <div style="text-align:center"><div class="m-t" style="font-size:9px">Create account</div><div class="m-s">Your profile and posts follow you to any device</div></div>
+          <div class="m-btn o m-row" style="justify-content:center"><b style="color:#4285F4">G</b>&nbsp;Continue with Google</div>
+          <div class="m-btn o m-row" style="justify-content:center"><b></b>&nbsp;Continue with Apple</div>
+          <div class="m-btn o m-row" style="justify-content:center"><i data-i="phone"></i>&nbsp;Continue with phone</div>
+          <div class="m-s" style="text-align:center">or with email</div>
+          <div class="m-in">you@example.com</div>
+          <div class="m-in">Password</div>
+          <div class="m-row" style="align-items:flex-start"><span style="width:2.6mm;height:2.6mm;border-radius:1mm;background:#FCD535;flex:none;margin-top:.3mm"></span><span class="m-s" style="color:#0F1118">I am 18 or older and agree to the Terms and the Privacy notice</span></div>
+          <div class="m-btn p">Create account</div>
+          <div class="m-s" style="text-align:center">Browse as a guest</div>
+        </div>
+      </div></div>
+      <div class="pcap"><b><span class="k">1</span>Create an account</b><span>Google, Apple, phone or email. You confirm you are 18+ and agree to the Terms; an email account confirms its address before it can use the wallet.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="w"></span><span class="acts"><i data-i="bell"></i><i data-i="menu"></i></span></div>
+        <div class="sbody">
+          <div class="m-card"><div class="m-row m-sp"><span class="m-s">Total balance</span><span class="m-chip" style="background:#FFF1BF;color:#8A6400">Practice</span></div><div class="m-big">$1,250.40</div>
+            <div class="m-grid3" style="margin-top:1.2mm"><div class="m-btn p">Add funds</div><div class="m-btn">P2P</div><div class="m-btn">Send</div></div></div>
+          <div class="m-chipr"><span class="m-chip">BTC <b class="m-ok">+1.2%</b></span><span class="m-chip">ETH <b class="m-ok">+0.8%</b></span><span class="m-chip">SOL <b style="color:#D93A4A">−0.4%</b></span></div>
+          <div class="m-row" style="gap:1.2mm">
+            <div class="m-story"><i class="star"><span style="background:#FF8A00"></span></i>You</div>
+            <div class="m-story"><i class="star"><span style="background:#4A5068"></span></i>Ravi</div>
+            <div class="m-story"><i class="heart"><span style="background:#0C8F5E"></span></i>Mei</div>
+            <div class="m-story"><i class="star"><span style="background:#2563D9"></span></i>Sam</div>
+            <div class="m-story"><i class="star"><span style="background:#D93A4A"></span></i>Nadia</div>
+          </div>
+          <div class="m-chipr"><span class="m-chip on">Discover</span><span class="m-chip">Following</span><span class="m-chip">Crypto</span><span class="m-chip">Stocks</span></div>
+          <div class="m-card"><div class="m-row"><span class="m-av s" style="background:#2563D9">SO</span><div><div class="m-t">Sam Okafor</div><div class="m-s">2h · Follow</div></div></div>
+            <div style="margin:1mm 0">Sunset run with the crew 🌅</div><div class="m-img" style="height:14mm"></div>
+            <div class="m-row m-sp m-s" style="margin-top:1mm"><span>♥ 248</span><span>💬 31</span><span>↻ 12</span><span style="color:#C77700;font-weight:800">₮ Tip</span></div></div>
+        </div>
+        <div class="pnav" data-on="home"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">2</span>Home</b><span>Your balance and quick actions on top, then stories in the shape each person picked, then the feed. Every post can be tipped.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="ttl">@asha</span><span class="acts"><i data-i="bell"></i><i data-i="menu"></i></span></div>
+        <div class="sbody">
+          <div class="m-row"><span class="m-av l" style="background:linear-gradient(135deg,#FF5A1F,#FFC21A)">AV</span>
+            <div style="flex:1;display:flex;justify-content:space-around;text-align:center"><div><div class="m-t">42</div><div class="m-s">Posts</div></div><div><div class="m-t">1.2K</div><div class="m-s">Followers</div></div><div><div class="m-t">380</div><div class="m-s">Following</div></div></div></div>
+          <div><div class="m-t">Asha Varma</div><div class="m-s">Designer · Mumbai · hifi.link/asha</div></div>
+          <div class="m-grid2"><div class="m-btn">Edit profile</div><div class="m-btn">Share</div></div>
+          <div class="m-row" style="gap:1.6mm"><div class="m-story"><i><span style="background:#FFC21A"></span></i>Travel</div><div class="m-story"><i><span style="background:#0C8F5E"></span></i>Work</div><div class="m-story"><i style="background:#E3E5EE"><span style="background:#fff;border-color:#fff"></span></i>New</div></div>
+          <div class="m-card"><div class="m-row m-sp"><span class="m-s">Money · Practice</span><span class="m-s">Assets · Wallet · Staked</span></div><div class="m-big">$1,250.40</div>
+            <div class="m-grid4" style="margin-top:1.2mm">
+              <div class="m-tile"><i data-i="send"></i>Send</div><div class="m-tile"><i data-i="receive"></i>Receive</div><div class="m-tile"><i data-i="scan"></i>Scan</div><div class="m-tile"><i data-i="swap"></i>Swap</div>
+              <div class="m-tile"><i data-i="trend"></i>Trade</div><div class="m-tile"><i data-i="percent"></i>Earn</div><div class="m-tile"><i data-i="handshake"></i>P2P</div><div class="m-tile"><i data-i="card"></i>Card</div>
+            </div></div>
+        </div>
+        <div class="pnav" data-on="profile"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">3</span>Profile</b><span>Your posts and highlights, and a money summary with one-tap Send, Receive, Scan, Swap, Trade, Earn, P2P and Card.</span></div>
+    </div>
+  </div>
+  <div class="note plain mt3"><b class="t">Tips for your first five minutes</b>Pick your language in Settings (203 to choose from). Choose your story shape in the story composer. Turn on new login alerts in Settings → Security. And remember: HiFi will never ask for a recovery phrase.</div>
+</section>
+
+<!-- ═════════════════════════ MOBILE 3 · CREATE & SHORTY ═════════════════════════ -->
+<section class="page" id="p-mobile3" data-sec="19 · HiFi on mobile" data-toc="Create and Shorty" data-level="2">
+  <div class="kicker">19 · HiFi on mobile · Walkthrough 2 of 5</div>
+  <h1>Create and Shorty</h1>
+  <p class="lead">One + button for every kind of post, a real camera studio for short video, and a full-screen player where fans can tip.</p>
+  <div class="phones">
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="w"></span><span class="acts"><i data-i="plus"></i><i data-i="bell"></i></span></div>
+        <div class="sbody"><div class="m-card"><div class="m-big">$1,250.40</div></div><div class="m-img" style="height:30mm"></div></div>
+        <div class="m-scrim"></div>
+        <div class="m-sheet">
+          <div class="grab"></div>
+          <div class="m-t" style="font-size:8.5px">Create</div>
+          <div class="m-grid3">
+            <div class="m-tile"><i data-i="doc"></i>Post</div><div class="m-tile"><i data-i="star"></i>Story</div><div class="m-tile"><i data-i="shorty"></i>Shorty</div>
+            <div class="m-tile"><i data-i="play"></i>Video</div><div class="m-tile"><i data-i="chart"></i>Poll</div><div class="m-tile"><i data-i="live"></i>Live</div>
+          </div>
+          <div class="m-s">Drafts are saved on this device and come back when you reopen.</div>
+        </div>
+      </div></div>
+      <div class="pcap"><b><span class="k">1</span>Tap +</b><span>Post, Story, Shorty, Video, Poll or Live. One picker, camera, filters, captions with #hashtags and @mentions, and an audience choice for each.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr dark">
+        <div class="sbody" style="padding:0;position:relative">
+          <div style="position:absolute;inset:0;background:linear-gradient(160deg,#3B2A1F,#14161F 60%,#0B0D14)"></div>
+          <div style="position:absolute;left:3mm;right:3mm;top:2mm;display:flex;gap:1mm"><i style="flex:3;height:1mm;border-radius:99px;background:#FFC21A"></i><i style="flex:2;height:1mm;border-radius:99px;background:#FFC21A"></i><i style="flex:5;height:1mm;border-radius:99px;background:rgba(255,255,255,.25)"></i></div>
+          <div style="position:absolute;top:5mm;left:3mm;right:3mm;display:flex;justify-content:space-between;font-weight:800"><span>✕</span><span>♪ Add music</span><span>⏱ 3s</span></div>
+          <div style="position:absolute;right:3mm;top:13mm;display:flex;flex-direction:column;gap:2.4mm;align-items:center;font-size:5.6px;font-weight:700"><span>⟲<br>Flip</span><span>1×<br>Speed</span><span>✦<br>Filters</span><span>⏲<br>Timer</span></div>
+          <div style="position:absolute;bottom:22mm;left:0;right:0;display:flex;justify-content:center;gap:1.4mm"><span class="m-chip">15s</span><span class="m-chip on">30s</span><span class="m-chip">60s</span><span class="m-chip">3m</span></div>
+          <div style="position:absolute;bottom:6mm;left:0;right:0;display:flex;justify-content:space-around;align-items:center">
+            <span class="m-img" style="width:7mm;height:7mm;border-radius:2mm"></span>
+            <span style="width:13mm;height:13mm;border-radius:50%;border:1mm solid #fff;display:flex;align-items:center;justify-content:center"><i style="width:9mm;height:9mm;border-radius:50%;background:#FF5A1F;display:block"></i></span>
+            <span class="m-btn p" style="padding:1.2mm 2.4mm">Next</span>
+          </div>
+        </div>
+      </div></div>
+      <div class="pcap"><b><span class="k">2</span>Shorty Studio</b><span>Record in segments (hold or hands-free), pick 15 s to 3 min, set speed, timer and filters, or import. Then trim, add text, stickers, music and voice.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr dark">
+        <div class="sbody" style="padding:0;position:relative">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,#1F3A5A 0%,#E07A3A 55%,#2A1A12 100%)"></div>
+          <div style="position:absolute;top:2mm;left:0;right:0;display:flex;justify-content:center;gap:2.4mm;font-weight:800;font-size:6.4px"><span style="opacity:.7">Following</span><span>For You</span><span style="opacity:.7">Popular</span></div>
+          <div style="position:absolute;right:2.4mm;bottom:12mm;display:flex;flex-direction:column;gap:3mm;align-items:center;font-size:5.6px;font-weight:800">
+            <span style="text-align:center">♥<br>12.4K</span><span style="text-align:center">💬<br>318</span><span style="text-align:center">↗<br>Share</span>
+            <span style="text-align:center"><i style="width:7mm;height:7mm;border-radius:50%;background:#FCD535;color:#1A1400;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:8px">₮</i>Tip</span>
+          </div>
+          <div style="position:absolute;left:3mm;right:14mm;bottom:5mm">
+            <div class="m-row"><span class="m-av s" style="background:#0C8F5E">MD</span><b>@mira.dance</b><span class="m-chip" style="background:#FCD535;color:#1A1400">Subscribe</span></div>
+            <div style="margin-top:1mm">Rooftop routine, take 7 #dance</div>
+            <div class="m-s" style="color:#E6E8F2">♪ Original audio · mira.dance</div>
+          </div>
+        </div>
+        <div class="pnav" data-on="shorty"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">3</span>Watch and tip</b><span>Swipe up for the next short. Double-tap to like. The coin button tips the creator in crypto without leaving the video.</span></div>
+    </div>
+  </div>
+  <h2>Gestures worth knowing</h2>
+  <table class="t compact">
+    <tr><td style="width:30%"><b>Swipe up / down</b></td><td>next or previous short; only the one on screen plays</td><td style="width:30%"><b>Double-tap a short</b></td><td>like it</td></tr>
+    <tr><td><b>Tap a story circle</b></td><td>watch; it moves on by itself</td><td><b>Long-press a highlight</b></td><td>edit or delete it</td></tr>
+    <tr><td><b>Pull up on Home</b></td><td>slide the feed over the dashboard</td><td><b>Tap a chat's name</b></td><td>open its details page</td></tr>
+  </table>
+</section>
+
+<!-- ═════════════════════════ MOBILE 4 · CHAT ═════════════════════════ -->
+<section class="page" id="p-mobile4" data-sec="19 · HiFi on mobile" data-toc="Chat and crypto in chat" data-level="2">
+  <div class="kicker">19 · HiFi on mobile · Walkthrough 3 of 5</div>
+  <h1>Chat, and crypto in chat</h1>
+  <p class="lead">Every conversation in one list, payments that sit inside the thread, and one panel for all eight crypto tools (chapter 14).</p>
+  <div class="phones">
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="ttl">Chats</span><span class="acts"><i data-i="search"></i><i data-i="plus"></i></span></div>
+        <div class="sbody">
+          <div class="m-row" style="gap:1.6mm">
+            <div class="m-story"><i style="background:#E3E5EE"><span style="background:#fff"></span></i>Your note</div>
+            <div class="m-story"><i><span style="background:#2563D9"></span></i>Sam</div>
+            <div class="m-story"><i><span style="background:#0C8F5E"></span></i>Mei</div>
+            <div class="m-story"><i><span style="background:#D93A4A"></span></i>Nadia</div>
+          </div>
+          <div class="m-chipr"><span class="m-chip on">All</span><span class="m-chip">Chats</span><span class="m-chip">Groups</span><span class="m-chip">Channels</span><span class="m-chip">Bots</span></div>
+          <div class="m-row"><span class="m-av" style="background:#FF8A00">PA</span><div style="flex:1"><div class="m-row m-sp"><span class="m-t">Priya Anand</span><span class="m-s">9:40</span></div><div class="m-s">You sent 25 USDT ✓✓</div></div></div>
+          <div class="m-row"><span class="m-av" style="background:#4A5068">WT</span><div style="flex:1"><div class="m-row m-sp"><span class="m-t">Weekend trip</span><span class="m-s">9:12</span></div><div class="m-s">Split bill · $120 · 2 of 4 paid</div></div></div>
+          <div class="m-row"><span class="m-av" style="background:#F7931A">₿</span><div style="flex:1"><div class="m-row m-sp"><span class="m-t">Bitcoin Builders</span><span class="m-s">8:55</span></div><div class="m-s"># general · Kenji: testnet is up</div></div></div>
+          <div class="m-row"><span class="m-av" style="background:#0B0E1A">CD</span><div style="flex:1"><div class="m-row m-sp"><span class="m-t">Crypto Desk</span><span class="m-s">bot</span></div><div class="m-s">BTC is up 1.2% today</div></div></div>
+          <div class="m-row"><span class="m-av" style="background:#C77700">🔖</span><div style="flex:1"><div class="m-t">Saved Messages</div><div class="m-s">Pay ID for rent</div></div></div>
+        </div>
+        <div class="pnav" data-on="chat"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">1</span>One inbox</b><span>Notes on top, then folders: All, Chats, Groups, Channels, Bots, Communities, Archived. Saved Messages is in the list too.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="m-row"><span>‹</span><span class="m-av s" style="background:#FF8A00">PA</span><span class="ttl">Priya</span></span><span class="acts"><i data-i="phone"></i><i data-i="more"></i></span></div>
+        <div class="sbody" style="background:#F1F2F6;padding-top:1.6mm">
+          <div class="m-bub">Dinner was great! How much do I owe you?</div>
+          <div class="m-bub me">25 USDT, sending you a request 🙂</div>
+          <div class="m-pay"><div class="m-row m-sp"><b>Payment · HiFi Pay</b><span class="m-chip" style="background:#FFF1BF;color:#8A6400">Practice</span></div><div class="m-big" style="color:#fff">25.00 USDT</div><div class="m-s">You → Priya · fee 0.00 · <span style="color:#7BE0B0">Confirmed</span></div><div class="m-s">Receipt in History</div></div>
+          <div class="m-card" style="border-color:#F2B8BF"><div class="m-row m-sp"><b style="color:#D93A4A">🧧 Gift packet</b><span class="m-s">3 of 5 left</span></div><div class="m-s">50 USDT for the group</div><div class="m-btn p" style="margin-top:1mm">Open packet</div></div>
+          <div class="m-bub">Thank you!! 🎉</div>
+        </div>
+        <div style="display:flex;gap:1.4mm;align-items:center;padding:1.4mm 2.4mm 3.4mm;background:#fff;border-top:1px solid #E3E5EE">
+          <span style="font-weight:800">+</span><span class="m-in" style="flex:1">Message</span><span style="width:5mm;height:5mm;border-radius:50%;background:#FCD535;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:7px">₮</span>
+        </div>
+      </div></div>
+      <div class="pcap"><b><span class="k">2</span>Payments in the thread</b><span>The coin button sits next to the message box. Payment cards show their status; the receipt is in History.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="ttl">Priya</span></div>
+        <div class="sbody"><div class="m-bub">Dinner was great!</div></div>
+        <div class="m-scrim"></div>
+        <div class="m-sheet">
+          <div class="grab"></div>
+          <div class="m-grid3">
+            <div class="m-tile"><i data-i="send"></i>Send</div><div class="m-tile"><i data-i="receive"></i>Request</div><div class="m-tile"><i data-i="gift"></i>Gift</div>
+            <div class="m-tile"><i data-i="split"></i>Split</div><div class="m-tile"><i data-i="chart"></i>Price</div><div class="m-tile"><i data-i="bell"></i>Alert</div>
+          </div>
+          <div class="m-card">
+            <div class="m-row"><span class="m-av s" style="background:#FF8A00">PA</span><div><div class="m-t">Priya Anand ✓</div><div class="m-s">@priya · name checked by HiFi</div></div></div>
+            <div class="m-big" style="margin:1mm 0">25.00 USDT</div>
+            <div class="m-row m-sp m-s"><span>Route</span><span>HiFi Pay</span></div>
+            <div class="m-row m-sp m-s"><span>Fee</span><span>0.00 USDT</span></div>
+            <div class="m-row m-sp"><b>Total</b><b>25.00 USDT</b></div>
+            <div class="m-row m-sp m-s"><span>Left after</span><span>975.00 USDT</span></div>
+          </div>
+          <div class="m-btn p">Approve · Practice</div>
+        </div>
+      </div></div>
+      <div class="pcap"><b><span class="k">3</span>Review, then approve</b><span>Pick a tool, enter the amount, and read who receives it, the route, the fee and the total before you approve.</span></div>
+    </div>
+  </div>
+  <div class="note good mt3"><b class="t">Before you approve, check three things</b>The name HiFi shows is the person you meant; the total is what you expect; and the label says Practice while HiFi uses practice money. A payment card in a chat is not proof of payment. The receipt in History is.</div>
+</section>
+
+<!-- ═════════════════════════ MOBILE 5 · COMMUNITY ═════════════════════════ -->
+<section class="page" id="p-mobile5" data-sec="19 · HiFi on mobile" data-toc="Communities on a phone" data-level="2">
+  <div class="kicker">19 · HiFi on mobile · Walkthrough 4 of 5</div>
+  <h1>Communities on a phone</h1>
+  <p class="lead">Find a community, enter its rooms, and take part in its decisions, including the crypto features from chapter 16.</p>
+  <div class="phones">
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="ttl">Communities</span><span class="acts"><i data-i="search"></i><i data-i="plus"></i></span></div>
+        <div class="sbody">
+          <div class="m-chipr"><span class="m-chip on">Discover</span><span class="m-chip">Joined</span><span class="m-chip">Trending</span><span class="m-chip">For You</span></div>
+          <div class="m-card"><div class="m-row"><span class="m-av" style="background:#F7931A">₿</span><div style="flex:1"><div class="m-t">Bitcoin Builders ✓</div><div class="m-s">48.2K members · 1.8K online</div></div><span class="m-btn p">Join</span></div><div class="m-s" style="margin-top:.8mm">Lightning, ordinals and everything shipping on Bitcoin.</div></div>
+          <div class="m-card"><div class="m-row"><span class="m-av" style="background:#627EEA">◆</span><div style="flex:1"><div class="m-t">Ethereum Core ✓</div><div class="m-s">62.8K members · 2.4K online</div></div><span class="m-btn">Joined</span></div><div class="m-s" style="margin-top:.8mm">EIPs, client releases and protocol research.</div></div>
+          <div class="m-card"><div class="m-row"><span class="m-av" style="background:#14C38E">⚡</span><div style="flex:1"><div class="m-t">Solana Speedrun</div><div class="m-s">Hackathons and tooling</div></div><span class="m-btn p">Join</span></div></div>
+          <div class="m-card"><div class="m-row"><span class="m-av" style="background:#D93A4A">🎨</span><div style="flex:1"><div class="m-t">Design Guild</div><div class="m-s">Paid · from $3/month · 7-day refund</div></div><span class="m-btn p">Join</span></div></div>
+          <div class="m-btn o">+ Start a community</div>
+        </div>
+        <div class="pnav" data-on="community"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">1</span>Discover and join</b><span>Free or paid communities. Paid ones show the price and the refund window before you join.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="m-row"><span>‹</span><span class="ttl">Bitcoin Builders</span></span><span class="acts"><i data-i="groups"></i></span></div>
+        <div class="sbody">
+          <div class="m-img" style="height:9mm;background:linear-gradient(120deg,#F7931A,#FFC21A)"></div>
+          <div class="m-s" style="font-weight:800;letter-spacing:.05em">START HERE</div>
+          <div class="m-row"><b>#</b> general</div>
+          <div class="m-row"><b>📢</b> announcements <span class="m-s">read-only</span></div>
+          <div class="m-row m-lock"><b>🔒</b> alpha <span class="m-s m-lock">needs 250 BUILD</span></div>
+          <div class="m-row"><b>#</b> dev &nbsp; <b>#</b> support</div>
+          <div class="m-s" style="font-weight:800;letter-spacing:.05em">VOICE</div>
+          <div class="m-row">🔊 Lounge <span class="m-s">· 4 in the room</span></div>
+          <div class="m-card"><div class="m-row m-sp"><b>Bounty</b><span class="m-chip" style="background:#FFF1BF;color:#8A6400">200 BUILD</span></div><div class="m-s">Translate the docs landing page · Medium</div><div class="m-btn p" style="margin-top:1mm">Claim when done</div></div>
+          <div class="m-row m-sp m-s"><span>Your BUILD: 120</span><span>Pass #128 ✓</span></div>
+        </div>
+        <div class="pnav" data-on="community"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">2</span>Inside a community</b><span>Channels by space. Gated rooms show what opens them, and bounties pay the community's token.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="m-row"><span>‹</span><span class="ttl">Governance</span></span></div>
+        <div class="sbody">
+          <div class="m-card"><div class="m-s">Proposal · ends in 3 days</div><div class="m-t" style="font-size:8px">Fund a monthly community call series</div><div class="m-s" style="margin-top:.6mm">Mode: reputation-weighted · quorum 40</div></div>
+          <div><div class="m-row m-sp"><b>For</b><span>62%</span></div><div class="m-prog"><i style="width:62%"></i></div></div>
+          <div><div class="m-row m-sp"><b>Against</b><span>28%</span></div><div class="m-prog"><i style="width:28%;background:#4A5068"></i></div></div>
+          <div><div class="m-row m-sp"><b>Abstain</b><span>10%</span></div><div class="m-prog"><i style="width:10%;background:#9AA0B8"></i></div></div>
+          <div class="m-row m-sp m-s"><span>57 votes</span><span class="m-ok">✓ quorum met</span></div>
+          <div class="m-grid3"><div class="m-btn p">For</div><div class="m-btn">Against</div><div class="m-btn">Abstain</div></div>
+          <div class="m-card"><div class="m-s">Verifiable history</div><div style="font-family:'JetBrains Mono';font-size:5.6px">a3f9…c21e → 7b04…19d2</div><div class="m-s">Anyone can recompute it</div></div>
+        </div>
+        <div class="pnav" data-on="community"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">3</span>Vote on proposals</b><span>See the mode, the quorum and the live result. Every step is recorded in a hash chain anyone can check.</span></div>
+    </div>
+  </div>
+  <h2>More you can do from a phone</h2>
+  <div class="g4 small">
+    <div class="card soft"><b>Claim a pass</b><br>Free and non-transferable, it lands in your Passport.</div>
+    <div class="card soft"><b>Buy in the marketplace</b><br>Pay in crypto; your wallet shows the address first.</div>
+    <div class="card soft"><b>Back a campaign</b><br>Crowdfunding with a goal and progress bar.</div>
+    <div class="card soft"><b>Run your community</b><br>Community Studio works on a phone too.</div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ MOBILE 6 · MONEY & SECURITY ═════════════════════════ -->
+<section class="page" id="p-mobile6" data-sec="19 · HiFi on mobile" data-toc="Money and security on a phone" data-level="2">
+  <div class="kicker">19 · HiFi on mobile · Walkthrough 5 of 5</div>
+  <h1>Money and security on a phone</h1>
+  <p class="lead">Pay someone by scanning their code, earn on idle coins, and lock down your account, all from the phone.</p>
+  <div class="phones">
+    <div class="pcol">
+      <div class="phone"><div class="scr dark">
+        <div class="ahdr"><span class="ttl">Scan to pay</span><span class="acts">✕</span></div>
+        <div class="sbody" style="align-items:center;justify-content:flex-start;gap:2.4mm">
+          <div style="width:34mm;height:34mm;margin-top:3mm;position:relative;border-radius:3mm;background:#1B1E28">
+            <i style="position:absolute;left:0;top:0;width:7mm;height:7mm;border-left:.8mm solid #FCD535;border-top:.8mm solid #FCD535;border-radius:2mm 0 0 0"></i>
+            <i style="position:absolute;right:0;top:0;width:7mm;height:7mm;border-right:.8mm solid #FCD535;border-top:.8mm solid #FCD535;border-radius:0 2mm 0 0"></i>
+            <i style="position:absolute;left:0;bottom:0;width:7mm;height:7mm;border-left:.8mm solid #FCD535;border-bottom:.8mm solid #FCD535;border-radius:0 0 0 2mm"></i>
+            <i style="position:absolute;right:0;bottom:0;width:7mm;height:7mm;border-right:.8mm solid #FCD535;border-bottom:.8mm solid #FCD535;border-radius:0 0 2mm 0"></i>
+            <div style="position:absolute;inset:8mm;background:repeating-conic-gradient(#fff 0 25%,#1B1E28 0 50%) 0 0/3mm 3mm;opacity:.85;border-radius:1mm"></div>
+          </div>
+          <div class="m-card" style="width:100%"><div class="m-row"><span class="m-av s" style="background:#0C8F5E">CC</span><div><div class="m-t">Chai Corner ✓ merchant</div><div class="m-s">Signed code · checked by HiFi</div></div></div>
+            <div class="m-row m-sp" style="margin-top:1mm"><span class="m-s">Amount</span><b>1.50 USDT</b></div>
+            <div class="m-row m-sp"><span class="m-s">Fee</span><span>0.00</span></div>
+            <div class="m-row m-sp"><span class="m-s">Quote</span><span>refreshes in 54 s</span></div></div>
+          <div class="m-btn p" style="width:100%">Approve · Practice</div>
+        </div>
+        <div class="pnav" data-on="profile"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">1</span>Scan and pay</b><span>Scan a signed HiFi code, see the merchant HiFi checked, the amount, every fee and the total, then approve.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="ttl">Earn</span><span class="acts"><i data-i="info"></i></span></div>
+        <div class="sbody">
+          <div class="m-chipr"><span class="m-chip">Copy trading</span><span class="m-chip on">Staking</span><span class="m-chip">Launchpool</span></div>
+          <div class="m-card"><div class="m-row m-sp"><b>USDT · Flexible</b><span class="m-chip" style="background:#FFF1BF;color:#8A6400">Practice</span></div><div class="m-row m-sp"><span class="m-s">Indicative rate</span><b>4.2%</b></div><div class="m-s">Not an offer or a promise. Redeem any time. Rates can change.</div><div class="m-btn p" style="margin-top:1mm">Stake</div></div>
+          <div class="m-card"><div class="m-row m-sp"><b>Learn &amp; Earn</b><span class="m-s">5 USDT per answer</span></div>
+            <div style="margin:.8mm 0">What is a liquid staking token?</div>
+            <div class="m-btn o" style="text-align:left;margin-bottom:.8mm">A receipt token you can trade while your stake stays locked</div>
+            <div class="m-btn o" style="text-align:left;margin-bottom:.8mm">A coin that automatically sells itself</div>
+            <div class="m-btn o" style="text-align:left">A stablecoin backed by staked cash</div></div>
+        </div>
+        <div class="pnav" data-on="more"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">2</span>Earn</b><span>Staking with indicative rates and plain risk wording, and quizzes that pay practice USDT for each right answer.</span></div>
+    </div>
+    <div class="pcol">
+      <div class="phone"><div class="scr">
+        <div class="ahdr"><span class="m-row"><span>‹</span><span class="ttl">Security</span></span></div>
+        <div class="sbody" style="gap:1.2mm">
+          <div class="m-s" style="font-weight:800;letter-spacing:.05em">ACTIVITY</div>
+          <div class="m-card m-row m-sp"><span>Devices and sessions</span><b>2</b></div>
+          <div class="m-card m-row m-sp"><span>Login activity</span><span>›</span></div>
+          <div class="m-s" style="font-weight:800;letter-spacing:.05em">ALERTS</div>
+          <div class="m-card m-row m-sp"><span>Security alerts</span><i style="width:6mm;height:3.4mm;border-radius:99px;background:#0C8F5E;display:block"></i></div>
+          <div class="m-card m-row m-sp"><span>New login alerts</span><i style="width:6mm;height:3.4mm;border-radius:99px;background:#0C8F5E;display:block"></i></div>
+          <div class="m-s" style="font-weight:800;letter-spacing:.05em">ALWAYS ON</div>
+          <div class="m-card"><div class="m-row m-sp"><b>Where your chats are kept</b><span>This device</span></div><div class="m-s">Not sent to HiFi servers, and not end-to-end encrypted.</div></div>
+          <div class="m-card"><div class="m-row m-sp"><b>Zero-knowledge storage</b><span class="m-ok">On</span></div><div class="m-s">Recovery phrases and private keys never reach HiFi.</div></div>
+          <div class="m-s">HiFi never asks for a recovery phrase. Anyone who does is not us.</div>
+        </div>
+        <div class="pnav" data-on="profile"></div>
+      </div></div>
+      <div class="pcap"><b><span class="k">3</span>Lock it down</b><span>Devices, login activity and alerts in one place, and plain statements of what is always on.</span></div>
+    </div>
+  </div>
+  <div class="note honest mt3"><b class="t">Lost your phone?</b>From another device: sign in, open Settings → Account → Security → Devices and sessions, and sign out of every device. Freeze your HiFi Card from its page; freezing never asks for a password, because a thief gains nothing from it.</div>
+</section>
+
+<!-- ═════════════════════════ CHAIN 1 ═════════════════════════ -->
+<section class="page" id="p-chain" data-sec="20 · HiFi Chain and HIFI" data-toc="20 The future: HiFi Chain and the HIFI coin" data-level="1">
+  <div class="band">
+    <div class="kicker">20 · The future: HiFi Chain and the HIFI coin <span class="new">New</span> <span class="chip plan">Planned</span></div>
+    <h1>HiFi's own blockchain, and a coin that runs the app</h1>
+    <p class="lead">Today HiFi's rewards, community tokens, passes and treasuries are records inside the app. The plan is for HiFi to run on its own blockchain, <b style="color:#fff">HiFi Chain</b>, with its own coin, <b style="color:#fff">HIFI</b>, used to run the app: paying for actions, rewarding creators and contributors, securing the network and governing it.</p>
+  </div>
+  <h2 style="margin-top:0">Why HiFi needs its own chain</h2>
+  <div class="g3">
+    <div class="card"><h3><span class="ic gold"><i data-i="bolt"></i></span>Payments small enough to make sense</h3><p>A tip of a few cents only works if the network fee is a fraction of a cent. A chain built for HiFi keeps fees tiny and confirms in seconds.</p></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="key"></i></span>Real ownership</h3><p>Creators and communities hold their tokens, passes and credentials themselves, and can take them outside HiFi.</p></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="eye"></i></span>Anyone can check</h3><p>Rewards, treasuries and votes become public records. Today's hash chain for governance moves on-chain.</p></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="link"></i></span>One economy</h3><p>One coin connects the feed, chat, communities and the wallet, instead of separate points in each.</p></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="sliders"></i></span>Tuned for a social app</h3><p>HiFi sets the fees, speed and features: sponsored fees, social recovery, built-in name and pass registries.</p></div>
+    <div class="card"><h3><span class="ic gold"><i data-i="globe"></i></span>Works with the wider world</h3><p>Compatible with Ethereum tools and wallets, with bridges to other chains, so HiFi is never a walled garden.</p></div>
+  </div>
+
+  <h2>From today's app records to HiFi Chain</h2>
+  <table class="t">
+    <tr><th style="width:36%">Today, inside HiFi</th><th>On HiFi Chain</th></tr>
+    <tr><td>TREND, the practice reward token</td><td><b>HIFI</b>, the coin for rewards, tips and fees</td></tr>
+    <tr><td>Community tokens kept in the app's own ledger</td><td>Real tokens, issued from a community token factory</td></tr>
+    <tr><td>Membership passes and credentials (non-transferable records)</td><td>Non-transferable ("soulbound") passes and credentials on-chain</td></tr>
+    <tr><td>Governance history as a SHA-256 hash chain</td><td>Proposals and votes recorded on-chain</td></tr>
+    <tr><td>Treasury and crowdfunding records</td><td>Treasuries held by contracts with multi-signature control</td></tr>
+    <tr><td>Asset Lab's "target chain" field</td><td>Real deployment on HiFi Chain, or bridged to others</td></tr>
+    <tr><td>P2P escrow on the HiFi server</td><td>Escrow contracts, with merchant bonds in HIFI</td></tr>
+    <tr><td>Pay ID and @username</td><td>A name registry, so people pay "@asha" on-chain too</td></tr>
+  </table>
+  <p class="tiny mt2">Everything in this chapter is a plan. It is not built, it is not an offer of any token, and every number in it is a proposal for discussion.</p>
+</section>
+
+<!-- ═════════════════════════ CHAIN 2 ═════════════════════════ -->
+<section class="page" id="p-chain2" data-sec="20 · HiFi Chain and HIFI" data-toc="How HIFI runs the app" data-level="2">
+  <div class="kicker">20 · HiFi Chain and HIFI <span class="new">New</span> <span class="chip plan">Planned</span></div>
+  <h1>How HIFI runs the app</h1>
+  <p class="lead">HIFI is a utility coin: it is what you use to do things in HiFi. Ten uses, grouped around the coin.</p>
+  <div style="display:grid;grid-template-columns:1fr 46mm 1fr;gap:3mm;align-items:center">
+    <div style="display:flex;flex-direction:column;gap:2mm">
+      <div class="card"><h3><span class="i" data-i="bolt"></span>1 · Network fees</h3><p>Pays for transactions on HiFi Chain. For everyday actions, HiFi pays the fee for you.</p></div>
+      <div class="card"><h3><span class="i" data-i="star"></span>2 · Creator rewards</h3><p>Engagement rewards and social-to-earn are paid in HIFI instead of practice TREND.</p></div>
+      <div class="card"><h3><span class="i" data-i="gift"></span>3 · Tips and gift packets</h3><p>Micro-tips in chat, posts and Shorty cost a fraction of a cent to send.</p></div>
+      <div class="card"><h3><span class="i" data-i="lock"></span>4 · Community tokens and gates</h3><p>Communities issue tokens on HiFi Chain; gates can check HIFI or a community token.</p></div>
+      <div class="card"><h3><span class="i" data-i="vote"></span>5 · Governance</h3><p>Holders and communities vote on upgrades, fee settings and ecosystem grants.</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3mm">
+      <svg viewBox="0 0 160 160" style="width:44mm">
+        <defs><linearGradient id="hg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF5A1F"/><stop offset=".5" stop-color="#FF8A00"/><stop offset="1" stop-color="#FFC21A"/></linearGradient></defs>
+        <circle cx="80" cy="80" r="76" fill="url(#hg)"/>
+        <circle cx="80" cy="80" r="62" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-dasharray="3 4"/>
+        <text x="80" y="78" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="34" fill="#fff">HIFI</text>
+        <text x="80" y="100" text-anchor="middle" font-size="10" font-weight="700" fill="#fff" opacity=".9">runs the app</text>
+      </svg>
+      <div class="note plain small" style="text-align:center">You never need HIFI just to chat, post or pay a friend in dollars.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2mm">
+      <div class="card"><h3><span class="i" data-i="shield"></span>6 · Staking and security</h3><p>Validators stake HIFI to run the chain; misbehaving loses part of the stake.</p></div>
+      <div class="card"><h3><span class="i" data-i="sparkle"></span>7 · Premium features</h3><p>Post boosts, larger uploads, custom Pay IDs and Studio Pro tools.</p></div>
+      <div class="card"><h3><span class="i" data-i="store"></span>8 · Marketplace and memberships</h3><p>Pay for listings and memberships in HIFI, or in stablecoins.</p></div>
+      <div class="card"><h3><span class="i" data-i="storage"></span>9 · Storage and media</h3><p>Pays for decentralised storage of posts, photos and video.</p></div>
+      <div class="card"><h3><span class="i" data-i="handshake"></span>10 · Escrow bonds</h3><p>P2P merchants post a HIFI bond, which they lose if they cheat.</p></div>
+    </div>
+  </div>
+
+  <h2>Where network fees go (proposed)</h2>
+  <div class="bar" style="height:9mm"><div style="width:40%;background:var(--grad)">40% creator &amp; community rewards</div><div style="width:30%;background:var(--ink)">30% validators &amp; stakers</div><div style="width:20%;background:#4A5068">20% treasury</div><div style="width:10%;background:var(--red)">10% burned</div></div>
+
+  <h2>Design principles</h2>
+  <div class="g2">
+    <ul class="tick small">
+      <li><b>Nobody needs HIFI to use HiFi.</b> Everyday fees are sponsored (a "paymaster"), so new users never buy a coin just to send a message.</li>
+      <li><b>Stablecoins stay welcome.</b> Prices can be in dollars or rupees; HIFI is an option at checkout, not a requirement.</li>
+    </ul>
+    <ul class="tick small">
+      <li><b>Rewards come from real activity</b>, paid from a fixed pool that shrinks over time, never from printing new coins.</li>
+      <li><b>Fees are recycled</b> to creators, communities and the people securing the chain.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═════════════════════════ CHAIN 3 ═════════════════════════ -->
+<section class="page" id="p-chain3" data-sec="20 · HiFi Chain and HIFI" data-toc="Building HiFi Chain" data-level="2">
+  <div class="kicker">20 · HiFi Chain and HIFI <span class="new">New</span> <span class="chip plan">Planned</span></div>
+  <h1>Building HiFi Chain</h1>
+  <p class="lead"><b>Our recommendation:</b> build HiFi Chain as HiFi's own Ethereum-compatible network on a proven, audited open-source framework, rather than writing a blockchain from scratch. "Our own chain" means HiFi owns and runs it, sets its rules and collects its fees. It does not mean inventing new cryptography, which is where new chains get hacked.</p>
+  <table class="t">
+    <tr><th style="width:20%">Approach</th><th style="width:20%">Examples</th><th>For</th><th>Against</th><th style="width:13%">Fit</th></tr>
+    <tr><td><b>Layer-2 network that settles on Ethereum</b></td><td>OP Stack, Arbitrum Orbit, ZK Stack, Polygon CDK</td><td>Borrows Ethereum's security; Ethereum wallets and tools work on day one; fastest to launch</td><td>Depends on Ethereum for final settlement; one operator orders transactions at first</td><td><span class="chip real">Recommended</span></td></tr>
+    <tr><td><b>Independent app-chain</b></td><td>Cosmos SDK with CometBFT, Avalanche L1</td><td>Full control, its own validators and modules</td><td>Must find and pay validators to secure it; needs bridges</td><td><span class="chip prac">Alternative</span></td></tr>
+    <tr><td><b>Written from scratch</b></td><td>New consensus and engine</td><td>Total control</td><td>Years of work, untested code, highest risk, no wallet support</td><td><span class="chip" style="color:var(--red);background:#FDE8EA">Not advised</span></td></tr>
+  </table>
+
+  <h2>Architecture</h2>
+  <div class="stack">
+    <div class="srow"><div class="sl" style="background:var(--ink)">HiFi app</div><div class="sb"><div><b>Phone and web</b>feed, chat, communities, wallet, HiFi Pay</div></div></div>
+    <div class="srow"><div class="sl" style="background:var(--ink)">HiFi Wallet</div><div class="sb"><div><b>Smart accounts</b>sign in with a passkey (Face ID, fingerprint)</div><div><b>Social recovery</b>trusted contacts help you back in</div><div><b>Sponsored fees</b>HiFi pays everyday gas</div></div></div>
+    <div class="srow"><div class="sl">HiFi Chain</div><div class="sb"><div><b>HIFI coin</b></div><div><b>Rewards</b>distributor</div><div><b>Community tokens</b>factory</div><div><b>Passes</b>&amp; credentials</div><div><b>Governance</b>&amp; treasury</div><div><b>Escrow</b>P2P, market</div><div><b>Names</b>Pay ID registry</div></div></div>
+    <div class="srow"><div class="sl" style="background:#4A5068">Services</div><div class="sb"><div><b>Sequencer and validators</b></div><div><b>Explorer and indexer</b></div><div><b>Price oracles</b></div><div><b>Bridges</b></div></div></div>
+    <div class="srow"><div class="sl" style="background:#4A5068">Settlement</div><div class="sb"><div><b>Ethereum</b>final settlement and data availability</div></div></div>
+  </div>
+
+  <div class="g2 mt3">
+    <div class="note good"><b class="t">Rules that carry over from today</b>HiFi never sees a key and never asks for a recovery phrase. The web server never signs. Practice and live money never mix. Every contract is audited before it holds value.</div>
+    <div class="note plain"><b class="t">Wallets for beginners</b>A passkey-based smart account means most people never handle a seed phrase at all. People who prefer MetaMask or another wallet can keep using it, as they can in HiFi today.</div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ CHAIN 4 ═════════════════════════ -->
+<section class="page" id="p-chain4" data-sec="20 · HiFi Chain and HIFI" data-toc="HIFI coin: a proposal" data-level="2">
+  <div class="kicker">20 · HiFi Chain and HIFI <span class="new">New</span> <span class="chip plan">Planned</span></div>
+  <h1>The HIFI coin: a proposal for discussion</h1>
+  <p class="lead">A starting point for the token design. Final numbers need economic modelling, legal advice in every launch country and an independent review.</p>
+  <div class="g4 mb3">
+    <div class="stat"><div class="v">HIFI</div><div class="l">ticker, native coin of HiFi Chain</div></div>
+    <div class="stat"><div class="v">1B</div><div class="l">fixed supply at launch: 1,000,000,000, with no hidden minting</div></div>
+    <div class="stat"><div class="v">18</div><div class="l">decimals, the Ethereum standard</div></div>
+    <div class="stat"><div class="v">8 yrs</div><div class="l">over which community rewards are released</div></div>
+  </div>
+  <div class="g32" style="align-items:center">
+    <svg viewBox="0 0 160 160" style="width:100%;max-width:62mm;justify-self:center">
+      <g transform="rotate(-90 80 80)" fill="none" stroke-width="26">
+        <circle cx="80" cy="80" r="60" stroke="#FF5A1F" stroke-dasharray="131.95 376.99" stroke-dashoffset="0"/>
+        <circle cx="80" cy="80" r="60" stroke="#FF8A00" stroke-dasharray="56.55 376.99" stroke-dashoffset="-131.95"/>
+        <circle cx="80" cy="80" r="60" stroke="#FFC21A" stroke-dasharray="56.55 376.99" stroke-dashoffset="-188.50"/>
+        <circle cx="80" cy="80" r="60" stroke="#0B0E1A" stroke-dasharray="45.24 376.99" stroke-dashoffset="-245.04"/>
+        <circle cx="80" cy="80" r="60" stroke="#565C73" stroke-dasharray="37.70 376.99" stroke-dashoffset="-290.28"/>
+        <circle cx="80" cy="80" r="60" stroke="#0C8F5E" stroke-dasharray="30.16 376.99" stroke-dashoffset="-327.98"/>
+        <circle cx="80" cy="80" r="60" stroke="#2563D9" stroke-dasharray="18.85 376.99" stroke-dashoffset="-358.14"/>
+      </g>
+      <text x="80" y="78" text-anchor="middle" font-family="Inter Display" font-weight="900" font-size="18">1B</text>
+      <text x="80" y="93" text-anchor="middle" font-size="8" fill="#565C73">HIFI</text>
+    </svg>
+    <table class="t compact">
+      <tr><th>Allocation</th><th class="num">Share</th><th class="num">HIFI</th><th>Release</th></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#FF5A1F"></span> Community &amp; creator rewards</td><td class="num">35%</td><td class="num">350M</td><td>over 8 years, shrinking</td></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#FF8A00"></span> Ecosystem &amp; developer grants</td><td class="num">15%</td><td class="num">150M</td><td>by governance vote</td></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#FFC21A"></span> Team &amp; contributors</td><td class="num">15%</td><td class="num">150M</td><td>4 years, 1-year cliff</td></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#0B0E1A"></span> Treasury</td><td class="num">12%</td><td class="num">120M</td><td>multi-signature, public</td></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#565C73"></span> Early backers</td><td class="num">10%</td><td class="num">100M</td><td>3 years, 1-year cliff</td></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#0C8F5E"></span> Network security (staking)</td><td class="num">8%</td><td class="num">80M</td><td>to validators over time</td></tr>
+      <tr><td><span style="display:inline-block;width:2.6mm;height:2.6mm;border-radius:.8mm;background:#2563D9"></span> Liquidity &amp; listings</td><td class="num">5%</td><td class="num">50M</td><td>at launch, where legal</td></tr>
+      <tr class="tot"><td>Total</td><td class="num">100%</td><td class="num">1,000M</td><td></td></tr>
+    </table>
+  </div>
+
+  <h2>Community rewards release (350M HIFI)</h2>
+  <div class="bar" style="height:9mm"><div style="width:34.3%;background:#FF5A1F">Years 1–2 · 120M</div><div style="width:28.6%;background:#FF8A00">Years 3–4 · 100M</div><div style="width:22.9%;background:#FFC21A;color:#1A1400">Years 5–6 · 80M</div><div style="width:14.2%;background:var(--ink)">7–8 · 50M</div></div>
+  <p class="small muted mt1">Rewards shrink every two years, so early activity is rewarded without diluting everyone later. When the pool is empty, rewards come only from recycled fees.</p>
+
+  <h2>Release principles</h2>
+  <div class="g2">
+    <ul class="tick small"><li><b>Vesting is locked in contracts</b>, with a public schedule anyone can read.</li><li><b>No team or backer coins unlock in year one.</b></li></ul>
+    <ul class="tick small"><li><b>Treasury spending is public</b> and controlled by several keyholders.</li><li><b>10% of fees are burned</b>, so supply can only fall after launch.</li></ul>
+  </div>
+</section>
+
+<!-- ═════════════════════════ CHAIN 5 ═════════════════════════ -->
+<section class="page" id="p-chain5" data-sec="20 · HiFi Chain and HIFI" data-toc="Stages and rules for the chain" data-level="2">
+  <div class="kicker">20 · HiFi Chain and HIFI <span class="new">New</span> <span class="chip plan">Planned</span></div>
+  <h1>Getting there, one gate at a time</h1>
+  <p class="lead">Each stage starts only when the checks at the end of the stage before it have passed. The dates follow the gates, not the other way round.</p>
+  <div class="vsteps">
+    <div class="vstep"><div class="k">0</div><div><b>Today: practice <span class="chip prac">Practice</span></b><span>TREND as the practice reward token; community tokens, passes and treasuries as app records; governance in a hash chain anyone can recompute.</span></div></div>
+    <div class="vstep"><div class="k">1</div><div><b>Server ledger and fair play</b><span>Rewards and balances move to the server ledger, and fake engagement is detected. <i>Gate:</i> the ledger reconciles to zero, and abuse checks are live.</span></div></div>
+    <div class="vstep"><div class="k">2</div><div><b>Design and legal</b><span>Token paper, economic model, choice of framework, and a legal opinion for each launch country, for example registration with FIU-IND under the PMLA in India, or MiCA in the EU. <i>Gate:</i> written legal opinions.</span></div></div>
+    <div class="vstep"><div class="k">3</div><div><b>Testnet</b><span>HiFi Chain testnet with test HIFI that has no value, the core contracts, the passkey wallet and a public bug bounty. <i>Gate:</i> 90 days stable with no critical bug open.</span></div></div>
+    <div class="vstep"><div class="k">4</div><div><b>Audits</b><span>Two independent smart-contract audits, an infrastructure audit and a penetration test, with the reports published. <i>Gate:</i> every critical and high finding fixed and re-checked.</span></div></div>
+    <div class="vstep"><div class="k">5</div><div><b>Mainnet</b><span>HIFI launches; rewards switch from TREND to HIFI; HIFI arrives in chat, communities and HiFi Pay where licensed. <i>Gate:</i> licences and partners in place for each country served.</span></div></div>
+    <div class="vstep"><div class="k">6</div><div><b>Hand over control</b><span>More independent validators, on-chain governance by HIFI holders and communities, and open grants.</span></div></div>
+  </div>
+
+  <h2>Rules and risks</h2>
+  <div class="g2">
+    <div class="note warn"><b class="t">Not an investment</b>HIFI is a utility coin for using HiFi. HiFi will not promise price rises or returns, and nothing in this document is an offer to sell any token. Practice TREND balances are not a claim on HIFI; how practice history is recognised, if at all, is decided before launch and published.</div>
+    <div class="note plain"><b class="t">Law and tax</b>Depending on the country, a token can count as a virtual digital asset, a payment instrument or a security, with different rules for each. In India, for example, gains are taxed at 30% and a 1% TDS applies to transfers. A lawyer in each country confirms the plan; this is not legal or tax advice.</div>
+    <div class="note plain"><b class="t">Security</b>Audited contracts, a permanent bug bounty, upgrades that wait behind a public time lock, multi-signature keys for the treasury, and keys for self-custody wallets that HiFi never holds.</div>
+    <div class="note plain"><b class="t">Technology risk</b>Bridges and new contracts are the most attacked parts of any chain. HiFi starts with a short list of audited contracts, caps what bridges can hold at first, and adds features only after each one is reviewed.</div>
+  </div>
+</section>
+
+<!-- ═════════════════════════ ROADMAP ═════════════════════════ -->
+<section class="page" id="p-roadmap" data-sec="21 · Roadmap" data-toc="21 Roadmap" data-level="1">
+  <div class="band">
+    <div class="kicker">21 · Roadmap</div>
+    <h1>From what works today to HiFi Chain</h1>
+    <p class="lead">Four steps. Each one is done only when its screens, server, database, security checks, error handling, statuses and tests all work together: a screen on its own does not count.</p>
+  </div>
+  <div class="g4">
+    <div class="card" style="border-top:3px solid var(--built)"><div class="kicker" style="color:var(--built)">Now</div><h3>Works today</h3>
+      <ul class="b small"><li>Sign-in with email, Google, Apple, phone</li><li>Feed, stories, story shapes, Shorty, Notes</li><li>Chat, folders, Crypto Desk, crypto in chat</li><li>Communities, Studio, Commune Hub+</li><li>Web3 Wallet, HiFi Pay, Card, Markets, Trade, P2P, Earn, all on practice money</li><li>Security headers, server sign-in checks, retry-safe payments</li></ul></div>
+    <div class="card" style="border-top:3px solid #E59A00"><div class="kicker">Next</div><h3>Shared and on the server</h3>
+      <ul class="b small"><li>Publish the database rules: @handles and shared posts for everyone</li><li>Put the latest version online at a public address</li><li>Shared comments, follows and notifications</li><li>All balances on the server ledger</li><li>Security Center, saved addresses, anti-phishing code</li><li>Support tickets linked to transactions</li></ul></div>
+    <div class="card" style="border-top:3px solid var(--plan)"><div class="kicker" style="color:var(--plan)">Then</div><h3>Going live</h3>
+      <ul class="b small"><li>Message server with end-to-end encryption</li><li>Real voice and video calls</li><li>Media storage, so posts follow you</li><li>A wallet provider for real HiFi wallets</li><li>Payment partner: real money in HiFi Pay</li><li>Card-issuing partner: a real HiFi Card</li><li>Native Android and iPhone apps</li></ul></div>
+    <div class="card" style="border-top:3px solid var(--ink)"><div class="kicker" style="color:var(--ink)">Later</div><h3>HiFi Chain</h3>
+      <ul class="b small"><li>Token design and legal opinions</li><li>Testnet and bug bounty</li><li>Independent audits</li><li>Mainnet: HIFI for rewards, tips and fees</li><li>Community tokens and passes on-chain</li><li>Hand over control to holders and communities</li></ul></div>
+  </div>
+
+  <h2>What each real-money product still needs</h2>
+  <table class="t compact">
+    <tr><th style="width:28%">Product</th><th>Before it can go live in a country</th></tr>
+    <tr><td><b>Any live crypto service</b></td><td>Registration as a crypto service provider where required (in India, with FIU-IND), identity checks, anti-money-laundering programme, sanctions screening, monitoring, record keeping</td></tr>
+    <tr><td><b>Trading, Convert</b></td><td>The above, plus a liquidity partner, and tax reporting</td></tr>
+    <tr><td><b>Withdrawals to outside wallets</b></td><td>Travel Rule data exchange for transfers to other providers, and the signing hardware</td></tr>
+    <tr><td><b>HiFi Pay, cross-border</b></td><td>A licensed payment or money-transfer partner in each corridor, and foreign-exchange disclosure</td></tr>
+    <tr><td><b>P2P</b></td><td>Merchant vetting, rules on payment details, and dispute staff</td></tr>
+    <tr><td><b>Earn</b></td><td>Checked product by product; in some countries a yield product needs its own licence or is not allowed</td></tr>
+    <tr><td><b>HiFi Card</b></td><td>A card-issuing partner and scheme membership through them</td></tr>
+  </table>
+  <p class="tiny mt2">Every item above is a switch on HiFi's server that starts closed. Screens name what is missing, for example "Cross-border transfers aren't available in India yet", rather than showing a broken button. This is a list of dependencies, not legal advice.</p>
+</section>
+
+<!-- ═════════════════════════ BACK COVER ═════════════════════════ -->
+<section class="page cover" data-bare data-toc="Closing">
+  <div class="glow"></div>
+  <div class="inner" style="justify-content:center;align-items:flex-start">
+    <img src="hifi-logo.png" alt="HiFi" style="height:30mm;margin-bottom:10mm">
+    <h1 class="big" style="font-size:44pt"><span>Your Digital Universe</span></h1>
+    <p class="sub" style="max-width:150mm">Social, chat, communities and money in one app, built to be honest about what it does today and clear about what comes next.</p>
+    <div class="pills mt4">
+      <span>One account</span><span>One wallet</span><span>One inbox</span><span>One history</span>
+    </div>
+    <div style="position:absolute;left:18mm;right:18mm;bottom:20mm">
+      <div style="border-top:1px solid rgba(255,255,255,.15);padding-top:5mm;display:flex;justify-content:space-between;font-size:8.4pt;color:#9AA0BA;margin-bottom:5mm"><span>HiFi — Your Digital Universe · Final edition · November 2026</span><span>47 pages</span></div>
+      <p class="disc">This document describes HiFi's features and plans. Features marked Practice use practice money with no real value. Plans can change. Nothing here is financial, legal, tax or investment advice, and nothing here is an offer to sell any token. Screenshots in Part 1 show a demo copy of the app with sample people; phone screens in Part 2 are illustrations.</p>
+    </div>
+  </div>
+</section>
+
+<script src="hifi.js"></script>
+</body>
+</html>

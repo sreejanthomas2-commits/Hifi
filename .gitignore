@@ -26,3 +26,7 @@ trending-standalone.html
 # Trending Pay's local book (services/pay/store.js), used when no MONGO_URI
 # is set: this machine's practice ledger and its signing keys, not source.
 /.paydata/
+
+# Temporary files from docs/hifi/build-pdf.js, removed after a good build.
+/docs/hifi/.raw.pdf
+/docs/hifi/.outline.json
